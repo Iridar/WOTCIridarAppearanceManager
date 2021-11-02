@@ -97,6 +97,18 @@
     <Content Include="Src\WOTCIridarAppearanceManager\Classes\UIManageAppearance_Uniform.uc">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Src\WOTCIridarAppearanceManager\Classes\UIMechaListItem_Button.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\WOTCIridarAppearanceManager\Classes\UIMechaListItem_Color.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\WOTCIridarAppearanceManager\Classes\UIMechaListItem_Soldier.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\WOTCIridarAppearanceManager\Classes\UIScreen_Biography.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\WOTCIridarAppearanceManager\Classes\UISL_AppearanceManager.uc">
       <SubType>Content</SubType>
     </Content>

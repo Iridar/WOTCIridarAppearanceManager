@@ -9,6 +9,11 @@ static function OnPreCreateTemplates()
 
 	`AMLOG("Replaced Character Pool manager.");
 }
+
+static event OnPostTemplatesCreated()
+{
+	class'UIManageAppearance'.static.SetInitialSoldierListSettings();
+}
 /*
 static event OnLoadedSavedGame()
 {

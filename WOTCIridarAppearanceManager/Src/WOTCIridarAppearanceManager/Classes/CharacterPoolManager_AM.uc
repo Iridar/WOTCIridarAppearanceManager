@@ -512,8 +512,7 @@ private function CopyUniformAppearance(out TAppearance NewAppearance, const XCom
 	}
 	else
 	{
-		// TODO: Uncomment
-		//class'UIManageAppearance'.static.CopyAppearance_Static(NewAppearance, UniformAppearance, 'PresetUniform');
+		class'UIManageAppearance'.static.CopyAppearance_Static(NewAppearance, UniformAppearance, 'PresetUniform');
 	}
 }
 

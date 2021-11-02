@@ -116,7 +116,7 @@ private function OnAutoManageUniformCheckboxChanged(UICheckbox CheckBox)
 	local CharacterPoolManager_AM	CharPoolMgr;
 	local XComGameState_Unit		UnitState;
 
-	if (CheckBox.GetParent(class'UIMechaListItem').bDisabled)
+	if (UIMechaListItem(CheckBox.GetParent(class'UIMechaListItem')).bDisabled)
 			return;
 
 	CustomizeScreen = UICustomize_Menu(CheckBox.Screen);
