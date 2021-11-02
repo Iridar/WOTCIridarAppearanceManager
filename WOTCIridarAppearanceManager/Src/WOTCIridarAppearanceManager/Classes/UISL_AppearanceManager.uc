@@ -19,6 +19,7 @@ private function AddButtons()
 {
 	local UICustomize_Menu			CustomizeScreen;;
 	local bool						bUnitIsUniform;
+	local bool						bAutoManageUniform;
 	local XComGameState_Unit		UnitState;
 	local CharacterPoolManager_AM	CharPoolMgr;
 
@@ -50,7 +51,11 @@ private function AddButtons()
 	CreateOrUpdateListItem('IRI_AppearanceStore_ListItem', CustomizeScreen, true, 
 		"Appearance Store", OnAppearanceStoreItemClicked); // TODO: Localize
 
-	if (!CustomizeScreen.bInArmory)
+	if (CustomizeScreen.bInArmory)
+	{
+		bAutoManageUniform = class'Help'.static.IsAutoManageUniformValueSet(UnitState);
+	}
+	else
 	{
 		// ## Loadout Button - always while in Character Pool interface
 		CreateOrUpdateListItem('IRI_Loadout_ListItem', CustomizeScreen, true, 
@@ -67,6 +72,8 @@ private function AddButtons()
 			CreateOrUpdateButton('IRI_ConvertUniformSoldier_ListItem', CustomizeScreen, true, 
 				"Convert to Uniform", "Convert", OnUniformButtonClicked); // TODO: Localize
 		}
+
+		bAutoManageUniform = CharPoolMgr.IsAutoManageUniform(UnitState);
 	}
 
 	// ## Configure Uniform Button - if the unit is uniform
@@ -77,12 +84,12 @@ private function AddButtons()
 	if (`GETMCMVAR(AUTOMATIC_UNIFORM_MANAGEMENT))
 	{
 		CreateOrUpdateCheckbox('IRI_AutoManageUniform_ListItem', CustomizeScreen, !bUnitIsUniform, 
-			"Disable automatic uniform management", CharPoolMgr.IsAutoManageUniformFlagSet(UnitState), OnAutoManageUniformCheckboxChanged); // TODO: Localize
+			"Disable automatic uniform management", bAutoManageUniform, OnAutoManageUniformCheckboxChanged); // TODO: Localize
 	}
 	else
 	{
 		CreateOrUpdateCheckbox('IRI_AutoManageUniform_ListItem', CustomizeScreen, !bUnitIsUniform, 
-			"Enable automatic uniform management", CharPoolMgr.IsAutoManageUniformFlagSet(UnitState), OnAutoManageUniformCheckboxChanged); // TODO: Localize
+			"Enable automatic uniform management", bAutoManageUniform, OnAutoManageUniformCheckboxChanged); // TODO: Localize
 	}
 
 	// ## Validate Appearance Button - if MCM is configured to not validate appearance automatically in the current game mode
@@ -117,17 +124,17 @@ private function OnAutoManageUniformCheckboxChanged(UICheckbox CheckBox)
 	if (CharPoolMgr == none)
 		return;
 
-	if (CharPoolMgr.IsCharacterPoolCharacter(UnitState))
+	if (CustomizeScreen.bInArmory)
 	{
-		CharPoolMgr.SetIsAutoManageUniform(UnitState, CheckBox.bChecked);
+		SetIsAutoManageUniform(UnitState, CheckBox.bChecked);
 	}
 	else
 	{
-		SetAutoManageUniform(UnitState, CheckBox.bChecked);
+		CharPoolMgr.SetIsAutoManageUniform(UnitState, CheckBox.bChecked);
 	}
 }
 
-private function SetAutoManageUniform(XComGameState_Unit UnitState, const bool bValue)
+private function SetIsAutoManageUniform(XComGameState_Unit UnitState, const bool bValue)
 {
 	local XComGameState NewGameState;
 

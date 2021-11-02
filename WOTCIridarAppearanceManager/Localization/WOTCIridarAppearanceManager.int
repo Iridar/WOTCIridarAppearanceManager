@@ -5,8 +5,8 @@ PresetEntireUnit = "Entire Unit"
 PresetPatterns = "Patterns"
 
 [AM_MCM_Screen]
-ModName = "Character Pool Overhaul"
-PageTitle = "Character Pool Overhaul"
+ModName = "Appearance Manager"
+PageTitle = "Appearance Manager"
 GroupHeader = "General Settings"
 
 DISABLE_APPEARANCE_VALIDATION_REVIEW_Label = "Disable appearance validation in normal mode"

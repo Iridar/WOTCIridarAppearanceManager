@@ -47,6 +47,7 @@ struct CharacterPoolExtraData
 var array<CharacterPoolExtraData> ExtraDatas;
 
 `include(WOTCIridarAppearanceManager\Src\ModConfigMenuAPI\MCM_API_CfgHelpers.uci)
+`define XOR(a, b) !`a && `b || `a && !`b
 
 // ============================================================================================
 // OVERRIDES OF EXISTING FUNCTIONS
@@ -251,7 +252,7 @@ final function SetIsUnitAnyClassUniform(XComGameState_Unit UnitState, bool bValu
 }
 final function SetIsAutoManageUniform(const XComGameState_Unit UnitState, const bool bValue)
 {
-	ExtraDatas[ GetExtraDataIndexForUnit(UnitState) ].bIsAnyClassUniform = bValue;
+	ExtraDatas[ GetExtraDataIndexForUnit(UnitState) ].bAutoManageUniform = bValue;
 	SaveCharacterPool();
 }
 
@@ -295,10 +296,16 @@ final function SaveCosmeticOptionsForUnit(const array<CosmeticOptionStruct> Cosm
 
 final function bool ShouldAutoManageUniform(const XComGameState_Unit UnitState)
 {
+	// If MCM setting of global uniform management is NOT enabled, we want to manage this unit's uniform if the flag on the unit IS set.
+	// If MCM setting of global uniform management IS enabled, we want to mange this unit's uniform if the flag on the unit is NOT set.
+	// Which boils down to "exclusive OR" logical operation.
 	return `XOR(`GETMCMVAR(AUTOMATIC_UNIFORM_MANAGEMENT), IsAutoManageUniformFlagSet(UnitState));
 }
 
-final function bool IsAutoManageUniformFlagSet(const XComGameState_Unit UnitState)
+// ============================================================================================
+// INTERNAL FUNCTIONS
+
+private function bool IsAutoManageUniformFlagSet(const XComGameState_Unit UnitState)
 {
 	if (IsCharacterPoolCharacter(UnitState))
 	{
@@ -306,9 +313,6 @@ final function bool IsAutoManageUniformFlagSet(const XComGameState_Unit UnitStat
 	}
 	return class'Help'.static.IsAutoManageUniformValueSet(UnitState);
 }
-
-// ============================================================================================
-// INTERNAL FUNCTIONS
 
 final function bool IsCharacterPoolCharacter(const XComGameState_Unit UnitState)
 {

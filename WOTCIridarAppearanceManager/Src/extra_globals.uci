@@ -1,5 +1,3 @@
 `define AMLOG(msg) `LOG(GetFuncName() @ `msg, class'AM_MCM_Defaults'.default.VERSION_CFG > class'AM_MCM_Screen'.default.VERSION_CFG ? class'AM_MCM_Defaults'.default.DEBUG_LOGGING : class'AM_MCM_Screen'.default.DEBUG_LOGGING, 'AppearanceManager')
 
 `define CHARACTERPOOLMGRAM CharacterPoolManager_AM(class'Engine'.static.GetEngine().GetCharacterPoolManager())
-
-`define XOR(a, b) !`a && `b || `a && !`b
