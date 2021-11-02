@@ -1,0 +1,2 @@
+class CharacterPoolManager_AM extends CharacterPoolManager;
+
