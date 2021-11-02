@@ -108,7 +108,6 @@ simulated function bool EquipItem(UIArmory_LoadoutItem Item)
 	local XComGameStateContext_ChangeContainer	TempContainer;	
 	local TAppearance							NewAppearance;
 	local XComGameState_Unit					UnitState;
-	local bool									bHasStoredAppearance;
 
 	UnitState = GetUnit();
 	if (UnitState == none)
@@ -116,7 +115,6 @@ simulated function bool EquipItem(UIArmory_LoadoutItem Item)
 
 	History = `XCOMHISTORY;
 	SelectedSlot = GetSelectedSlot();
-	bHasStoredAppearance = UnitState.HasStoredAppearance(UnitState.kAppearance.iGender, Item.ItemTemplate.DataName);
 
 	`AMLOG(UnitState.GetFullName() @ "attempting to equip item:" @ Item.ItemTemplate.DataName @ "into slot:" @ SelectedSlot $ ". Current torso:" @ UnitState.kAppearance.nmTorso);
 
@@ -144,7 +142,7 @@ simulated function bool EquipItem(UIArmory_LoadoutItem Item)
 		EquipmentTemplate = X2EquipmentTemplate(Item.ItemTemplate);
 		if (EquipmentTemplate != none && EquipmentTemplate.EquipSound != "")
 		{
-			`SOUNDMGR.PlaySoundEvent(EquipmentTemplate.EquipSound);
+			PlaySoundEvent(EquipmentTemplate.EquipSound);
 		}
 	}
 
@@ -161,15 +159,41 @@ simulated function bool EquipItem(UIArmory_LoadoutItem Item)
 		// Always refresh and save unit's appearance in case equipping the item modified it.
 		NewAppearance = UnitState.kAppearance;
 		XComUnitPawn(CustomizationManager.ActorPawn).SetAppearance(NewAppearance);
-		if (!bHasStoredAppearance)
+
+		if (SelectedSlot == eInvSlot_Armor)
 		{
 			UnitState.StoreAppearance(NewAppearance.iGender, Item.ItemTemplate.DataName);
-			CustomizationManager.CommitChanges();
 		}
+		else
+		{
+			UnitState.StoreAppearance(NewAppearance.iGender);
+		}
+		CustomizationManager.CommitChanges();
+		
 
 		CharPoolMgr.SaveCharacterPool();
 	}
 	return EquipSucceeded;
+}
+
+// Sound managers don't exist in Shell, have to do it by hand.
+private function PlaySoundEvent(string strKey)
+{
+	local string	SoundEventPath;
+	local AkEvent	SoundEvent;
+
+	foreach class'XComStrategySoundManager'.default.SoundEventPaths(SoundEventPath)
+	{
+		if (InStr(SoundEventPath, strKey) != INDEX_NONE)
+		{
+			SoundEvent = AkEvent(`CONTENT.RequestGameArchetype(SoundEventPath));
+			if (SoundEvent != none)
+			{
+				WorldInfo.PlayAkEvent(SoundEvent);
+				return;
+			}
+		}
+	}
 }
 
 simulated private function CreateVisualAttachments(XComGameState_Unit UnitState)

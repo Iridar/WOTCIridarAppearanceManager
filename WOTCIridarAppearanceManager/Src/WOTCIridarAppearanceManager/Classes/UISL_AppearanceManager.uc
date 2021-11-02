@@ -22,6 +22,7 @@ private function AddButtons()
 	local bool						bAutoManageUniform;
 	local XComGameState_Unit		UnitState;
 	local CharacterPoolManager_AM	CharPoolMgr;
+	local UIMechaListItem			ListItem;
 
 	CustomizeScreen = UICustomize_Menu(`SCREENSTACK.GetCurrentScreen());
 	if (CustomizeScreen == none)
@@ -43,6 +44,27 @@ private function AddButtons()
 
 	bUnitIsUniform = CharPoolMgr.IsUnitUniform(UnitState);
 
+	// ## Auto Manage Uniform toggle - always, but disabled if unit is a uniform.
+	if (CustomizeScreen.bInArmory)
+	{
+		bAutoManageUniform = class'Help'.static.IsAutoManageUniformValueSet(UnitState);
+	}
+	else
+	{
+		bAutoManageUniform = CharPoolMgr.IsAutoManageUniform(UnitState);
+	}
+	if (`GETMCMVAR(AUTOMATIC_UNIFORM_MANAGEMENT))
+	{
+		ListItem = CreateOrUpdateCheckbox('IRI_AutoManageUniform_ListItem', CustomizeScreen, true, 
+			"Disable automatic uniform management", bAutoManageUniform, OnAutoManageUniformCheckboxChanged); // TODO: Localize
+	}
+	else
+	{
+		ListItem = CreateOrUpdateCheckbox('IRI_AutoManageUniform_ListItem', CustomizeScreen, true, 
+			"Enable automatic uniform management", bAutoManageUniform, OnAutoManageUniformCheckboxChanged); // TODO: Localize
+	}
+	if (ListItem != none) ListItem.SetDisabled(bUnitIsUniform);
+
 	// ## Manage Appearance Button - always
 	CreateOrUpdateListItem('IRI_ManageAppearance_ListItem', CustomizeScreen, true, 
 		"Manage Appearance", OnManageAppearanceItemClicked); // TODO: Localize
@@ -51,11 +73,7 @@ private function AddButtons()
 	CreateOrUpdateListItem('IRI_AppearanceStore_ListItem', CustomizeScreen, true, 
 		"Appearance Store", OnAppearanceStoreItemClicked); // TODO: Localize
 
-	if (CustomizeScreen.bInArmory)
-	{
-		bAutoManageUniform = class'Help'.static.IsAutoManageUniformValueSet(UnitState);
-	}
-	else
+	if (!CustomizeScreen.bInArmory)
 	{
 		// ## Loadout Button - always while in Character Pool interface
 		CreateOrUpdateListItem('IRI_Loadout_ListItem', CustomizeScreen, true, 
@@ -72,8 +90,6 @@ private function AddButtons()
 			CreateOrUpdateButton('IRI_ConvertUniformSoldier_ListItem', CustomizeScreen, true, 
 				"Convert to Uniform", "Convert", OnUniformButtonClicked); // TODO: Localize
 		}
-
-		bAutoManageUniform = CharPoolMgr.IsAutoManageUniform(UnitState);
 	}
 
 		// ## Validate Appearance Button - if MCM is configured to not validate appearance automatically in the current game mode
@@ -87,18 +103,6 @@ private function AddButtons()
 	// ## Configure Uniform Button - if the unit is uniform
 	CreateOrUpdateListItem('IRI_ConfigureUniform_ListItem', CustomizeScreen, bUnitIsUniform, 
 		"Configure Uniform", OnConfigureUniformItemClicked); // TODO: Localize
-
-	// ## Auto Manage Uniform toggle - if the unit is not uniform
-	if (`GETMCMVAR(AUTOMATIC_UNIFORM_MANAGEMENT))
-	{
-		CreateOrUpdateCheckbox('IRI_AutoManageUniform_ListItem', CustomizeScreen, !bUnitIsUniform, 
-			"Disable automatic uniform management", bAutoManageUniform, OnAutoManageUniformCheckboxChanged); // TODO: Localize
-	}
-	else
-	{
-		CreateOrUpdateCheckbox('IRI_AutoManageUniform_ListItem', CustomizeScreen, !bUnitIsUniform, 
-			"Enable automatic uniform management", bAutoManageUniform, OnAutoManageUniformCheckboxChanged); // TODO: Localize
-	}
 	
 	CustomizeScreen.SetTimer(0.25f, false, nameof(AddButtons), self);
 }
@@ -111,6 +115,9 @@ private function OnAutoManageUniformCheckboxChanged(UICheckbox CheckBox)
 	local UICustomize_Menu			CustomizeScreen;
 	local CharacterPoolManager_AM	CharPoolMgr;
 	local XComGameState_Unit		UnitState;
+
+	if (CheckBox.GetParent(class'UIMechaListItem').bDisabled)
+			return;
 
 	CustomizeScreen = UICustomize_Menu(CheckBox.Screen);
 	if (CustomizeScreen == none)
@@ -296,9 +303,7 @@ simulated private function OnUniformButtonClicked(UIButton ButtonSource)
 	// Duh shouldn't use armor name in the unit name, since one unit can hold appearance for many armors
 	//ItemTemplate = class'Help'.static.GetItemTemplateFromCosmeticTorso(UnitState.kAppearance.nmTorso);
 
-	UnitState.SetCharacterName("UNIFORM", 
-		/*ItemTemplate != none ? ItemTemplate.FriendlyName : */"", 
-		class'Help'.static.GetFriendlyGender(UnitState.kAppearance.iGender)); // TODO: Localize // TODO: Ensure no first/last name clashes?
+	UnitState.SetCharacterName("UNIFORM", class'Help'.static.GetFriendlyGender(UnitState.kAppearance.iGender), ""); // TODO: Localize
 
 	UnitState.kAppearance.iAttitude = 0; // Set by the Book attitude so the soldier stops squirming.
 	UnitState.UpdatePersonalityTemplate();
@@ -371,7 +376,7 @@ private function OnValidateButtonClicked(UIButton ButtonSource)
 // ===================================================================
 // INTERNAL HELPERS
 
-private function CreateOrUpdateListItem(const name MCName, UICustomize_Menu CustomizeScreen, bool bShouldShow, string strDesc, delegate<OnClickDelegate> OnListItemClicked)
+private function UIMechaListItem CreateOrUpdateListItem(const name MCName, UICustomize_Menu CustomizeScreen, bool bShouldShow, string strDesc, delegate<OnClickDelegate> OnListItemClicked)
 {
 	local UIMechaListItem ListItem;
 
@@ -398,9 +403,10 @@ private function CreateOrUpdateListItem(const name MCName, UICustomize_Menu Cust
 		ListItem.InitListItem(MCName).bAnimateOnInit = false;
 		ListItem.UpdateDataDescription(strDesc, OnListItemClicked);
 	}
+	return ListItem;
 }
 
-private function CreateOrUpdateCheckbox(const name MCName, UICustomize_Menu CustomizeScreen, bool bShouldShow, string strDesc, bool bIsChecked, delegate<OnCheckboxChangedCallback> OnCheckboxChanged)
+private function UIMechaListItem CreateOrUpdateCheckbox(const name MCName, UICustomize_Menu CustomizeScreen, bool bShouldShow, string strDesc, bool bIsChecked, delegate<OnCheckboxChangedCallback> OnCheckboxChanged)
 {
 	local UIMechaListItem ListItem;
 
@@ -426,9 +432,10 @@ private function CreateOrUpdateCheckbox(const name MCName, UICustomize_Menu Cust
 		ListItem.InitListItem(MCName).bAnimateOnInit = false;
 		ListItem.UpdateDataCheckbox(strDesc, "", bIsChecked, OnCheckboxChanged);
 	}
+	return ListItem;
 }
 
-private function CreateOrUpdateButton(const name MCName, UICustomize_Menu CustomizeScreen, bool bShouldShow, string strDesc, string strButtonLabel, delegate<OnButtonClickedCallback> OnButtonClicked)
+private function UIMechaListItem CreateOrUpdateButton(const name MCName, UICustomize_Menu CustomizeScreen, bool bShouldShow, string strDesc, string strButtonLabel, delegate<OnButtonClickedCallback> OnButtonClicked)
 {
 	local UIMechaListItem ListItem;
 
@@ -454,6 +461,7 @@ private function CreateOrUpdateButton(const name MCName, UICustomize_Menu Custom
 		ListItem.InitListItem(MCName).bAnimateOnInit = false;
 		ListItem.UpdateDataButton(strDesc, strButtonLabel, OnButtonClicked);
 	}
+	return ListItem;
 }
 
 // ----------------------------------------------------------------------
