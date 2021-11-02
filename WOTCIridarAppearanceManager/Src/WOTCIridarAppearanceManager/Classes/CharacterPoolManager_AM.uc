@@ -294,6 +294,7 @@ final function SaveCosmeticOptionsForUnit(const array<CosmeticOptionStruct> Cosm
 	SaveCharacterPool();
 }
 
+// Called from X2EventListener_AM.
 final function bool ShouldAutoManageUniform(const XComGameState_Unit UnitState)
 {
 	// If MCM setting of global uniform management is NOT enabled, we want to manage this unit's uniform if the flag on the unit IS set.
@@ -318,6 +319,7 @@ final function bool IsCharacterPoolCharacter(const XComGameState_Unit UnitState)
 {
 	local int Index;	
 
+	// This check is primitive, but this is what the original Character Pool does to see if this CP unit is already in the campaign.
 	for (Index = 0; Index < CharacterPool.Length; Index++)
 	{
 		if (UnitState.GetFullName() == CharacterPool[Index].GetFullName())
@@ -511,7 +513,7 @@ private function CopyUniformAppearance(out TAppearance NewAppearance, const XCom
 	else
 	{
 		// TODO: Uncomment
-		//class'UICustomize_CPExtended'.static.CopyAppearance_Static(NewAppearance, UniformAppearance, 'PresetUniform');
+		//class'UIManageAppearance'.static.CopyAppearance_Static(NewAppearance, UniformAppearance, 'PresetUniform');
 	}
 }
 

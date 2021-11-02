@@ -76,6 +76,14 @@ private function AddButtons()
 		bAutoManageUniform = CharPoolMgr.IsAutoManageUniform(UnitState);
 	}
 
+		// ## Validate Appearance Button - if MCM is configured to not validate appearance automatically in the current game mode
+	if (!`XENGINE.bReviewFlagged && `GETMCMVAR(DISABLE_APPEARANCE_VALIDATION_DEBUG) || 
+		`XENGINE.bReviewFlagged && `GETMCMVAR(DISABLE_APPEARANCE_VALIDATION_REVIEW))
+	{
+		CreateOrUpdateButton('IRI_ValidateAppearance_ListItem', CustomizeScreen, true, 
+				"Validate Appearance", "Validate", OnValidateButtonClicked); // TODO: Localize
+	}
+
 	// ## Configure Uniform Button - if the unit is uniform
 	CreateOrUpdateListItem('IRI_ConfigureUniform_ListItem', CustomizeScreen, bUnitIsUniform, 
 		"Configure Uniform", OnConfigureUniformItemClicked); // TODO: Localize
@@ -90,14 +98,6 @@ private function AddButtons()
 	{
 		CreateOrUpdateCheckbox('IRI_AutoManageUniform_ListItem', CustomizeScreen, !bUnitIsUniform, 
 			"Enable automatic uniform management", bAutoManageUniform, OnAutoManageUniformCheckboxChanged); // TODO: Localize
-	}
-
-	// ## Validate Appearance Button - if MCM is configured to not validate appearance automatically in the current game mode
-	if (!`XENGINE.bReviewFlagged && `GETMCMVAR(DISABLE_APPEARANCE_VALIDATION_DEBUG) || 
-		`XENGINE.bReviewFlagged && `GETMCMVAR(DISABLE_APPEARANCE_VALIDATION_REVIEW))
-	{
-		CreateOrUpdateButton('IRI_ValidateAppearance_ListItem', CustomizeScreen, true, 
-				"Validate Appearance", "Validate", OnValidateButtonClicked); // TODO: Localize
 	}
 	
 	CustomizeScreen.SetTimer(0.25f, false, nameof(AddButtons), self);
