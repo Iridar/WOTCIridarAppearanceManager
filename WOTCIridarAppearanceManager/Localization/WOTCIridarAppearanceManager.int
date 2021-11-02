@@ -1,1 +1,22 @@
-Blah blah
+[UICustomize_CPExtended]
+PresetDefault = "Default"
+PresetUniform = "Uniform"
+PresetEntireUnit = "Entire Unit"
+PresetPatterns = "Patterns"
+
+[AM_MCM_Screen]
+ModName = "Character Pool Overhaul"
+PageTitle = "Character Pool Overhaul"
+GroupHeader = "General Settings"
+
+DISABLE_APPEARANCE_VALIDATION_REVIEW_Label = "Disable appearance validation in normal mode"
+DISABLE_APPEARANCE_VALIDATION_REVIEW_Tip = "If you start the game with cosmetic mods missing, the game normally automatically regenerates appearance of units that used cosmetics parts from those mods. This setting allows to disable that feature so that your character pool units can preserve their appearance. This setting affects the normal mode of the game, when it is started with the \"-review\" launch argument."
+
+DISABLE_APPEARANCE_VALIDATION_DEBUG_Label = "Disable appearance validation in debug mode"
+DISABLE_APPEARANCE_VALIDATION_DEBUG_Tip = "If you start the game with cosmetic mods missing, the game normally automatically regenerates appearance of units that used cosmetics parts from those mods. This setting allows to disable that feature so that your character pool units can preserve their appearance. This setting affects the debug mode of the game, when it is started without the \"-review\" launch argument."
+
+DEBUG_LOGGING_Label = "Enable debug logging"
+DEBUG_LOGGING_Tip = "If enabled, the mod will print debug messages into the log file, located at:\n..\\Documents\\my games\\XCOM2 War of the Chosen\\XComGame\\Logs\\Launch.log"
+
+AUTOMATIC_UNIFORM_MANAGEMENT_Label = "Enable automatic uniform management by default"
+AUTOMATIC_UNIFORM_MANAGEMENT_Tip = "If enabled, the mod will automatically apply uniforms to soldiers when they equip armor for the first time or when they are promoted to the squaddie rank. This setting can also be configured for each soldier individually on the appearance customization screen."

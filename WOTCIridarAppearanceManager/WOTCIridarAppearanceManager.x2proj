@@ -25,6 +25,9 @@
       <SubType>Content</SubType>
     </Content>
     <Content Include="ReadMe.txt" />
+    <Content Include="Src\extra_globals.uci">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\ModConfigMenuAPI\Classes\MCM_API.uc">
       <SubType>Content</SubType>
     </Content>
@@ -79,10 +82,25 @@
     <Content Include="Src\WOTCIridarAppearanceManager\Classes\CharacterPoolManager_AM.uc">
       <SubType>Content</SubType>
     </Content>
-    <Content Include="Src\WOTCIridarAppearanceManager\Classes\X2DownloadableContentInfo_AM.uc">
+    <Content Include="Src\WOTCIridarAppearanceManager\Classes\Help.uc">
       <SubType>Content</SubType>
     </Content>
-    <Content Include="Src\WOTCIridarAppearanceManager\extra_globals.uci">
+    <Content Include="Src\WOTCIridarAppearanceManager\Classes\UIAppearanceStore.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\WOTCIridarAppearanceManager\Classes\UIArmory_Loadout_CharPool.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\WOTCIridarAppearanceManager\Classes\UIManageAppearance.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\WOTCIridarAppearanceManager\Classes\UIManageAppearance_Uniform.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\WOTCIridarAppearanceManager\Classes\UISL_AppearanceManager.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\WOTCIridarAppearanceManager\Classes\X2DownloadableContentInfo_AM.uc">
       <SubType>Content</SubType>
     </Content>
   </ItemGroup>
@@ -96,7 +114,7 @@
     <Folder Include="Src\WOTCIridarAppearanceManager" />
     <Folder Include="Src\WOTCIridarAppearanceManager\Classes" />
   </ItemGroup>
-    <PropertyGroup>
+  <PropertyGroup>
     <SolutionRoot>$(MSBuildProjectDirectory)\..\</SolutionRoot>
     <ScriptsDir>$(SolutionRoot).scripts\</ScriptsDir>
     <BuildCommonRoot>$(ScriptsDir)X2ModBuildCommon\</BuildCommonRoot>

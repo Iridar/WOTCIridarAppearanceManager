@@ -1,0 +1,1 @@
+class UIManageAppearance_Uniform extends UIManageAppearance;

@@ -1,0 +1,1 @@
+class UIManageAppearance extends UICustomize;

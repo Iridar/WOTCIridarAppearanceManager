@@ -7,7 +7,7 @@ static function OnPreCreateTemplates()
 	LocalEngine = `XENGINE;
 	LocalEngine.m_CharacterPoolManager = new class'CharacterPoolManager_AM';
 
-	`AMLOG("Replacing CP manager. Num extra datas:" @ CharacterPoolManagerExtended(LocalEngine.m_CharacterPoolManager).CPExtraDatas.Length);
+	`AMLOG("Replaced Character Pool manager.");
 }
 /*
 static event OnLoadedSavedGame()

@@ -1,0 +1,3 @@
+class UIArmory_Loadout_CharPool extends UIArmory_Loadout;
+
+var XComCharacterCustomization CustomizationManager;

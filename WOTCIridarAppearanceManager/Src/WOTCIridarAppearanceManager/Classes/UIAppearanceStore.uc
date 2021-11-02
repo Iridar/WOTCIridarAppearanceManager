@@ -1,0 +1,1 @@
+class UIAppearanceStore extends UICustomize;

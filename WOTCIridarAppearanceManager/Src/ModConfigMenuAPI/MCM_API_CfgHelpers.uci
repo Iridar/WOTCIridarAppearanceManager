@@ -17,7 +17,7 @@ Although if you already have a [UnrealEd.EditorEngine] section, you probably alr
 
 
 `define MCM_DEFAULT_CLASS class'AM_MCM_Defaults'
-`define MCM_SCREEN_CLASS class'MCM_API_Includes'
+`define MCM_SCREEN_CLASS class'AM_MCM_Screen'
 
 
 //MCM_MAJOR_VERSION defined means were are in the Screen class, because this is defined in MCM_API_INCLUDES.uci

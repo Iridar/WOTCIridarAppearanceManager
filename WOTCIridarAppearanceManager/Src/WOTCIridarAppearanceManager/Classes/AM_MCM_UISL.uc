@@ -2,7 +2,7 @@ class AM_MCM_UISL extends UIScreenListener;
 
 event OnInit(UIScreen Screen)
 {
-	local WOTCCharacterPoolExtended_MCMScreen MCMScreen;
+	local AM_MCM_Screen MCMScreen;
 
 	if (ScreenClass == none)
 	{
