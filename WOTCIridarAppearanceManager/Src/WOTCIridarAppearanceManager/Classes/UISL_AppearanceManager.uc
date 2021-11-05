@@ -12,6 +12,8 @@ var localized string strVadlidateAppearance;
 var localized string strVadlidateAppearanceButton;
 var localized string strConfigureUniform;
 var localized string strUniformSoldierFirstName;
+var localized string strConvertToUniformPopupTitle;
+var localized string strConvertToUniformPopupText;
 
 `include(WOTCIridarAppearanceManager\Src\ModConfigMenuAPI\MCM_API_CfgHelpers.uci)
 
@@ -331,18 +333,34 @@ simulated private function OnSoldierButtonClicked(UIButton ButtonSource)
 	UnitState.SetCharacterName(strFirstName, strLastName, CharGen.kSoldier.strNickName);
 	CustomizeScreen.CustomizeManager.CommitChanges();
 	
-	CharPoolMgr.SetIsAutoManageUniform(UnitState, true);
+	CharPoolMgr.SetIsAutoManageUniform(UnitState, false);
 	CharPoolMgr.SetIsUnitUniform(UnitState, false);
 	
 	CustomizeScreen.List.ClearItems();
 	CustomizeScreen.UpdateData();
 }
 
-simulated private function OnUniformButtonClicked(UIButton ButtonSource)
+private function OnUniformButtonClicked(UIButton ButtonSource)
+{
+	local TDialogueBoxData kDialogData;
+
+	kDialogData.eType = eDialog_Normal;
+	kDialogData.strTitle = strConvertToUniformPopupTitle;
+	kDialogData.strText = strConvertToUniformPopupText;
+	kDialogData.strAccept = class'UISimpleScreen'.default.m_strAccept;
+	kDialogData.strCancel = class'UISimpleScreen'.default.m_strCancel;
+	kDialogData.fnCallback = OnCloseScreenDialogCallback;
+	`PRESBASE.UIRaiseDialog(kDialogData);
+}
+
+private function OnCloseScreenDialogCallback(Name eAction)
 {
 	local UICustomize_Menu			CustomizeScreen;
 	local XComGameState_Unit		UnitState;
 	local CharacterPoolManager_AM	CharPoolMgr;
+
+	if (eAction != 'eUIAction_Accept')
+		return;
 
 	CustomizeScreen = UICustomize_Menu(`SCREENSTACK.GetCurrentScreen());
 	if (CustomizeScreen == none)
@@ -355,8 +373,6 @@ simulated private function OnUniformButtonClicked(UIButton ButtonSource)
 	UnitState = CustomizeScreen.CustomizeManager.UpdatedUnitState;
 	if (UnitState == none)
 		return;
-
-	// TODO: Add a popup with confirmation prompt here
 
 	UnitState.SetCharacterName(strUniformSoldierFirstName, class'Help'.static.GetFriendlyGender(UnitState.kAppearance.iGender), "");
 
