@@ -13,7 +13,7 @@ Write-Host "Sourcing $common"
 $builder = [BuildProject]::new("WOTCIridarAppearanceManager", $srcDirectory, $sdkPath, $gamePath)
 
 $builder.IncludeSrc("$srcDirectory\X2WOTCCommunityHighlander\X2WOTCCommunityHighlander\Src")
-$builder.IncludeSrc("$srcDirectory\WOTCXSkin\WOTCXSkin\Src")
+
 
 switch ($config)
 {
