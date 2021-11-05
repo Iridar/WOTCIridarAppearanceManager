@@ -5,7 +5,8 @@ class UIManageAppearance extends UICustomize;
 # Priority
 
 Confirmation popup too overzealous? Pay attention to repro.
-Add confirmation popup when applying changes to more than just this unit.
+
+Add toggle to hide presets?
 
 # Character Pool
 Fix weapons / Dual Wielding not working in CP?
@@ -29,7 +30,6 @@ Way to add presets through in-game UI
 3. Test automatic uniform managemennt settings. 
 
 ## Finalization
-1. Fix log error spam.
 1. Polish localization
 
 ## Addressed
@@ -37,6 +37,8 @@ Way to add presets through in-game UI
 Maybe allow Appearance Store button to work as a "reskin armor" button? - redundant, can be done with this mod's customization screen by importing unit's own appearance from another armor.
 
 ## Ideas for later
+
+Make GetApplyChangesNumUnits() take into account gender of the targeted soldier, as depending on selected cosmetic options they may not receive any changes.
 
 AU units with custom rookie class should be able to choose from different classes in CP
 I have no idea how they coded that, but it would appear that they stem from a separate species specific rookie template, then get a class independently, while the game properly treats them as rookies, allowing them to train in GTS. however in the character pool there is no option to change their class, which is an issue for anyone using the "use my class" mod
@@ -80,6 +82,8 @@ var localized string strCopyPreset;
 var localized string strNotAvailableInCharacterPool;
 var localized string strSameGenderRequired;
 var localized string strCopyPresetButtonDisabled;
+var localized string strConfirmApplyChangesTitle;
+var localized string strConfirmApplyChangesText;
 
 // ==============================================================================
 // Screen Options - preserved between game restarts.
@@ -142,6 +146,8 @@ var protected UIList	FiltersList;
 
 var protected UIBGBox	AppearanceListBG;
 var protected UIList	AppearanceList;
+
+`include(WOTCIridarAppearanceManager\Src\ModConfigMenuAPI\MCM_API_CfgHelpers.uci)
 
 // ================================================================================================================================================
 // INITIAL SETUP - called once when screen is pushed, or when switching to a new armory unit.
@@ -383,18 +389,91 @@ function bool GetFilterListCheckboxStatus(name FilterName)
 
 private function OnApplyChangesButtonClicked(UIButton ButtonSource)
 {
-	bCanExitWithoutPopup = true;
-	ApplyChanges();
-	
-	UpdateUnitAppearance();
-	
-	OriginalAppearance = ArmoryPawn.m_kAppearance;
-	SelectedAppearance = OriginalAppearance;
-	OriginalAttitude = ArmoryUnit.GetPersonalityTemplate();
+	local TDialogueBoxData kDialogData;
+	local int iNumUnitsToChange;
 
-	UpdateOptionsList();
+	if (`GETMCMVAR(MULTIPLE_UNIT_CHANGE_REQUIRES_CONFIRMATION))
+	{
+		iNumUnitsToChange = GetApplyChangesNumUnits();
+		if (iNumUnitsToChange > 1)
+		{
+			kDialogData.eType = eDialog_Normal;
+			kDialogData.strTitle = strConfirmApplyChangesTitle;
+			kDialogData.strText = Repl(strConfirmApplyChangesText, "%NUM_UNITS%", iNumUnitsToChange);
+			kDialogData.strAccept = class'UISimpleScreen'.default.m_strAccept;
+			kDialogData.strCancel = class'UISimpleScreen'.default.m_strCancel;
+			kDialogData.fnCallback = OnApplyChangesCloseScreenDialogCallback;
+			`PRESBASE.UIRaiseDialog(kDialogData);
+			return;
+		}
+	}
 
-	class'Help'.static.PlayStrategySoundEvent("Play_MenuSelect", self);
+	OnApplyChangesCloseScreenDialogCallback('eUIAction_Accept');
+	
+}
+
+private function int GetApplyChangesNumUnits()
+{
+	local StateObjectReference				SquadUnitRef;
+	local int								iNumUnits;
+	local array<XComGameState_Unit>			UnitStates;
+	local XComGameState_Unit				UnitState;
+	local XComGameState_HeadquartersXCom	XComHQ;
+
+	if (GetFilterListCheckboxStatus('ApplyToThisUnit'))
+	{
+		iNumUnits++;
+	}
+
+	if (GetFilterListCheckboxStatus('ApplyToCharPool'))
+	{
+		foreach PoolMgr.CharacterPool(UnitState)
+		{
+			if (IsUnitSameType(UnitState)) iNumUnits++;
+		}
+	}
+
+	XComHQ = class'UIUtilities_Strategy'.static.GetXComHQ(true);
+	if (XComHQ == none)
+		return iNumUnits;
+
+	if (GetFilterListCheckboxStatus('ApplyToSquad'))
+	{
+		foreach XComHQ.Squad(SquadUnitRef)
+		{
+			UnitState = XComGameState_Unit(History.GetGameStateForObjectID(SquadUnitRef.ObjectID));
+			if (UnitState != none && IsUnitSameType(UnitState)) iNumUnits++;
+		}
+	}
+	if (GetFilterListCheckboxStatus('ApplyToBarracks'))
+	{
+		UnitStates = XComHQ.GetSoldiers(true, true);
+		foreach UnitStates(UnitState)
+		{
+			if (IsUnitSameType(UnitState)) iNumUnits++;
+		}
+	}
+	
+	return iNumUnits;
+}
+
+private function OnApplyChangesCloseScreenDialogCallback(Name eAction)
+{
+	if (eAction == 'eUIAction_Accept')
+	{
+		bCanExitWithoutPopup = true;
+		ApplyChanges();
+	
+		UpdateUnitAppearance();
+	
+		OriginalAppearance = ArmoryPawn.m_kAppearance;
+		SelectedAppearance = OriginalAppearance;
+		OriginalAttitude = ArmoryUnit.GetPersonalityTemplate();
+
+		UpdateOptionsList();
+
+		class'Help'.static.PlayStrategySoundEvent("Play_MenuSelect", self);
+	}
 }
 
 // ================================================================================================================================================
@@ -991,6 +1070,8 @@ private function ApplyChanges()
 	{
 		foreach PoolMgr.CharacterPool(UnitState)
 		{
+			if (!IsUnitSameType(UnitState)) continue;
+
 			ApplyChangesToUnit(UnitState);
 		}
 		PoolMgr.SaveCharacterPool();
@@ -1023,10 +1104,19 @@ private function ApplyChanges()
 		NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState("Apply appearance changes to barracks");
 		foreach UnitStates(UnitState)
 		{
+			if (!IsUnitSameType(UnitState)) continue;
+
 			UnitState = XComGameState_Unit(NewGameState.ModifyStateObject(UnitState.Class, UnitState.ObjectID));
 			ApplyChangesToUnit(UnitState, NewGameState);
 		}
-		`GAMERULES.SubmitGameState(NewGameState);
+		if (NewGameState.GetNumGameStateObjects() > 0)
+		{
+			`GAMERULES.SubmitGameState(NewGameState);
+		}
+		else
+		{
+			`XCOMHISTORY.CleanupPendingGameState(NewGameState);
+		}
 	}
 }
 

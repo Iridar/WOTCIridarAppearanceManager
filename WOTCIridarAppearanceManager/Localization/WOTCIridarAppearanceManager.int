@@ -35,6 +35,9 @@ strNotAvailableInCharacterPool = "Not available in Character Pool"
 strSameGenderRequired = "This appearance option is locked due to gender mismatch with the selected appearance."
 strCopyPresetButtonDisabled = "Presets can be copied only into the Default Preset"
 
+strConfirmApplyChangesTitle = "APPLY CHANGES?"
+strConfirmApplyChangesText = "Warning! You are about to apply appearance changes to %NUM_UNITS% units. Proceed?"
+
 [UISL_AppearanceManager]
 strUseForAutoManageUniform = "Use for automatic uniform management"
 
@@ -74,6 +77,9 @@ DEBUG_LOGGING_Tip = "If enabled, the mod will print debug messages into the log 
 
 AUTOMATIC_UNIFORM_MANAGEMENT_Label = "Enable automatic uniform management by default"
 AUTOMATIC_UNIFORM_MANAGEMENT_Tip = "If enabled, the mod will automatically apply uniforms to soldiers when they equip armor for the first time or when they are promoted to the squaddie rank. This setting can also be configured for each soldier individually on the appearance customization screen."
+
+MULTIPLE_UNIT_CHANGE_REQUIRES_CONFIRMATION_Label = "Require confirmation to apply changes to multiple units"
+MULTIPLE_UNIT_CHANGE_REQUIRES_CONFIRMATION_Tip = "If enabled, Appearance Manager will show a popup message when you click \"Apply Changes\" if that will result in changing appearance of multiple units."
 
 [Help]
 strCurrentAppearance = "(Current)"
