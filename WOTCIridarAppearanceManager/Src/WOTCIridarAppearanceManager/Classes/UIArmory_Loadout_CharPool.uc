@@ -10,7 +10,7 @@ simulated function InitArmory(StateObjectReference UnitRef, optional name DispEv
 {
 	super.InitArmory(UnitRef, DispEvent, SoldSpawnEvent, NavBackEvent, HideEvent, RemoveEvent, bInstant, InitCheckGameState);
 
-	CharPoolMgr = `CHARACTERPOOLMGRAM;
+	CharPoolMgr = `CHARACTERPOOLMGR;
 	Header.Hide();
 }
 
@@ -54,7 +54,7 @@ simulated function UpdateLockerList()
 	foreach ItemMgr.IterateTemplates(DataTemplate)
 	{
 		EqTemplate = X2EquipmentTemplate(DataTemplate);
-		if (EqTemplate == none || !UnitState.CanAddItemToInventory(EqTemplate, SelectedSlot, TempGameState))
+		if (EqTemplate == none || !ShouldShowTemplate(EqTemplate) || !UnitState.CanAddItemToInventory(EqTemplate, SelectedSlot, TempGameState))
 			continue;
 
 		Item = EqTemplate.CreateInstanceFromTemplate(TempGameState);
@@ -93,6 +93,13 @@ simulated function UpdateLockerList()
 
 	// Nuke the Game State once we no longer need it.
 	History.ObliterateGameStatesFromHistory(1);
+}
+
+private function bool ShouldShowTemplate(const X2ItemTemplate ItemTemplate)
+{
+	 return ItemTemplate.iItemSize > 0 &&		//	Item worth wearing (e.g. not an XPAD)
+			ItemTemplate.HasDisplayData() &&	//	Has localized name
+			ItemTemplate.strImage != "";		//	Has inventory icon
 }
 
 // Cosmetically equip new item. Mostly intended for Armor, but works with other items too.
