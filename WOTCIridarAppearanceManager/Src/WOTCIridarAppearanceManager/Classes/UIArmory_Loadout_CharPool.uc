@@ -125,6 +125,11 @@ simulated function bool EquipItem(UIArmory_LoadoutItem Item)
 
 	History = `XCOMHISTORY;
 	SelectedSlot = GetSelectedSlot();
+	if (SelectedSlot == eInvSlot_Armor)
+	{
+		UnitState.StoreAppearance();
+		CustomizationManager.CommitChanges();
+	}
 
 	`AMLOG(UnitState.GetFullName() @ "attempting to equip item:" @ Item.ItemTemplate.DataName @ "into slot:" @ SelectedSlot $ ". Current torso:" @ UnitState.kAppearance.nmTorso);
 
