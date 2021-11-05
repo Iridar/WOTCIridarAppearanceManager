@@ -31,7 +31,11 @@ strExitScreenPopup_Stay = "Stay on screen"
 strShowAllOptions = "SHOW ALL OPTIONS"
 strCopyPreset = "Copy Preset"
 
-[UISL_AppearanceManager
+strNotAvailableInCharacterPool = "Not available in Character Pool"
+strSameGenderRequired = "This appearance option is locked due to gender mismatch with the selected appearance."
+strCopyPresetButtonDisabled = "Presets can be copied only into the Default Preset"
+
+[UISL_AppearanceManager]
 strUseForAutoManageUniform = "Use for automatic uniform management"
 
 strDisableAutoManageUniform = "Disable automatic uniform management"

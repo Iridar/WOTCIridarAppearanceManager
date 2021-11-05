@@ -78,6 +78,9 @@ var localized string strExitScreenPopup_Leave;
 var localized string strExitScreenPopup_Stay;
 var localized string strShowAllOptions;
 var localized string strCopyPreset;
+var localized string strNotAvailableInCharacterPool;
+var localized string strSameGenderRequired;
+var localized string strCopyPresetButtonDisabled;
 
 // ==============================================================================
 // Screen Options - preserved between game restarts.
@@ -325,7 +328,7 @@ function CreateFiltersList()
 	SpawnedItem.bAnimateOnInit = false;
 	SpawnedItem.InitListItem('ApplyToSquad');
 	SpawnedItem.UpdateDataCheckbox(`CAPS(class'UITLE_ChallengeModeMenu'.default.m_Header_Squad), strApplyToSquadTip, false, none, none);
-	SpawnedItem.SetDisabled(InShell());
+	SpawnedItem.SetDisabled(InShell(), strNotAvailableInCharacterPool);
 
 	if (bInArmory)
 	{
@@ -1487,7 +1490,7 @@ private function MaybeCreateAppearanceOption(name OptionName, coerce string Curr
 			break;
 	}
 
-	SpawnedItem.SetDisabled(!bShowAllCosmeticOptions && bDisabled); // Have to do this after checkbox has been assigned to the list item.
+	SpawnedItem.SetDisabled(!bShowAllCosmeticOptions && bDisabled, strSameGenderRequired); // Have to do this after checkbox has been assigned to the list item.
 }
 
 private function MaybeCreateOptionAttitude()
@@ -1801,7 +1804,7 @@ function OptionPresetCheckboxChanged(UICheckbox CheckBox)
 			ListItem = UIMechaListItem_Button(OptionsList.GetChildByName(PresetName));
 			if (ListItem != none && ListItem.Button != none)
 			{
-				ListItem.Button.SetDisabled(CurrentPreset != 'PresetDefault');
+				ListItem.Button.SetDisabled(CurrentPreset != 'PresetDefault', strCopyPresetButtonDisabled);
 			}
 		}
 	}
