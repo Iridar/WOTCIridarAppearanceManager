@@ -13,6 +13,8 @@ static function OnPreCreateTemplates()
 static event OnPostTemplatesCreated()
 {
 	class'UIManageAppearance'.static.SetInitialSoldierListSettings();
+
+	class'UIArmory_Loadout_CharPool'.default.bXSkinLoaded = class'Help'.static.IsModActive(WOTCXSkin);
 }
 /*
 static event OnLoadedSavedGame()

@@ -1,3 +1,6 @@
 [submodule "X2WOTCCommunityHighlander"]
 	path = X2WOTCCommunityHighlander
 	url = https://github.com/X2CommunityCore/X2WOTCCommunityHighlander.git
+[submodule "WOTCXSkin"]
+	path = WOTCXSkin
+	url = https://github.com/Iridar/WOTCXSkin.git

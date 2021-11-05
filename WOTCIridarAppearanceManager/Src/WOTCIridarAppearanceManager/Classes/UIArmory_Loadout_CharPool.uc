@@ -6,6 +6,8 @@ var private CharacterPoolManager	CharPoolMgr;
 // Modified Loadout screen, used to "equip" armors and weapons in Character Pool.
 // All changes done to Unit States on this screen don't submit gamestates.
 
+var config bool bXSkinLoaded;
+
 simulated function InitArmory(StateObjectReference UnitRef, optional name DispEvent, optional name SoldSpawnEvent, optional name NavBackEvent, optional name HideEvent, optional name RemoveEvent, optional bool bInstant = false, optional XComGameState InitCheckGameState)
 {
 	super.InitArmory(UnitRef, DispEvent, SoldSpawnEvent, NavBackEvent, HideEvent, RemoveEvent, bInstant, InitCheckGameState);
@@ -56,6 +58,12 @@ simulated function UpdateLockerList()
 		EqTemplate = X2EquipmentTemplate(DataTemplate);
 		if (EqTemplate == none || !ShouldShowTemplate(EqTemplate) || !UnitState.CanAddItemToInventory(EqTemplate, SelectedSlot, TempGameState))
 			continue;
+
+		// Skip weapons that were blacklisted from appearing as skins in XSkin. Done this way to avoid maintaining the same exclusion list across multiple mods.
+		if (bXSkinLoaded && X2WeaponTemplate(EqTemplate) != none)
+		{
+			if (class'XSkin_UIArmory_EquipmentSelect'.static.IsTemplateExcluded_Static(EqTemplate)) continue;
+		}
 
 		Item = EqTemplate.CreateInstanceFromTemplate(TempGameState);
 		if (ShowInLockerList(Item, SelectedSlot))
