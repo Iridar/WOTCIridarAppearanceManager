@@ -339,3 +339,8 @@ simulated private function SetItemImage(UIArmory_LoadoutItem LoadoutItem, X2Item
 		LoadoutItem.MC.EndOp();
 	}
 }
+
+defaultproperties
+{
+	bUseNavHelp = false
+}

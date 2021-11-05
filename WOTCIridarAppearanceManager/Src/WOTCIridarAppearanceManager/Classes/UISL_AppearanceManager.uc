@@ -58,6 +58,10 @@ private function AddButtons()
 	if (bUnitIsUniform)
 		RemoveCanAppearAsListItems(CustomizeScreen);
 
+	// ## Loadout Button - while in Character Pool interface.
+	CreateOrUpdateListItem('IRI_Loadout_ListItem', CustomizeScreen, !CustomizeScreen.bInArmory, 
+		class'UIArmory_MainMenu'.default.m_strLoadout, OnLoadoutItemClicked);
+
 	// ## Auto Manage Uniform toggle - always, but disabled if unit is a uniform.
 	if (CustomizeScreen.bInArmory)
 	{
@@ -94,10 +98,6 @@ private function AddButtons()
 
 	if (!CustomizeScreen.bInArmory)
 	{
-		// ## Loadout Button - always while in Character Pool interface
-		CreateOrUpdateListItem('IRI_Loadout_ListItem', CustomizeScreen, true, 
-			class'UIArmory_MainMenu'.default.m_strLoadout, OnLoadoutItemClicked);
-
 		// ## Convert to Uniform / Convert to Soldier - always while in Character Pool interface
 		if (bUnitIsUniform)
 		{
