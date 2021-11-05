@@ -89,6 +89,7 @@ var localized string strConfirmApplyChangesText;
 // Screen Options - preserved between game restarts.
 var config(AppearanceManager) array<CheckboxPresetStruct> CheckboxPresets;
 var config(AppearanceManager) array<name> Presets;
+var protected config(AppearanceManager) bool bShowPresets;
 var protected config(AppearanceManager) bool bShowCharPoolSoldiers;
 var protected config(AppearanceManager) bool bShowUniformSoldiers;
 var protected config(AppearanceManager) bool bShowBarracksSoldiers;
@@ -1781,9 +1782,12 @@ private function CreateOptionPresets()
 	SpawnedItem.bAnimateOnInit = false;
 	SpawnedItem.InitListItem(); 
 	SpawnedItem.SetDisabled(true);
-	SpawnedItem.UpdateDataDescription(`CAPS(class'UIOptionsPCScreen'.default.m_strGraphicsLabel_Preset));
+	SpawnedItem.UpdateDataCheckbox(`CAPS(class'UIOptionsPCScreen'.default.m_strGraphicsLabel_Preset), "", bShowPresets, OptionShowPresetsChanged);
 
-	`AMLOG(GetFuncName() @ `showvar(CurrentPreset));
+	`AMLOG(GetFuncName() @ `showvar(CurrentPreset) @ `showvar(bShowPresets));
+
+	if (!bShowPresets)
+		return;
 
 	for (i = 0; i < Presets.Length; i++)
 	{
@@ -1864,6 +1868,14 @@ function OptionsListItemClicked(UIList ContainerList, int ItemIndex)
 	{
 		OptionPresetCheckboxChanged(ListItem.Checkbox);
 	}
+}
+
+function OptionShowPresetsChanged(UICheckbox CheckBox)
+{
+	bShowPresets = CheckBox.bChecked;
+	default.bShowPresets = bShowPresets;
+	self.SaveConfig();
+	UpdateOptionsList();
 }
 
 function OptionPresetCheckboxChanged(UICheckbox CheckBox)
@@ -2361,6 +2373,7 @@ static final function SetInitialSoldierListSettings()
 		CDO_Defaults = AM_MCM_Defaults(class'XComEngine'.static.GetClassDefaultObject(class'AM_MCM_Defaults'));
 
 		CDO.bInitComplete = true;
+		CDO.bShowPresets = CDO_Defaults.bShowPresets;
 		CDO.bShowCharPoolSoldiers = CDO_Defaults.bShowCharPoolSoldiers;
 		CDO.bShowUniformSoldiers = CDO_Defaults.bShowUniformSoldiers;	
 		CDO.bShowBarracksSoldiers = CDO_Defaults.bShowBarracksSoldiers;

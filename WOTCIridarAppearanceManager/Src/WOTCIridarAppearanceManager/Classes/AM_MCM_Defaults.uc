@@ -18,6 +18,7 @@ var config bool DEBUG_LOGGING;
 // These are not exposed for MCM, they are for UIManageAppearance.
 var config array<name> Presets;
 var config array<CheckboxPresetStruct> CheckboxPresets;
+var config bool bShowPresets;
 
 var config bool bShowCharPoolSoldiers;
 var config bool bShowUniformSoldiers;
