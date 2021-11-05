@@ -77,7 +77,7 @@ simulated function UpdateLockerList()
 	LockerList.ClearItems();
 	foreach LockerItems(LockerItem)
 	{
-		UIArmory_LoadoutItem(LockerList.CreateItem(class'UIArmory_LoadoutItem')).InitLoadoutItem(LockerItem.Item, SelectedSlot, false, LockerItem.DisabledReason);
+		UIArmory_LoadoutItem(LockerList.CreateItem(class'UIArmory_LoadoutItem_CharPool')).InitLoadoutItem(LockerItem.Item, SelectedSlot, false, LockerItem.DisabledReason);
 	}
 	// If we have an invalid SelectedIndex, just try and select the first thing that we can.
 	// Otherwise let's make sure the Navigator is selecting the right thing.
@@ -255,7 +255,7 @@ simulated function UpdateEquippedList()
 	while (En.HasNext())
 	{
 		En.Next();
-		Item = UIArmory_LoadoutItem(EquippedList.CreateItem(class'UIArmory_LoadoutItem'));
+		Item = UIArmory_LoadoutItem(EquippedList.CreateItem(class'UIArmory_LoadoutItem_CharPool'));
 		if (CannotEditSlotsList.Find(En.Slot) != INDEX_NONE)
 			Item.InitLoadoutItem(En.ItemState, En.Slot, true, m_strCannotEdit);
 		else if (En.IsLocked)

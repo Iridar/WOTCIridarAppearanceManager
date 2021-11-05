@@ -88,7 +88,13 @@
     <Content Include="Src\WOTCIridarAppearanceManager\Classes\UIAppearanceStore.uc">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Src\WOTCIridarAppearanceManager\Classes\UIArmory_LoadoutItem_CharPool.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\WOTCIridarAppearanceManager\Classes\UIArmory_Loadout_CharPool.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\WOTCIridarAppearanceManager\Classes\UICharacterPool_AM.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\WOTCIridarAppearanceManager\Classes\UIManageAppearance.uc">

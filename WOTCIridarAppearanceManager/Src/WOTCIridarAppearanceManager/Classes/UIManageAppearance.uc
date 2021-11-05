@@ -5,6 +5,7 @@ class UIManageAppearance extends UICustomize;
 # Priority
 
 Confirmation popup too overzealous? Pay attention to repro.
+Add confirmation popup when applying changes to more than just this unit.
 
 # Character Pool
 Fix weapons / Dual Wielding not working in CP?
