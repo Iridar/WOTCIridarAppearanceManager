@@ -41,6 +41,9 @@ struct CharacterPoolExtraData
 	var bool bIsUniform;		// Whether this unit is a uniform.
 	var bool bIsAnyClassUniform;// Whether this unit's appearance can be applied to any soldier class, or only the matching ones.
 	var bool bAutoManageUniform;// Universal flag. 
+								// If this unit is a uniform, then they will be considered by the automated Uniform Manager only if this flag is set to true.
+								// This allows having uniforms that can be used only by the player manually. 
+								// If this unit is NOT a uniform, and:
 								// If automatic uniform management is enabled in MCM, then if this flag is 'true', this unit will be excluded from uniform management.
 								// If automatic uniform management is disabled in MCM, then if this flag is 'true', this unit will receive uniform management.
 };
@@ -413,6 +416,7 @@ private function array<XComGameState_Unit> GetClassSpecificUniforms(const name A
 	foreach CharacterPool(UniformState)
 	{
 		if (IsUnitUniform(UniformState) && 
+			IsAutoManageUniform(UniformState) && // Only Auto Manage Uniforms are used for the automated system.
 			!IsUnitAnyClassUniform(UniformState) && 
 			UniformState.GetSoldierClassTemplateName() == SoldierClass && 
 			UniformState.HasStoredAppearance(iGender, ArmorTemplateName))
@@ -431,6 +435,7 @@ private function array<XComGameState_Unit> GetAnyClassUniforms(const name ArmorT
 	foreach CharacterPool(UniformState)
 	{
 		if (IsUnitUniform(UniformState) && 
+			IsAutoManageUniform(UniformState) &&
 			IsUnitAnyClassUniform(UniformState) &&
 			UniformState.HasStoredAppearance(iGender, ArmorTemplateName))
 		{

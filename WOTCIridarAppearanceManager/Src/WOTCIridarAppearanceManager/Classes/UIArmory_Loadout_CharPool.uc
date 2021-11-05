@@ -142,7 +142,7 @@ simulated function bool EquipItem(UIArmory_LoadoutItem Item)
 		EquipmentTemplate = X2EquipmentTemplate(Item.ItemTemplate);
 		if (EquipmentTemplate != none && EquipmentTemplate.EquipSound != "")
 		{
-			PlaySoundEvent(EquipmentTemplate.EquipSound);
+			class'Help'.static.PlayStrategySoundEvent(EquipmentTemplate.EquipSound, self);
 		}
 	}
 
@@ -174,26 +174,6 @@ simulated function bool EquipItem(UIArmory_LoadoutItem Item)
 		CharPoolMgr.SaveCharacterPool();
 	}
 	return EquipSucceeded;
-}
-
-// Sound managers don't exist in Shell, have to do it by hand.
-private function PlaySoundEvent(string strKey)
-{
-	local string	SoundEventPath;
-	local AkEvent	SoundEvent;
-
-	foreach class'XComStrategySoundManager'.default.SoundEventPaths(SoundEventPath)
-	{
-		if (InStr(SoundEventPath, strKey) != INDEX_NONE)
-		{
-			SoundEvent = AkEvent(`CONTENT.RequestGameArchetype(SoundEventPath));
-			if (SoundEvent != none)
-			{
-				WorldInfo.PlayAkEvent(SoundEvent);
-				return;
-			}
-		}
-	}
 }
 
 simulated private function CreateVisualAttachments(XComGameState_Unit UnitState)

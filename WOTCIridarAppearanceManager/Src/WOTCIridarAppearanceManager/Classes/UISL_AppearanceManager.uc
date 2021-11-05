@@ -22,7 +22,6 @@ private function AddButtons()
 	local bool						bAutoManageUniform;
 	local XComGameState_Unit		UnitState;
 	local CharacterPoolManager_AM	CharPoolMgr;
-	local UIMechaListItem			ListItem;
 
 	CustomizeScreen = UICustomize_Menu(`SCREENSTACK.GetCurrentScreen());
 	if (CustomizeScreen == none)
@@ -43,6 +42,8 @@ private function AddButtons()
 	}
 
 	bUnitIsUniform = CharPoolMgr.IsUnitUniform(UnitState);
+	if (bUnitIsUniform)
+		RemoveCanAppearAsListItems(CustomizeScreen);
 
 	// ## Auto Manage Uniform toggle - always, but disabled if unit is a uniform.
 	if (CustomizeScreen.bInArmory)
@@ -53,17 +54,22 @@ private function AddButtons()
 	{
 		bAutoManageUniform = CharPoolMgr.IsAutoManageUniform(UnitState);
 	}
-	if (`GETMCMVAR(AUTOMATIC_UNIFORM_MANAGEMENT))
+
+	if (bUnitIsUniform)
 	{
-		ListItem = CreateOrUpdateCheckbox('IRI_AutoManageUniform_ListItem', CustomizeScreen, true, 
+		CreateOrUpdateCheckbox('IRI_AutoManageUniform_ListItem', CustomizeScreen, true, 
+			"Use for automatic uniform management", bAutoManageUniform, OnAutoManageUniformCheckboxChanged); // TODO: Localize
+	}
+	else if (`GETMCMVAR(AUTOMATIC_UNIFORM_MANAGEMENT))
+	{
+		CreateOrUpdateCheckbox('IRI_AutoManageUniform_ListItem', CustomizeScreen, true, 
 			"Disable automatic uniform management", bAutoManageUniform, OnAutoManageUniformCheckboxChanged); // TODO: Localize
 	}
 	else
 	{
-		ListItem = CreateOrUpdateCheckbox('IRI_AutoManageUniform_ListItem', CustomizeScreen, true, 
+		CreateOrUpdateCheckbox('IRI_AutoManageUniform_ListItem', CustomizeScreen, true, 
 			"Enable automatic uniform management", bAutoManageUniform, OnAutoManageUniformCheckboxChanged); // TODO: Localize
 	}
-	if (ListItem != none) ListItem.SetDisabled(bUnitIsUniform);
 
 	// ## Manage Appearance Button - always
 	CreateOrUpdateListItem('IRI_ManageAppearance_ListItem', CustomizeScreen, true, 
@@ -107,6 +113,32 @@ private function AddButtons()
 	CustomizeScreen.SetTimer(0.25f, false, nameof(AddButtons), self);
 }
 
+// Get rid of "can appear as" toggles for non-uniforms.
+private function RemoveCanAppearAsListItems(UICustomize_Menu CustmozeMenu)
+{
+	local UIMechaListItem ListItem;
+	local int i;
+
+	for (i = CustmozeMenu.List.ItemCount - 1; i >= 0; i--)
+	{	
+		ListItem = UIMechaListItem(CustmozeMenu.List.GetItem(i));
+		if (ListItem == none) continue;
+
+		if (ListItem.Checkbox != none && ListItem.Desc.htmlText == CustmozeMenu.m_strAllowTypeSoldier)
+		{
+			CustmozeMenu.List.ItemContainer.RemoveChild(ListItem);
+		}
+		if (ListItem.Checkbox != none && ListItem.Desc.htmlText == CustmozeMenu.m_strAllowTypeVIP)
+		{	
+			CustmozeMenu.List.ItemContainer.RemoveChild(ListItem);
+		}
+		if (ListItem.Checkbox != none && ListItem.Desc.htmlText == CustmozeMenu.m_strAllowTypeDarkVIP)
+		{
+			CustmozeMenu.List.ItemContainer.RemoveChild(ListItem);
+		}
+	}
+}
+
 // ===================================================================
 // ON CLICK METHODS
 
@@ -116,8 +148,11 @@ private function OnAutoManageUniformCheckboxChanged(UICheckbox CheckBox)
 	local CharacterPoolManager_AM	CharPoolMgr;
 	local XComGameState_Unit		UnitState;
 
-	if (UIMechaListItem(CheckBox.GetParent(class'UIMechaListItem')).bDisabled)
-			return;
+	//if (UIMechaListItem(CheckBox.GetParent(class'UIMechaListItem')).bDisabled)
+	//{
+	//	CheckBox.SetChecked(false, false);
+	//	return;
+	//}
 
 	CustomizeScreen = UICustomize_Menu(CheckBox.Screen);
 	if (CustomizeScreen == none)
@@ -242,15 +277,20 @@ private function OnLoadoutItemClicked()
 
 simulated private function OnSoldierButtonClicked(UIButton ButtonSource)
 {
-	local UICustomize_Menu		CustomizeScreen;
-	local XComGameState_Unit	UnitState;
-	local X2CharacterTemplate	CharacterTemplate;
-	local XGCharacterGenerator	CharGen;
-	local string				strFirstName;
-	local string				strLastName;
+	local UICustomize_Menu			CustomizeScreen;
+	local XComGameState_Unit		UnitState;
+	local X2CharacterTemplate		CharacterTemplate;
+	local XGCharacterGenerator		CharGen;
+	local string					strFirstName;
+	local string					strLastName;
+	local CharacterPoolManager_AM	CharPoolMgr;
 
 	CustomizeScreen = UICustomize_Menu(`SCREENSTACK.GetCurrentScreen());
 	if (CustomizeScreen == none)
+		return;
+
+	CharPoolMgr = `CHARACTERPOOLMGRAM;
+	if (CharPoolMgr == none)
 		return;
 
 	UnitState = CustomizeScreen.CustomizeManager.UpdatedUnitState;
@@ -278,7 +318,8 @@ simulated private function OnSoldierButtonClicked(UIButton ButtonSource)
 	UnitState.SetCharacterName(strFirstName, strLastName, CharGen.kSoldier.strNickName);
 	CustomizeScreen.CustomizeManager.CommitChanges();
 	
-	`CHARACTERPOOLMGRAM.SetIsUnitUniform(UnitState, false);
+	CharPoolMgr.SetIsAutoManageUniform(UnitState, true);
+	CharPoolMgr.SetIsUnitUniform(UnitState, false);
 	
 	CustomizeScreen.List.ClearItems();
 	CustomizeScreen.UpdateData();
@@ -286,35 +327,38 @@ simulated private function OnSoldierButtonClicked(UIButton ButtonSource)
 
 simulated private function OnUniformButtonClicked(UIButton ButtonSource)
 {
-	local UICustomize_Menu		CustomizeScreen;
-	local XComGameState_Unit	UnitState;
-	//local X2ItemTemplate		ItemTemplate;
+	local UICustomize_Menu			CustomizeScreen;
+	local XComGameState_Unit		UnitState;
+	local CharacterPoolManager_AM	CharPoolMgr;
 
 	CustomizeScreen = UICustomize_Menu(`SCREENSTACK.GetCurrentScreen());
 	if (CustomizeScreen == none)
 		return;
 
-	// TODO: Add a popup with confirmation prompt here
+	CharPoolMgr = `CHARACTERPOOLMGRAM;
+	if (CharPoolMgr == none)
+		return;
 
 	UnitState = CustomizeScreen.CustomizeManager.UpdatedUnitState;
 	if (UnitState == none)
 		return;
 
-	// Duh shouldn't use armor name in the unit name, since one unit can hold appearance for many armors
-	//ItemTemplate = class'Help'.static.GetItemTemplateFromCosmeticTorso(UnitState.kAppearance.nmTorso);
+	// TODO: Add a popup with confirmation prompt here
 
 	UnitState.SetCharacterName("UNIFORM", class'Help'.static.GetFriendlyGender(UnitState.kAppearance.iGender), ""); // TODO: Localize
 
 	UnitState.kAppearance.iAttitude = 0; // Set by the Book attitude so the soldier stops squirming.
 	UnitState.UpdatePersonalityTemplate();
+
 	UnitState.bAllowedTypeSoldier = false;
 	UnitState.bAllowedTypeVIP = false;
 	UnitState.bAllowedTypeDarkVIP = false;
 	CustomizeScreen.CustomizeManager.CommitChanges();
 	CustomizeScreen.CustomizeManager.ReCreatePawnVisuals(CustomizeScreen.CustomizeManager.ActorPawn, true);
 
-	`CHARACTERPOOLMGRAM.SetIsUnitUniform(UnitState, true);
-
+	CharPoolMgr.SetIsAutoManageUniform(UnitState, true); 
+	CharPoolMgr.SetIsUnitUniform(UnitState, true);
+	
 	CustomizeScreen.List.ClearItems();
 	CustomizeScreen.UpdateData();	
 }

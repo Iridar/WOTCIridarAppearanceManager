@@ -134,7 +134,35 @@ static final function bool IsCosmeticEmpty(coerce string Cosmetic)
 	return false;
 }
 
+// Sound managers don't exist in Shell, have to do it by hand.
+static final function PlayStrategySoundEvent(string strKey, Actor InActor)
+{
+	local string	SoundEventPath;
+	local AkEvent	SoundEvent;
+
+	foreach class'XComStrategySoundManager'.default.SoundEventPaths(SoundEventPath)
+	{
+		if (InStr(SoundEventPath, strKey) != INDEX_NONE)
+		{
+			SoundEvent = AkEvent(`CONTENT.RequestGameArchetype(SoundEventPath));
+			if (SoundEvent != none)
+			{
+				InActor.WorldInfo.PlayAkEvent(SoundEvent);
+				return;
+			}
+		}
+	}
+}
+
 defaultproperties
 {
 	AutoManageUniformValueName = "IRI_AutoManageUniform_Value"
 }
+
+// Unused stuff below
+/*
+simulated private function string GetColorFriendlyText(coerce string strText, LinearColor ParamColor)
+{
+	return "<font color='#" $ GetHTMLColor(ParamColor) $ "'>" $ strText $ "</font>";
+}
+*/
