@@ -5,8 +5,7 @@ class UIManageAppearance extends UICustomize;
 # Priority
 
 Confirmation popup too overzealous? Pay attention to repro.
-
-Add toggle to hide presets?
+Exiting the manage appearance screen of a uniform borks the customize screen
 
 # Character Pool
 Fix weapons / Dual Wielding not working in CP?
@@ -84,6 +83,11 @@ var localized string strSameGenderRequired;
 var localized string strCopyPresetButtonDisabled;
 var localized string strConfirmApplyChangesTitle;
 var localized string strConfirmApplyChangesText;
+var localized string strCreatePreset;
+var localized string strCreatePresetTitle;
+var localized string strCreatePresetText;
+var localized string strDuplicatePresetDisallowedText;
+var localized string strDuplicatePresetDisallowedTitle;
 
 // ==============================================================================
 // Screen Options - preserved between game restarts.
@@ -716,7 +720,7 @@ private function CreateAppearanceStoreEntriesForUnit(const XComGameState_Unit Un
 
 	UnitName = class'Help'.static.GetUnitDisplayString(UnitState);
 	if (bCharPool && IsUnitPresentInCampaign(UnitState)) // If unit was already drawn from the CP, color their entry green.
-			UnitName = class'UIUtilities_Text'.static.GetColoredText(UnitName, eUIState_Good);
+			UnitName = `GREEN(UnitName);
 
 	// Cycle through Appearance Store, which may or may not include unit's current appearance.
 	foreach UnitState.AppearanceStore(StoredAppearance)
@@ -1772,17 +1776,17 @@ private function bool GetOptionCheckboxPosition(const name OptionName)
 private function CreateOptionPresets()
 {
 	local string strFriendlyPresetName;
-	local UIMechaListItem SpawnedItem;
+	local UIMechaListItem_Button SpawnedItem;
 	local int i;
 
 	if (Presets.Length == 0)
 		return;
 
-	SpawnedItem = Spawn(class'UIMechaListItem', OptionsList.itemContainer);
+	SpawnedItem = Spawn(class'UIMechaListItem_Button', OptionsList.itemContainer);
 	SpawnedItem.bAnimateOnInit = false;
 	SpawnedItem.InitListItem(); 
-	SpawnedItem.SetDisabled(true);
-	SpawnedItem.UpdateDataCheckbox(`CAPS(class'UIOptionsPCScreen'.default.m_strGraphicsLabel_Preset), "", bShowPresets, OptionShowPresetsChanged);
+	SpawnedItem.UpdateDataCheckbox("", "", bShowPresets, OptionShowPresetsChanged);
+	SpawnedItem.UpdateDataButton(`GREEN(`CAPS(class'UIOptionsPCScreen'.default.m_strGraphicsLabel_Preset)), strCreatePreset, OnCreatePresetButtonClicked);
 
 	`AMLOG(GetFuncName() @ `showvar(CurrentPreset) @ `showvar(bShowPresets));
 
@@ -1792,8 +1796,11 @@ private function CreateOptionPresets()
 	for (i = 0; i < Presets.Length; i++)
 	{
 		strFriendlyPresetName = Localize("UIManageAppearance", string(Presets[i]), "WOTCIridarAppearanceManager");
-		if (strFriendlyPresetName == "")
+		if (strFriendlyPresetName == "" || 
+			InStr(strFriendlyPresetName, "WOTCIridarAppearanceManager.UIManageAppearance.") != INDEX_NONE) // Happens if there's no localization for this preset.
+		{
 			strFriendlyPresetName = string(Presets[i]);
+		}
 
 		CreateOptionPreset(Presets[i], strFriendlyPresetName, "", CurrentPreset == Presets[i]);
 	}
@@ -1851,6 +1858,40 @@ private function OnCopyPresetButtonClicked(UIButton ButtonSource)
 	UpdateOptionsList();
 	ApplyPresetCheckboxPositions();
 	UpdateUnitAppearance();
+}
+
+private function OnCreatePresetButtonClicked(UIButton ButtonSource)
+{
+	local TInputDialogData kData;
+
+	kData.strTitle = strCreatePresetTitle;
+	kData.iMaxChars = 63;
+	kData.strInputBoxText = strCreatePresetText;
+	kData.fnCallback = OnCreatePresetInputBoxAccepted;
+
+	Movie.Pres.UIInputDialog(kData);
+}
+
+function OnCreatePresetInputBoxAccepted(string text)
+{
+	local name NewPresetName;
+
+	text = Repl(text, " ", "_"); // Oh, you want to break this preset by putting spaces into a 'name'? I'm afraid I can't let you do that, Dave..
+
+	NewPresetName = name(text);
+
+	if (Presets.Find(NewPresetName) != INDEX_NONE)
+	{
+		// Not letting you create duplicates either.
+		ShowInfoPopup(strDuplicatePresetDisallowedTitle, strDuplicatePresetDisallowedText, eDialog_Warning);
+	}
+	else
+	{
+		Presets.AddItem(NewPresetName);
+		default.Presets = Presets;
+		self.SaveConfig();
+		UpdateOptionsList();
+	}
 }
 
 function OptionsListItemClicked(UIList ContainerList, int ItemIndex)
@@ -2434,6 +2475,18 @@ function bool IsUnitPresentInCampaign(const XComGameState_Unit CheckUnit)
 		}
 	}
 	return false;
+}
+
+simulated private function ShowInfoPopup(string strTitle, string strText, optional EUIDialogBoxDisplay eType)
+{
+	local TDialogueBoxData kDialogData;
+
+	kDialogData.strTitle = strTitle;
+	kDialogData.strText = strText;
+	kDialogData.eType = eType;
+	kDialogData.strAccept = class'UIUtilities_Text'.default.m_strGenericOK;
+
+	Movie.Pres.UIRaiseDialog(kDialogData);
 }
 
 // --------------------------------------------------------------------------------------

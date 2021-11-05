@@ -5,3 +5,4 @@
 `define CAPS(VarName) class'UIUtilities_Text'.static.CapsCheckForGermanScharfesS(`VarName)
 
 `define YELLOW(VarName) class'UIUtilities_Text'.static.GetColoredText(`VarName, eUIState_Warning)
+`define GREEN(VarName) class'UIUtilities_Text'.static.GetColoredText(`VarName, eUIState_Good)
