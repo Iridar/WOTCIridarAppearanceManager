@@ -4,7 +4,6 @@ class UIManageAppearance extends UICustomize;
 /*
 # Priority
 
-Appearance list categories become unchecked if you click on the soldier. They're not skipped from "auto uncheck"
 Confirmation popup too overzealous? Pay attention to repro.
 
 # Character Pool
@@ -29,9 +28,8 @@ Way to add presets through in-game UI
 3. Test automatic uniform managemennt settings. 
 
 ## Finalization
-0. Clean up everything. Commentate. Add private/final. Go through TODO's
-1. Localize stuff. Add localized tooltips to disabled items.
-2. Fix log error spam.
+1. Fix log error spam.
+1. Polish localization
 
 ## Addressed
 
@@ -564,6 +562,7 @@ private function AppearanceOptionCheckboxChanged(UICheckbox CheckBox)
 			case 'bShowCharPoolSoldiers':
 			case 'bShowBarracksSoldiers':
 			case 'bShowDeadSoldiers':
+			case 'bShowUniformSoldiers':
 				bSkip = true;
 				break;
 			default:
@@ -572,6 +571,7 @@ private function AppearanceOptionCheckboxChanged(UICheckbox CheckBox)
 		if (bSkip) 
 			continue;
 		
+		`AMLOG("Unchecking:" @ ListItem.MCName);
 		ListItem.Checkbox.SetChecked(false, false);
 	}
 	// And force check whiever checkbox was clicked on.
