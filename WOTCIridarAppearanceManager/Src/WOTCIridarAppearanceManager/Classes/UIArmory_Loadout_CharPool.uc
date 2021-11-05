@@ -3,6 +3,8 @@ class UIArmory_Loadout_CharPool extends UIArmory_Loadout;
 var XComCharacterCustomization		CustomizationManager;
 var private CharacterPoolManager	CharPoolMgr;
 
+var private config(ExcludedItems) array<name> EXCLUDED_SKINS;
+
 // Modified Loadout screen, used to "equip" armors and weapons in Character Pool.
 // All changes done to Unit States on this screen don't submit gamestates.
 
@@ -99,7 +101,8 @@ private function bool ShouldShowTemplate(const X2ItemTemplate ItemTemplate)
 {
 	 return ItemTemplate.iItemSize > 0 &&		//	Item worth wearing (e.g. not an XPAD)
 			ItemTemplate.HasDisplayData() &&	//	Has localized name
-			ItemTemplate.strImage != "";		//	Has inventory icon
+			ItemTemplate.strImage != "" &&		//	Has inventory icon
+			EXCLUDED_SKINS.Find(ItemTemplate.DataName) == INDEX_NONE;
 }
 
 // Cosmetically equip new item. Mostly intended for Armor, but works with other items too.
