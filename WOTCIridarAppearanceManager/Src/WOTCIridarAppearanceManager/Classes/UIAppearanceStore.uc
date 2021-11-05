@@ -90,12 +90,12 @@ simulated function UpdateData()
 
 		if (class'Help'.static.IsAppearanceCurrent(StoredAppearance.Appearance, OriginalAppearance))
 		{
-			DisplayName @= "(Current)"; // TODO: Localize
+			DisplayName @= class'Help'.default.strCurrentAppearance;
 			GetListItem(i++).UpdateDataDescription(DisplayName); // Deleting current appearance may not work as people expect it to.
 		}
 		else
 		{
-			GetListItem(i++).UpdateDataButton(DisplayName, "Delete", OnDeleteButtonClicked); // TODO: Localize
+			GetListItem(i++).UpdateDataButton(DisplayName, class'UISaveLoadGameListItem'.default.m_sDeleteLabel, OnDeleteButtonClicked);
 		}
 	}
 }

@@ -4,6 +4,7 @@ class UIManageAppearance extends UICustomize;
 /*
 # Priority
 
+Appearance list categories become unchecked if you click on the soldier. They're not skipped from "auto uncheck"
 Confirmation popup too overzealous? Pay attention to repro.
 
 # Character Pool
@@ -57,6 +58,26 @@ enum ECosmeticType
 	ECosmeticType_GenderInt,
 	ECosmeticType_Biography
 };
+
+var localized string strApplyTo;
+var localized string strApplyChangesButton;
+var localized string strApplyToThisUnit;
+var localized string strApplyToThisUnitTip;
+var localized string strApplyToSquadTip;
+var localized string strApplyToBarracksTip;
+var localized string strApplyToCPTip;
+var localized string strFiltersTitle;
+var localized string strSelectAppearanceTitle;
+var localized string strSearchTitle;
+var localized string strNoArmorTemplateError;
+var localized string strOriginalAppearance;
+var localized string strUniformsTitle;
+var localized string strExitScreenPopupTitle;
+var localized string strExitScreenPopupText;
+var localized string strExitScreenPopup_Leave;
+var localized string strExitScreenPopup_Stay;
+var localized string strShowAllOptions;
+var localized string strCopyPreset;
 
 // ==============================================================================
 // Screen Options - preserved between game restarts.
@@ -293,17 +314,17 @@ function CreateFiltersList()
 	SpawnedItem = Spawn(class'UIMechaListItem', FiltersList.itemContainer);
 	SpawnedItem.bAnimateOnInit = false;
 	SpawnedItem.InitListItem();
-	SpawnedItem.UpdateDataButton("APPLY TO", "Apply Changes", OnApplyChangesButtonClicked); // TODO: Localize
+	SpawnedItem.UpdateDataButton(strApplyTo, strApplyChangesButton, OnApplyChangesButtonClicked);
 
 	SpawnedItem = Spawn(class'UIMechaListItem', FiltersList.itemContainer);
 	SpawnedItem.bAnimateOnInit = false;
 	SpawnedItem.InitListItem('ApplyToThisUnit');
-	SpawnedItem.UpdateDataCheckbox(class'UIUtilities_Text'.static.CapsCheckForGermanScharfesS("This unit"), "", true, none, none); // TODO: Localize
+	SpawnedItem.UpdateDataCheckbox(`CAPS(strApplyToThisUnit), strApplyToThisUnitTip, true, none, none);
 
 	SpawnedItem = Spawn(class'UIMechaListItem', FiltersList.itemContainer);
 	SpawnedItem.bAnimateOnInit = false;
 	SpawnedItem.InitListItem('ApplyToSquad');
-	SpawnedItem.UpdateDataCheckbox(class'UIUtilities_Text'.static.CapsCheckForGermanScharfesS("squad"), "", false, none, none); // TODO: Localize
+	SpawnedItem.UpdateDataCheckbox(`CAPS(class'UITLE_ChallengeModeMenu'.default.m_Header_Squad), strApplyToSquadTip, false, none, none);
 	SpawnedItem.SetDisabled(InShell());
 
 	if (bInArmory)
@@ -311,37 +332,37 @@ function CreateFiltersList()
 		SpawnedItem = Spawn(class'UIMechaListItem', FiltersList.itemContainer);
 		SpawnedItem.bAnimateOnInit = false;
 		SpawnedItem.InitListItem('ApplyToBarracks');
-		SpawnedItem.UpdateDataCheckbox(class'UIUtilities_Text'.static.CapsCheckForGermanScharfesS("barracks"), "", false, none, none); // TODO: Localize
+		SpawnedItem.UpdateDataCheckbox(`CAPS(class'XComKeybindingData'.default.m_arrAvengerBindableLabels[eABC_Barracks]), strApplyToBarracksTip, false, none, none);
 	}
 	else
 	{
 		SpawnedItem = Spawn(class'UIMechaListItem', FiltersList.itemContainer);
 		SpawnedItem.bAnimateOnInit = false;
 		SpawnedItem.InitListItem('ApplyToCharPool');
-		SpawnedItem.UpdateDataCheckbox(class'UIUtilities_Text'.static.CapsCheckForGermanScharfesS("Character Pool"), "", false, none, none); // TODO: Localize
+		SpawnedItem.UpdateDataCheckbox(`CAPS(class'UICharacterPool'.default.m_strTitle), strApplyToCPTip, false, none, none);
 	}
 
 	SpawnedItem = Spawn(class'UIMechaListItem', FiltersList.itemContainer);
 	SpawnedItem.bAnimateOnInit = false;
 	SpawnedItem.InitListItem();
 	SpawnedItem.SetDisabled(true);
-	SpawnedItem.UpdateDataDescription("FILTERS"); // TODO: Localize
+	SpawnedItem.UpdateDataDescription(strFiltersTitle);
 
 	SpawnedItem = Spawn(class'UIMechaListItem', FiltersList.itemContainer);
 	SpawnedItem.bAnimateOnInit = false;
 	SpawnedItem.InitListItem('FilterGender');
-	SpawnedItem.UpdateDataCheckbox(class'UIUtilities_Text'.static.CapsCheckForGermanScharfesS(class'UICustomize_Info'.default.m_strGender), "", true, OnFilterCheckboxChanged, none);
+	SpawnedItem.UpdateDataCheckbox(`CAPS(class'UICustomize_Info'.default.m_strGender), "", true, OnFilterCheckboxChanged, none);
 
 	SpawnedItem = Spawn(class'UIMechaListItem', FiltersList.itemContainer);
 	SpawnedItem.bAnimateOnInit = false;
 	SpawnedItem.InitListItem('FilterClass');
-	SpawnedItem.UpdateDataCheckbox(class'UIUtilities_Text'.static.CapsCheckForGermanScharfesS(class'UIPersonnel'.default.m_strButtonLabels[ePersonnelSoldierSortType_Class]), "", false, OnFilterCheckboxChanged, none);
+	SpawnedItem.UpdateDataCheckbox(`CAPS(class'UIPersonnel'.default.m_strButtonLabels[ePersonnelSoldierSortType_Class]), "", false, OnFilterCheckboxChanged, none);
 
 	SpawnedItem = Spawn(class'UIMechaListItem', FiltersList.itemContainer);
 	SpawnedItem.bAnimateOnInit = false;
 	SpawnedItem.InitListItem('FilterArmorAppearance');
-	SpawnedItem.SetDisabled(ArmorTemplateName == '', "No armor template on the unit" @ ArmoryUnit.GetFullName()); // TODO: Localize
-	SpawnedItem.UpdateDataCheckbox(class'UIUtilities_Text'.static.CapsCheckForGermanScharfesS("Armor Appearance"), "", true, OnFilterCheckboxChanged, none); // TODO: Localize
+	SpawnedItem.SetDisabled(ArmorTemplateName == '', strNoArmorTemplateError @ ArmoryUnit.GetFullName());
+	SpawnedItem.UpdateDataCheckbox(`CAPS(class'UIArmory_Loadout'.default.m_strInventoryLabels[eInvSlot_Armor]), "", true, OnFilterCheckboxChanged, none); 
 }
 
 private function OnFilterCheckboxChanged(UICheckbox CheckBox)
@@ -389,14 +410,14 @@ function UpdateAppearanceList()
 	SpawnedItem = Spawn(class'UIMechaListItem_Soldier', AppearanceList.ItemContainer);
 	SpawnedItem.bAnimateOnInit = false;
 	SpawnedItem.InitListItem();
-	SpawnedItem.UpdateDataButton(class'UIUtilities_Text'.static.GetColoredText("SELECT APPEARANCE", eUIState_Warning), 
-		"Search" $ SearchText == "" ? "" : ":" @ SearchText, OnSearchButtonClicked); // TODO: Localize
+	SpawnedItem.UpdateDataButton(`YELLOW(strSelectAppearanceTitle), 
+		strSearchTitle $ SearchText == "" ? "" : ":" @ SearchText, OnSearchButtonClicked);
 	
 	// First entry is always "No change"
 	SpawnedItem = Spawn(class'UIMechaListItem_Soldier', AppearanceList.ItemContainer);
 	SpawnedItem.bAnimateOnInit = false;
 	SpawnedItem.InitListItem();
-	SpawnedItem.UpdateDataCheckbox("ORIGINAL APPEARANCE", "", bOriginalAppearanceSelected, AppearanceOptionCheckboxChanged, none); // TODO: Localize
+	SpawnedItem.UpdateDataCheckbox(strOriginalAppearance, "", bOriginalAppearanceSelected, AppearanceOptionCheckboxChanged, none);
 	SpawnedItem.StoredAppearance.Appearance = OriginalAppearance;
 	SpawnedItem.bOriginalAppearance = true;
 
@@ -404,7 +425,7 @@ function UpdateAppearanceList()
 	SpawnedItem = Spawn(class'UIMechaListItem_Soldier', AppearanceList.ItemContainer);
 	SpawnedItem.bAnimateOnInit = false;
 	SpawnedItem.InitListItem('bShowUniformSoldiers');
-	SpawnedItem.UpdateDataCheckbox(class'UIUtilities_Text'.static.GetColoredText("UNIFORMS", eUIState_Warning), "", bShowUniformSoldiers, AppearanceOptionCheckboxChanged, none); // TODO: Localize
+	SpawnedItem.UpdateDataCheckbox(`YELLOW(`CAPS(strUniformsTitle)), "", bShowUniformSoldiers, AppearanceOptionCheckboxChanged, none);
 
 	if (bShowUniformSoldiers)
 	{
@@ -421,7 +442,7 @@ function UpdateAppearanceList()
 	SpawnedItem = Spawn(class'UIMechaListItem_Soldier', AppearanceList.ItemContainer);
 	SpawnedItem.bAnimateOnInit = false;
 	SpawnedItem.InitListItem('bShowCharPoolSoldiers');
-	SpawnedItem.UpdateDataCheckbox(class'UIUtilities_Text'.static.GetColoredText("CHARACTER POOL", eUIState_Warning), "", bShowCharPoolSoldiers, AppearanceOptionCheckboxChanged, none); // TODO: Localize
+	SpawnedItem.UpdateDataCheckbox(`YELLOW(`CAPS(class'UICharacterPool'.default.m_strTitle)), "", bShowCharPoolSoldiers, AppearanceOptionCheckboxChanged, none);
 
 	if (bShowCharPoolSoldiers)
 	{
@@ -439,7 +460,7 @@ function UpdateAppearanceList()
 		SpawnedItem = Spawn(class'UIMechaListItem_Soldier', AppearanceList.ItemContainer);
 		SpawnedItem.bAnimateOnInit = false;
 		SpawnedItem.InitListItem('bShowBarracksSoldiers');
-		SpawnedItem.UpdateDataCheckbox(class'UIUtilities_Text'.static.GetColoredText("BARRACKS", eUIState_Warning), "", bShowBarracksSoldiers, AppearanceOptionCheckboxChanged, none); // TODO: Localize
+		SpawnedItem.UpdateDataCheckbox(`YELLOW(`CAPS(class'XComKeybindingData'.default.m_arrAvengerBindableLabels[eABC_Barracks])), "", bShowBarracksSoldiers, AppearanceOptionCheckboxChanged, none);
 
 		XComHQ = `XCOMHQ;
 		if (bShowBarracksSoldiers)
@@ -454,7 +475,7 @@ function UpdateAppearanceList()
 		SpawnedItem = Spawn(class'UIMechaListItem_Soldier', AppearanceList.ItemContainer);
 		SpawnedItem.bAnimateOnInit = false;
 		SpawnedItem.InitListItem('bShowDeadSoldiers');
-		SpawnedItem.UpdateDataCheckbox(class'UIUtilities_Text'.static.GetColoredText("MORGUE", eUIState_Warning), "", bShowDeadSoldiers, AppearanceOptionCheckboxChanged, none); // TODO: Localize
+		SpawnedItem.UpdateDataCheckbox(`YELLOW(`CAPS(class'UIPersonnel_BarMemorial'.default.m_strTitle)), "", bShowDeadSoldiers, AppearanceOptionCheckboxChanged, none);
 
 		if (bShowDeadSoldiers)
 		{
@@ -577,7 +598,7 @@ private function OnSearchButtonClicked(UIButton ButtonSource)
 	}
 	else
 	{
-		kData.strTitle = "Search"; //TODO: Localize
+		kData.strTitle = strSearchTitle;
 		kData.iMaxChars = 99;
 		kData.strInputBoxText = SearchText;
 		kData.fnCallback = OnSearchInputBoxAccepted;
@@ -654,7 +675,7 @@ private function CreateAppearanceStoreEntriesForUnit(const XComGameState_Unit Un
 		{
 			bCurrentAppearanceFound = true;
 
-			DisplayString @= "(Current)"; // TODO: Localize
+			DisplayString @= class'Help'.default.strCurrentAppearance;
 		}
 
 		if (SearchText != "" && InStr(DisplayString, SearchText,, true) == INDEX_NONE) // ignore case
@@ -707,7 +728,7 @@ private function CreateAppearanceStoreEntriesForUnit(const XComGameState_Unit Un
 		{
 			DisplayString @= "|" @ class'XComCharacterCustomization'.default.Gender_Female;
 		}
-		DisplayString @= "(Current)"; // TODO: Localize
+		DisplayString @= class'Help'.default.strCurrentAppearance;
 
 		if (SearchText != "" && InStr(DisplayString, SearchText,, true) == INDEX_NONE) // ignore case
 			return;
@@ -922,11 +943,11 @@ simulated function CloseScreen()
 	}
 	else
 	{
-		kDialogData.strTitle = "Exit without saving changes?"; // TODO: Localize
+		kDialogData.strTitle = strExitScreenPopupTitle;
 		kDialogData.eType = eDialog_Warning;
-		kDialogData.strText = "Are you sure?";
-		kDialogData.strAccept = "Exit without changes";
-		kDialogData.strCancel = "Stay on screen";
+		kDialogData.strText = strExitScreenPopupText;
+		kDialogData.strAccept = strExitScreenPopup_Leave;
+		kDialogData.strCancel = strExitScreenPopup_Stay;
 		kDialogData.fnCallback = OnCloseScreenDialogCallback;
 		Movie.Pres.UIRaiseDialog(kDialogData);
 	}
@@ -1459,7 +1480,7 @@ private function MaybeCreateAppearanceOption(name OptionName, coerce string Curr
 		case ECosmeticType_Biography:
 			strDesc = class'UICustomize_Info'.default.m_strEditBiography;	
 			SpawnedItem.UpdateDataCheckbox(strDesc, "", bChecked, OnOptionCheckboxChanged, none);
-			SpawnedItem.UpdateDataButton(strDesc, "Preview", OnPreviewBiographyButtonClicked); // TODO: Localize		
+			SpawnedItem.UpdateDataButton(strDesc, class'UICustomize_Info'.default.m_strPreviewVoice, OnPreviewBiographyButtonClicked);
 			break;
 
 		default:
@@ -1570,7 +1591,7 @@ function UIMechaListItem_Button CreateOptionShowAll()
 	SpawnedItem = Spawn(class'UIMechaListItem_Button', OptionsList.itemContainer);
 	SpawnedItem.bAnimateOnInit = false;
 	SpawnedItem.InitListItem('bShowAllCosmeticOptions'); 
-	SpawnedItem.UpdateDataCheckbox("SHOW ALL OPTIONS", "", bShowAllCosmeticOptions, OnOptionCheckboxChanged, none);  // TODO: Localize
+	SpawnedItem.UpdateDataCheckbox(strShowAllOptions, "", bShowAllCosmeticOptions, OnOptionCheckboxChanged, none);
 
 	return SpawnedItem;
 }
@@ -1666,7 +1687,7 @@ private function CreateOptionPresets()
 	SpawnedItem.bAnimateOnInit = false;
 	SpawnedItem.InitListItem(); 
 	SpawnedItem.SetDisabled(true);
-	SpawnedItem.UpdateDataDescription(class'UIUtilities_Text'.static.CapsCheckForGermanScharfesS(class'UIOptionsPCScreen'.default.m_strGraphicsLabel_Preset));
+	SpawnedItem.UpdateDataDescription(`CAPS(class'UIOptionsPCScreen'.default.m_strGraphicsLabel_Preset));
 
 	`AMLOG(GetFuncName() @ `showvar(CurrentPreset));
 
@@ -1693,7 +1714,7 @@ private function CreateOptionPreset(name OptionName, string strText, string strT
 
 	if (OptionName != 'PresetDefault')
 	{
-		SpawnedItem.UpdateDataButton(strText, "Copy Preset", OnCopyPresetButtonClicked); // TODO: Localize
+		SpawnedItem.UpdateDataButton(strText, strCopyPreset, OnCopyPresetButtonClicked);
 	}
 }
 
@@ -1802,7 +1823,7 @@ private function bool MaybeCreateOptionCategory(name CategoryName, string strTex
 		
 		bChecked = bShowAllCosmeticOptions || GetOptionCategoryCheckboxStatus(CategoryName);
 
-		SpawnedItem.UpdateDataCheckbox(class'UIUtilities_Text'.static.GetColoredText(class'UIUtilities_Text'.static.CapsCheckForGermanScharfesS(strText), eUIState_Warning),
+		SpawnedItem.UpdateDataCheckbox(class'UIUtilities_Text'.static.GetColoredText(`CAPS(strText), eUIState_Warning),
 			"", bChecked, OptionCategoryCheckboxChanged, none);
 
 		SpawnedItem.SetDisabled(bShowAllCosmeticOptions);

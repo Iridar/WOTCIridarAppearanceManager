@@ -1,5 +1,6 @@
 class UIManageAppearance_Uniform extends UIManageAppearance;
 
+var localized string strGenderDisabled;
 
 simulated function InitScreen(XComPlayerController InitController, UIMovie InitMovie, optional name InitName)
 {
@@ -49,8 +50,8 @@ simulated private function DisableGenderOption()
 	ListItem = UIMechaListItem(OptionsList.GetChildByName('iGender'));
 	if (ListItem != none && ListItem.Checkbox != none)
 	{
-		ListItem.Checkbox.SetChecked(false, false); // TODO: Add some localized tooltip here to explain why gender is blocked
-		ListItem.SetDisabled(true);
+		ListItem.Checkbox.SetChecked(false, false);
+		ListItem.SetDisabled(true, default.strGenderDisabled);
 	}
 }
 

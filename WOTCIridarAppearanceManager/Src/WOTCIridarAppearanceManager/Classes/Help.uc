@@ -4,6 +4,8 @@ var config array<string> EmptyCosmeticPartialNames;
 
 var name AutoManageUniformValueName;
 
+var localized string strCurrentAppearance;
+
 static final function string GetUnitDisplayString(const XComGameState_Unit UnitState)
 {
 	local X2SoldierClassTemplate	ClassTemplate;

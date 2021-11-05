@@ -4,6 +4,53 @@ PresetUniform = "Uniform"
 PresetEntireUnit = "Entire Unit"
 PresetPatterns = "Patterns"
 
+strApplyTo = "APPLY TO"
+strApplyChangesButton = "Apply Changes"
+
+strApplyToThisUnit = "THIS UNIT"
+strApplyToThisUnitTip = "If enabled, appearance changes will be applied to this specific unit."
+
+strApplyToSquadTip = "If enabled, appearance changes will be applied to all units that are currently in the squad."
+strApplyToBarracksTip = "If enabled, appearance changes will be applied to all units in the barracks, excluding units in the squad and this unit."
+strApplyToCPTip = "If enabled, appearance changes will be applied to all units in the Character Pool, excluding this unit."
+
+strFiltersTitle = "FILTERS"
+
+strSelectAppearanceTitle = "SELECT APPEARANCE"
+strSearchTitle = "Search"
+strNoArmorTemplateError = "Failed to find equipped armor on this unit. Armor filter disabled."
+
+strOriginalAppearance = "ORIGINAL APPEARANCE"
+strUniformsTitle = "UNIFORMS"
+
+strExitScreenPopupTitle = "Exit without saving changes?"
+strExitScreenPopupText = "Are you sure?"
+strExitScreenPopup_Leave = "Exit without changes"
+strExitScreenPopup_Stay = "Stay on screen"
+
+strShowAllOptions = "SHOW ALL OPTIONS"
+strCopyPreset = "Copy Preset"
+
+[UISL_AppearanceManager
+strUseForAutoManageUniform = "Use for automatic uniform management"
+
+strDisableAutoManageUniform = "Disable automatic uniform management"
+strEnableAutoManageUniform = "Enable automatic uniform management"
+
+strManageAppearance = "Manage Appearance"
+strStoredAppearance = "Stored Appearance"
+
+strConvertButtonTitle = "Convert"
+
+strConverToUniform = "Convert to Uniform"
+strConvertToSoldier = "Convert to Soldier"
+
+strVadlidateAppearance = "Validate Appearance"
+strVadlidateAppearanceButton = "Validate"
+
+strConfigureUniform = "Configure Uniform"
+strUniformSoldierFirstName = "UNIFORM"
+
 [AM_MCM_Screen]
 ModName = "Appearance Manager"
 PageTitle = "Appearance Manager"
@@ -20,3 +67,9 @@ DEBUG_LOGGING_Tip = "If enabled, the mod will print debug messages into the log 
 
 AUTOMATIC_UNIFORM_MANAGEMENT_Label = "Enable automatic uniform management by default"
 AUTOMATIC_UNIFORM_MANAGEMENT_Tip = "If enabled, the mod will automatically apply uniforms to soldiers when they equip armor for the first time or when they are promoted to the squaddie rank. This setting can also be configured for each soldier individually on the appearance customization screen."
+
+[Help]
+strCurrentAppearance = "(Current)"
+
+[UIManageAppearance_Uniform]
+strGenderDisabled = "Uniforms that change unit's gender are not possible. Gender change disabled."

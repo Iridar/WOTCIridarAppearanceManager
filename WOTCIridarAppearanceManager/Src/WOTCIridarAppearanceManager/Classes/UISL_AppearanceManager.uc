@@ -1,5 +1,18 @@
 class UISL_AppearanceManager extends UIScreenListener;
 
+var localized string strUseForAutoManageUniform;
+var localized string strDisableAutoManageUniform;
+var localized string strEnableAutoManageUniform;
+var localized string strManageAppearance;
+var localized string strStoredAppearance;
+var localized string strConvertButtonTitle;
+var localized string strConverToUniform;
+var localized string strConvertToSoldier;
+var localized string strVadlidateAppearance;
+var localized string strVadlidateAppearanceButton;
+var localized string strConfigureUniform;
+var localized string strUniformSoldierFirstName;
+
 `include(WOTCIridarAppearanceManager\Src\ModConfigMenuAPI\MCM_API_CfgHelpers.uci)
 
 delegate OnClickDelegate();
@@ -58,43 +71,43 @@ private function AddButtons()
 	if (bUnitIsUniform)
 	{
 		CreateOrUpdateCheckbox('IRI_AutoManageUniform_ListItem', CustomizeScreen, true, 
-			"Use for automatic uniform management", bAutoManageUniform, OnAutoManageUniformCheckboxChanged); // TODO: Localize
+			strUseForAutoManageUniform, bAutoManageUniform, OnAutoManageUniformCheckboxChanged);
 	}
 	else if (`GETMCMVAR(AUTOMATIC_UNIFORM_MANAGEMENT))
 	{
 		CreateOrUpdateCheckbox('IRI_AutoManageUniform_ListItem', CustomizeScreen, true, 
-			"Disable automatic uniform management", bAutoManageUniform, OnAutoManageUniformCheckboxChanged); // TODO: Localize
+			strDisableAutoManageUniform, bAutoManageUniform, OnAutoManageUniformCheckboxChanged);
 	}
 	else
 	{
 		CreateOrUpdateCheckbox('IRI_AutoManageUniform_ListItem', CustomizeScreen, true, 
-			"Enable automatic uniform management", bAutoManageUniform, OnAutoManageUniformCheckboxChanged); // TODO: Localize
+			strEnableAutoManageUniform, bAutoManageUniform, OnAutoManageUniformCheckboxChanged);
 	}
 
 	// ## Manage Appearance Button - always
 	CreateOrUpdateListItem('IRI_ManageAppearance_ListItem', CustomizeScreen, true, 
-		"Manage Appearance", OnManageAppearanceItemClicked); // TODO: Localize
+		strManageAppearance, OnManageAppearanceItemClicked);
 
 	// ## Appearance Store Button - always
 	CreateOrUpdateListItem('IRI_AppearanceStore_ListItem', CustomizeScreen, true, 
-		"Appearance Store", OnAppearanceStoreItemClicked); // TODO: Localize
+		strStoredAppearance, OnAppearanceStoreItemClicked);
 
 	if (!CustomizeScreen.bInArmory)
 	{
 		// ## Loadout Button - always while in Character Pool interface
 		CreateOrUpdateListItem('IRI_Loadout_ListItem', CustomizeScreen, true, 
-			"Loadout", OnLoadoutItemClicked); // TODO: Localize
+			class'UIArmory_MainMenu'.default.m_strLoadout, OnLoadoutItemClicked);
 
 		// ## Convert to Uniform / Convert to Soldier - always while in Character Pool interface
 		if (bUnitIsUniform)
 		{
 			CreateOrUpdateButton('IRI_ConvertUniformSoldier_ListItem', CustomizeScreen, true, 
-				"Convert to Soldier", "Convert", OnSoldierButtonClicked); // TODO: Localize
+				strConvertToSoldier, strConvertButtonTitle, OnSoldierButtonClicked);
 		}
 		else
 		{
 			CreateOrUpdateButton('IRI_ConvertUniformSoldier_ListItem', CustomizeScreen, true, 
-				"Convert to Uniform", "Convert", OnUniformButtonClicked); // TODO: Localize
+				strConverToUniform, strConvertButtonTitle, OnUniformButtonClicked);
 		}
 	}
 
@@ -103,12 +116,12 @@ private function AddButtons()
 		`XENGINE.bReviewFlagged && `GETMCMVAR(DISABLE_APPEARANCE_VALIDATION_REVIEW))
 	{
 		CreateOrUpdateButton('IRI_ValidateAppearance_ListItem', CustomizeScreen, true, 
-				"Validate Appearance", "Validate", OnValidateButtonClicked); // TODO: Localize
+				strVadlidateAppearance, strVadlidateAppearanceButton, OnValidateButtonClicked);
 	}
 
 	// ## Configure Uniform Button - if the unit is uniform
 	CreateOrUpdateListItem('IRI_ConfigureUniform_ListItem', CustomizeScreen, bUnitIsUniform, 
-		"Configure Uniform", OnConfigureUniformItemClicked); // TODO: Localize
+		strConfigureUniform, OnConfigureUniformItemClicked);
 	
 	CustomizeScreen.SetTimer(0.25f, false, nameof(AddButtons), self);
 }
@@ -345,7 +358,7 @@ simulated private function OnUniformButtonClicked(UIButton ButtonSource)
 
 	// TODO: Add a popup with confirmation prompt here
 
-	UnitState.SetCharacterName("UNIFORM", class'Help'.static.GetFriendlyGender(UnitState.kAppearance.iGender), ""); // TODO: Localize
+	UnitState.SetCharacterName(strUniformSoldierFirstName, class'Help'.static.GetFriendlyGender(UnitState.kAppearance.iGender), "");
 
 	UnitState.kAppearance.iAttitude = 0; // Set by the Book attitude so the soldier stops squirming.
 	UnitState.UpdatePersonalityTemplate();
