@@ -4,8 +4,6 @@ class UIManageAppearance extends UICustomize;
 /*
 # Priority
 
-Confirmation popup too overzealous? Pay attention to repro.
-
 Make it possible to delete presets.
 
 # Character Pool
@@ -420,7 +418,6 @@ private function OnApplyChangesButtonClicked(UIButton ButtonSource)
 	}
 
 	OnApplyChangesCloseScreenDialogCallback('eUIAction_Accept');
-	
 }
 
 private function int GetApplyChangesNumUnits()
@@ -472,16 +469,7 @@ private function OnApplyChangesCloseScreenDialogCallback(Name eAction)
 {
 	if (eAction == 'eUIAction_Accept')
 	{
-		bCanExitWithoutPopup = true;
 		ApplyChanges();
-	
-		UpdateUnitAppearance();
-	
-		OriginalAppearance = ArmoryPawn.m_kAppearance;
-		SelectedAppearance = OriginalAppearance;
-		OriginalAttitude = ArmoryUnit.GetPersonalityTemplate();
-
-		UpdateOptionsList();
 
 		class'Help'.static.PlayStrategySoundEvent("Play_MenuSelect", self);
 	}
@@ -1139,8 +1127,6 @@ private function ApplyChanges()
 	local XComGameState_Unit				UnitState;
 	local XComGameState						NewGameState;
 
-	bCanExitWithoutPopup = true;
-
 	// Current Unit
 	if (GetFilterListCheckboxStatus('ApplyToThisUnit') && !bOriginalAppearanceSelected)
 	{
@@ -1204,6 +1190,8 @@ private function ApplyChanges()
 			`XCOMHISTORY.CleanupPendingGameState(NewGameState);
 		}
 	}
+
+	bCanExitWithoutPopup = true;
 }
 
 private function ApplyChangesToUnit(XComGameState_Unit UnitState, optional XComGameState NewGameState)
@@ -1375,6 +1363,12 @@ private function ApplyChangesToArmoryUnit()
 		`GAMERULES.SubmitGameState(NewGameState);
 	}
 	ArmoryPawn.CustomizationIdleAnim = ArmoryUnit.GetPersonalityTemplate().IdleAnimName;
+
+	OriginalAppearance = ArmoryPawn.m_kAppearance;
+	OriginalAttitude = ArmoryUnit.GetPersonalityTemplate();
+
+	UpdateOptionsList();
+	UpdateUnitAppearance();
 }
 
 function CancelChanges()
@@ -1746,8 +1740,6 @@ function OnOptionCheckboxChanged(UICheckbox CheckBox)
 
 	`AMLOG(CheckBox.GetParent(class'UIMechaListItem_Button').MCName @ CheckBox.bChecked);
 
-	//bCanExitWithoutPopup = false;
-
 	switch (CheckBox.GetParent(class'UIMechaListItem_Button').MCName)
 	{
 		case 'iGender':
@@ -1981,8 +1973,6 @@ function OptionsListItemClicked(UIList ContainerList, int ItemIndex)
 {
 	local UIMechaListItem ListItem;
 
-	//bCanExitWithoutPopup = false;
-
 	// Exit early if the player clicked on the first two members in the list, or anywhere below the presets.
 	if (ItemIndex < 2 || ItemIndex >= Presets.Length + 2) // +2 members above the first preset in the list
 		return;
@@ -2011,7 +2001,6 @@ function OptionPresetCheckboxChanged(UICheckbox CheckBox)
 	PresetName = CheckBox.GetParent(class'UIMechaListItem_Button').MCName;
 	if (Presets.Find(PresetName) != INDEX_NONE)
 	{
-		//bCanExitWithoutPopup = false;
 		SavePresetCheckboxPositions();
 		CurrentPreset = PresetName;
 
