@@ -303,7 +303,65 @@ final function bool ShouldAutoManageUniform(const XComGameState_Unit UnitState)
 	// If MCM setting of global uniform management is NOT enabled, we want to manage this unit's uniform if the flag on the unit IS set.
 	// If MCM setting of global uniform management IS enabled, we want to mange this unit's uniform if the flag on the unit is NOT set.
 	// Which boils down to "exclusive OR" logical operation.
-	return `XOR(`GETMCMVAR(AUTOMATIC_UNIFORM_MANAGEMENT), IsAutoManageUniformFlagSet(UnitState));
+	return `GETMCMVAR(AUTOMATIC_UNIFORM_MANAGEMENT) != IsAutoManageUniformFlagSet(UnitState);
+}
+
+// Direct copy of the original CreateSoldier() with the option to force specific gender. Used to save soldier appearance as uniform.
+event XComGameState_Unit CreateSoldierForceGender(name DataTemplateName, optional EGender eForceGender)
+{
+	local XComGameState							SoldierContainerState;
+	local XComGameState_Unit					NewSoldierState;	
+	local X2CharacterTemplateManager			CharTemplateMgr;	
+	local X2CharacterTemplate					CharacterTemplate;
+	local TSoldier								CharacterGeneratorResult;
+	local XGCharacterGenerator					CharacterGenerator;
+	local XComGameStateHistory					History;
+	local XComGameStateContext_ChangeContainer	ChangeContainer;
+
+	CharTemplateMgr = class'X2CharacterTemplateManager'.static.GetCharacterTemplateManager();
+	if (CharTemplateMgr == none)
+	{
+		`AMLOG("ERROR :: Failed to retrieve X2CharacterTemplateManager");
+		return none;
+	}
+
+	CharacterTemplate = CharTemplateMgr.FindCharacterTemplate(DataTemplateName);	
+	if (CharacterTemplate == none)
+	{
+		`AMLOG("ERROR :: Failed to find Character Template:" @ CharacterTemplate);
+		return none;
+	}
+
+	CharacterGenerator = `XCOMGAME.Spawn(CharacterTemplate.CharacterGeneratorClass);
+	if (CharacterGenerator == none)
+	{
+		`AMLOG("ERROR :: Failed to spawn CharacterGeneratorClass:" @ CharacterTemplate.CharacterGeneratorClass.Name @ "for Character Template:" @ CharacterTemplate);
+		return none;
+	}
+
+	History = `XCOMHISTORY;
+	
+	//Create a game state to use for creating a unit
+	ChangeContainer = class'XComGameStateContext_ChangeContainer'.static.CreateEmptyChangeContainer("Character Pool Manager");
+	SoldierContainerState = History.CreateNewGameState(true, ChangeContainer);
+
+	NewSoldierState = CharacterTemplate.CreateInstanceFromTemplate(SoldierContainerState);
+	NewSoldierState.RandomizeStats();
+
+	NewSoldierState.bAllowedTypeSoldier = true;
+
+	CharacterGeneratorResult = CharacterGenerator.CreateTSoldier(DataTemplateName, eForceGender);
+	NewSoldierState.SetTAppearance(CharacterGeneratorResult.kAppearance);
+	NewSoldierState.SetCharacterName(CharacterGeneratorResult.strFirstName, CharacterGeneratorResult.strLastName, CharacterGeneratorResult.strNickName);
+	NewSoldierState.SetCountry(CharacterGeneratorResult.nmCountry);
+	class'XComGameState_Unit'.static.NameCheck(CharacterGenerator, NewSoldierState, eNameType_Full);
+
+	NewSoldierState.GenerateBackground(, CharacterGenerator.BioCountryName);
+	
+	//Tell the history that we don't actually want this game state
+	History.CleanupPendingGameState(SoldierContainerState);
+
+	return NewSoldierState;
 }
 
 // ============================================================================================

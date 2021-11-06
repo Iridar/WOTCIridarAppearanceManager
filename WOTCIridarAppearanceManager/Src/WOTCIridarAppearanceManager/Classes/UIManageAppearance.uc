@@ -88,6 +88,12 @@ var localized string strCreatePresetTitle;
 var localized string strCreatePresetText;
 var localized string strDuplicatePresetDisallowedText;
 var localized string strDuplicatePresetDisallowedTitle;
+var localized string strSaveAsUniform;
+var localized string strEnterUniformName;
+var localized string strFailedToCreateUnitTitle;
+var localized string strFailedToCreateUnitText;
+var localized string strInvalidEmptyUniformNameTitle;
+var localized string strInvalidEmptyUniformNameText;
 
 // ==============================================================================
 // Screen Options - preserved between game restarts.
@@ -506,6 +512,7 @@ function UpdateAppearanceList()
 	SpawnedItem.UpdateDataCheckbox(strOriginalAppearance, "", bOriginalAppearanceSelected, AppearanceOptionCheckboxChanged, none);
 	SpawnedItem.StoredAppearance.Appearance = OriginalAppearance;
 	SpawnedItem.bOriginalAppearance = true;
+	SpawnedItem.UpdateDataButton(strOriginalAppearance, strSaveAsUniform, OnSaveAsUniformButtonClicked);
 
 	// Uniforms
 	SpawnedItem = Spawn(class'UIMechaListItem_Soldier', AppearanceList.ItemContainer);
@@ -695,10 +702,82 @@ private function OnSearchButtonClicked(UIButton ButtonSource)
 	}
 }
 
-function OnSearchInputBoxAccepted(string text)
+private function OnSearchInputBoxAccepted(string text)
 {
 	SearchText = text;
 	UpdateAppearanceList();
+}
+
+private function OnSaveAsUniformButtonClicked(UIButton ButtonSource)
+{
+	local TInputDialogData kData;
+
+	kData.strTitle = strEnterUniformName;
+	kData.iMaxChars = 99;
+	kData.strInputBoxText = GetFriendlyGender(ArmoryPawn.m_kAppearance.iGender);
+	kData.fnCallback = OnSaveAsUniformInputBoxAccepted;
+
+	Movie.Pres.UIInputDialog(kData);
+}
+
+private function OnSaveAsUniformInputBoxAccepted(string strLastName)
+{
+	local XComGameState_Unit NewUnit;
+
+	if (strLastName != "")
+	{
+		NewUnit = PoolMgr.CreateSoldierForceGender(ArmoryUnit.GetMyTemplateName(), EGender(ArmoryPawn.m_kAppearance.iGender));
+		if (NewUnit == none)
+		{
+			ShowInfoPopup(strFailedToCreateUnitTitle, strFailedToCreateUnitText @ ArmoryUnit.GetMyTemplateName(), eDialog_Warning);
+			return;
+		}
+
+		NewUnit.SetTAppearance(ArmoryPawn.m_kAppearance);
+
+		NewUnit.SetCharacterName(class'UISL_AppearanceManager'.default.strUniformSoldierFirstName, strLastName, "");
+		PoolMgr.SetIsAutoManageUniform(NewUnit, true); 
+		PoolMgr.SetIsUnitUniform(NewUnit, true);
+
+		NewUnit.kAppearance.iAttitude = 0;
+		NewUnit.UpdatePersonalityTemplate();
+		NewUnit.bAllowedTypeSoldier = false;
+		NewUnit.bAllowedTypeVIP = false;
+		NewUnit.bAllowedTypeDarkVIP = false;
+
+		NewUnit.StoreAppearance(ArmoryPawn.m_kAppearance.iGender, ArmorTemplateName);
+		PoolMgr.CharacterPool.AddItem(NewUnit);
+		SaveCosmeticOptionsForUnit(NewUnit); // This calls SaveCharacterPool()
+
+		UpdateAppearanceList();
+	}
+	else 
+	{
+		ShowInfoPopup(strInvalidEmptyUniformNameTitle, strInvalidEmptyUniformNameText, eDialog_Alert);
+	}
+}
+
+simulated function SaveCosmeticOptionsForUnit(XComGameState_Unit UnitState)
+{
+	local array<CosmeticOptionStruct>	CosmeticOptions;
+	local CosmeticOptionStruct			CosmeticOption;
+	local UIMechaListItem				ListItem;
+	local int i;
+
+	for (i = 1; i < OptionsList.ItemCount; i++) // Skip 0th member that is for sure "ShowAllCosmetics"
+	{
+		ListItem = UIMechaListItem(OptionsList.GetItem(i));
+		if (ListItem == none || ListItem.Checkbox == none || !IsCosmeticOption(ListItem.MCName))
+			continue;
+
+		`AMLOG(i @ "List item:" @ ListItem.MCName @ ListItem.Desc.htmlText @ "Checked:" @ ListItem.Checkbox.bChecked);
+
+		CosmeticOption.OptionName = ListItem.MCName;
+		CosmeticOption.bChecked = ListItem.Checkbox.bChecked;
+		CosmeticOptions.AddItem(CosmeticOption);
+	}
+
+	PoolMgr.SaveCosmeticOptionsForUnit(CosmeticOptions, UnitState, GetGenderArmorTemplate());
 }
 
 private function CreateAppearanceStoreEntriesForUnit(const XComGameState_Unit UnitState, optional bool bCharPool)
@@ -1060,6 +1139,8 @@ private function ApplyChanges()
 	local XComGameState_Unit				UnitState;
 	local XComGameState						NewGameState;
 
+	bCanExitWithoutPopup = true;
+
 	// Current Unit
 	if (GetFilterListCheckboxStatus('ApplyToThisUnit') && !bOriginalAppearanceSelected)
 	{
@@ -1131,6 +1212,8 @@ private function ApplyChangesToUnit(XComGameState_Unit UnitState, optional XComG
 	local string		strFirstName;
 	local string		strNickname;
 	local string		strLastName;
+
+	`AMLOG(UnitState.GetFullName());
 
 	if (IsCheckboxChecked('FirstName'))
 		strFirstName = SelectedUnit.GetFirstName();
@@ -2462,7 +2545,7 @@ private function FixScreenPosition()
 }
 
 // Don't look at me, that's how CP itself does this check :shrug:
-function bool IsUnitPresentInCampaign(const XComGameState_Unit CheckUnit)
+final function bool IsUnitPresentInCampaign(const XComGameState_Unit CheckUnit)
 {
 	local XComGameState_Unit CycleUnit;
 
@@ -2477,7 +2560,7 @@ function bool IsUnitPresentInCampaign(const XComGameState_Unit CheckUnit)
 	return false;
 }
 
-simulated private function ShowInfoPopup(string strTitle, string strText, optional EUIDialogBoxDisplay eType)
+private function ShowInfoPopup(string strTitle, string strText, optional EUIDialogBoxDisplay eType)
 {
 	local TDialogueBoxData kDialogData;
 
@@ -2487,6 +2570,68 @@ simulated private function ShowInfoPopup(string strTitle, string strText, option
 	kDialogData.strAccept = class'UIUtilities_Text'.default.m_strGenericOK;
 
 	Movie.Pres.UIRaiseDialog(kDialogData);
+}
+
+// Exclude presets and category checkboxes
+final function bool IsCosmeticOption(const name OptionName)
+{
+	switch(OptionName)
+	{
+		case'nmHead': return true;
+		case'iGender': return true;
+		case'iRace': return true;
+		case'nmHaircut': return true;
+		case'iHairColor': return true;
+		case'iFacialHair': return true;
+		case'nmBeard': return true;
+		case'iSkinColor': return true;
+		case'iEyeColor': return true;
+		case'nmFlag': return true;
+		case'iVoice': return true;
+		case'iAttitude': return true;
+		case'iArmorDeco': return true;
+		case'iArmorTint': return true;
+		case'iArmorTintSecondary': return true;
+		case'iWeaponTint': return true;
+		case'iTattooTint': return true;
+		case'nmWeaponPattern': return true;
+		case'nmPawn': return true;
+		case'nmTorso': return true;
+		case'nmArms': return true;
+		case'nmLegs': return true;
+		case'nmHelmet': return true;
+		case'nmEye': return true;
+		case'nmTeeth': return true;
+		case'nmFacePropLower': return true;
+		case'nmFacePropUpper': return true;
+		case'nmPatterns': return true;
+		case'nmVoice': return true;
+		case'nmLanguage': return true;
+		case'nmTattoo_LeftArm': return true;
+		case'nmTattoo_RightArm': return true;
+		case'nmScars': return true;
+		case'nmTorso_Underlay': return true;
+		case'nmArms_Underlay': return true;
+		case'nmLegs_Underlay': return true;
+		case'nmFacePaint': return true;
+		case'nmLeftArm': return true;
+		case'nmRightArm': return true;
+		case'nmLeftArmDeco': return true;
+		case'nmRightArmDeco': return true;
+		case'nmLeftForearm': return true;
+		case'nmRightForearm': return true;
+		case'nmThighs': return true;
+		case'nmShins': return true;
+		case'nmTorsoDeco': return true;
+		case'bGhostPawn': return true;
+	default:
+		return false;
+	}
+}
+
+final function string GetGenderArmorTemplate()
+{
+	return ArmorTemplateName $ ArmoryUnit.kAppearance.iGender;
 }
 
 // --------------------------------------------------------------------------------------

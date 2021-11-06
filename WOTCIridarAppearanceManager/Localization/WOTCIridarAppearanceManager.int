@@ -45,6 +45,14 @@ strCreatePresetText = "Enter preset name"
 strDuplicatePresetDisallowedTitle = "Failed to add new preset!"
 strDuplicatePresetDisallowedText = "A preset with that name already exists. Aborting."
 
+strSaveAsUniform = "SAVE AS UNIFORM"
+strEnterUniformName = "Enter Uniform's name:"
+
+strFailedToCreateUnitTitle = "ERROR!"
+strFailedToCreateUnitText = "Failed to create Uniform unit using character template: "
+
+strInvalidEmptyUniformNameTitle = "Invalid Uniform name"
+strInvalidEmptyUniformNameText = "Uniform name cannot be empty."
 
 [UISL_AppearanceManager]
 strUseForAutoManageUniform = "Use for automatic uniform management"

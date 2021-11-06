@@ -1,6 +1,6 @@
-class UIMechaListItem_Soldier extends UIMechaListItem;
+class UIMechaListItem_Soldier extends UIMechaListItem_Button;
 
-// Used in UICharacterPool_CPExtended to list soldiers. Simply convenience.
+// Used in UIManageAppearance to list soldier appearances. Simply convenience.
 
 var AppearanceInfo					StoredAppearance;
 var X2SoldierPersonalityTemplate	PersonalityTemplate;
