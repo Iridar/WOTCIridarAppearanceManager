@@ -12,8 +12,6 @@ var localized string strVadlidateAppearance;
 var localized string strVadlidateAppearanceButton;
 var localized string strConfigureUniform;
 var localized string strUniformSoldierFirstName;
-var localized string strConvertToUniformPopupTitle;
-var localized string strConvertToUniformPopupText;
 
 `include(WOTCIridarAppearanceManager\Src\ModConfigMenuAPI\MCM_API_CfgHelpers.uci)
 
@@ -399,26 +397,44 @@ simulated private function OnSoldierButtonClicked(UIButton ButtonSource)
 
 private function OnUniformButtonClicked(UIButton ButtonSource)
 {
-	local TDialogueBoxData kDialogData;
+	local TInputDialogData		kData;
+	local UICustomize_Menu		CustomizeScreen;
+	local XComGameState_Unit	UnitState;
 
-	kDialogData.eType = eDialog_Normal;
-	kDialogData.strTitle = strConvertToUniformPopupTitle;
-	kDialogData.strText = strConvertToUniformPopupText;
-	kDialogData.strAccept = class'UISimpleScreen'.default.m_strAccept;
-	kDialogData.strCancel = class'UISimpleScreen'.default.m_strCancel;
-	kDialogData.fnCallback = OnUniformButtonCallback;
-	`PRESBASE.UIRaiseDialog(kDialogData);
+	CustomizeScreen = UICustomize_Menu(`SCREENSTACK.GetCurrentScreen());
+	if (CustomizeScreen == none)
+		return;
+
+	UnitState = CustomizeScreen.CustomizeManager.UpdatedUnitState;
+	if (UnitState == none)
+		return;
+
+	kData.strTitle = class'UIManageAppearance'.default.strEnterUniformName;
+	kData.iMaxChars = 99;
+	kData.strInputBoxText = class'Help'.static.GetFriendlyGender(UnitState.kAppearance.iGender);
+	kData.fnCallback = OnConvertToUniformInputBoxAccepted;
+
+	`PRESBASE.UIInputDialog(kData);
 }
 
-private function OnUniformButtonCallback(Name eAction)
+private function OnConvertToUniformInputBoxAccepted(string strLastName)
 {
 	local UICustomize_Menu			CustomizeScreen;
 	local XComGameState_Unit		UnitState;
 	local CharacterPoolManager_AM	CharPoolMgr;
+	local TDialogueBoxData			kDialogData;
 
-	if (eAction != 'eUIAction_Accept')
+	if (strLastName == "")
+	{
+		kDialogData.strTitle = class'UIManageAppearance'.default.strInvalidEmptyUniformNameTitle;
+		kDialogData.strText = class'UIManageAppearance'.default.strInvalidEmptyUniformNameText;
+		kDialogData.eType = eDialog_Alert;
+		kDialogData.strAccept = class'UIUtilities_Text'.default.m_strGenericOK;
+
+		`PRESBASE.UIRaiseDialog(kDialogData);
 		return;
-
+	}
+	
 	CustomizeScreen = UICustomize_Menu(`SCREENSTACK.GetCurrentScreen());
 	if (CustomizeScreen == none)
 		return;
@@ -431,7 +447,7 @@ private function OnUniformButtonCallback(Name eAction)
 	if (UnitState == none)
 		return;
 
-	UnitState.SetCharacterName(strUniformSoldierFirstName, class'Help'.static.GetFriendlyGender(UnitState.kAppearance.iGender), "");
+	UnitState.SetCharacterName(strUniformSoldierFirstName, strLastName, "");
 
 	UnitState.kAppearance.iAttitude = 0; // Set by the Book attitude so the soldier stops squirming.
 	UnitState.UpdatePersonalityTemplate();

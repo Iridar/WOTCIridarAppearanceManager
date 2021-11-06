@@ -74,9 +74,6 @@ strVadlidateAppearanceButton = "Validate"
 strConfigureUniform = "Configure Uniform"
 strUniformSoldierFirstName = "UNIFORM"
 
-strConvertToUniformPopupTitle = "CONVERT UNIT TO UNIFORM?"
-strConvertToUniformPopupText = "Are you sure you want to convert this unit to uniform? They will lose their name and attitude."
-
 [AM_MCM_Screen]
 ModName = "Appearance Manager"
 PageTitle = "Appearance Manager"
