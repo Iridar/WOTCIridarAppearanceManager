@@ -5,7 +5,8 @@ class UIManageAppearance extends UICustomize;
 # Priority
 
 Confirmation popup too overzealous? Pay attention to repro.
-Exiting the manage appearance screen of a uniform borks the customize screen
+
+Make it possible to delete presets.
 
 # Character Pool
 Fix weapons / Dual Wielding not working in CP?
@@ -21,7 +22,6 @@ This is undesirable. Figure out what to do about it. (probably wipe the setting 
 # This screen
 
 Make clicking an item toggle its checkbox?
-Way to add presets through in-game UI
 
 ## Checks:
 1. Check if you can customize a unit with all armors in the campaign, then save them into CP, and that they will actually have all that appearance in the next campaign

@@ -25,8 +25,21 @@ event OnInit(UIScreen Screen)
 {
 	if (UICustomize_Menu(Screen) != none)
 	{	 
-		// When screen is initialized, list has no items yet, and our changes to it don't work right.
-		Screen.SetTimer(0.05f, false, nameof(AddButtons), self);
+		// When screen is initialized, list has no items yet, so need to wait for the list to init.
+		UICustomize_Menu(Screen).List.AddOnInitDelegate(OnListInited);
+	}
+}
+
+simulated function OnListInited(UIPanel Panel)
+{
+	AddButtons();
+}
+
+event OnReceiveFocus(UIScreen Screen)
+{
+	if (UICustomize_Menu(Screen) != none)
+	{	 
+		AddButtons();
 	}
 }
 
@@ -37,95 +50,132 @@ private function AddButtons()
 	local bool						bAutoManageUniform;
 	local XComGameState_Unit		UnitState;
 	local CharacterPoolManager_AM	CharPoolMgr;
+	local int						ListIndex;
 
 	CustomizeScreen = UICustomize_Menu(`SCREENSTACK.GetCurrentScreen());
-	if (CustomizeScreen == none)
+	if (CustomizeScreen == none) 
 		return;
 	
 	CharPoolMgr = `CHARACTERPOOLMGRAM;
-	if (CharPoolMgr == none)
+	if (CharPoolMgr == none) 
 		return;
 
 	UnitState = CustomizeScreen.GetUnit();
-	if (UnitState == none)
+	if (UnitState == none) 
 		return;
 
-	if (CustomizeScreen.List.ItemCount == 0)
+	// Check if "Manage Appearance" list item already exists and is visible - then we don't know need to do anything else.
+	if (!ChangesAlreadyMade(CustomizeScreen.List))
 	{
-		CustomizeScreen.SetTimer(0.25f, false, nameof(AddButtons), self); // If buttons list is still empty, reset the timer and exit.
-		return;
-	}
+		bUnitIsUniform = CharPoolMgr.IsUnitUniform(UnitState);
+		if (bUnitIsUniform) 
+			RemoveCanAppearAsListItems(CustomizeScreen);
 
-	bUnitIsUniform = CharPoolMgr.IsUnitUniform(UnitState);
-	if (bUnitIsUniform)
-		RemoveCanAppearAsListItems(CustomizeScreen);
+		ListIndex = GetIndexOfLastVisibleListItem(CustomizeScreen.List) + 1;
 
-	// ## Loadout Button - while in Character Pool interface.
-	CreateOrUpdateListItem('IRI_Loadout_ListItem', CustomizeScreen, !CustomizeScreen.bInArmory, 
-		class'UIArmory_MainMenu'.default.m_strLoadout, OnLoadoutItemClicked);
-
-	// ## Auto Manage Uniform toggle - always, but disabled if unit is a uniform.
-	if (CustomizeScreen.bInArmory)
-	{
-		bAutoManageUniform = class'Help'.static.IsAutoManageUniformValueSet(UnitState);
-	}
-	else
-	{
-		bAutoManageUniform = CharPoolMgr.IsAutoManageUniform(UnitState);
-	}
-
-	if (bUnitIsUniform)
-	{
-		CreateOrUpdateCheckbox('IRI_AutoManageUniform_ListItem', CustomizeScreen, true, 
-			strUseForAutoManageUniform, bAutoManageUniform, OnAutoManageUniformCheckboxChanged);
-	}
-	else if (`GETMCMVAR(AUTOMATIC_UNIFORM_MANAGEMENT))
-	{
-		CreateOrUpdateCheckbox('IRI_AutoManageUniform_ListItem', CustomizeScreen, true, 
-			strDisableAutoManageUniform, bAutoManageUniform, OnAutoManageUniformCheckboxChanged);
-	}
-	else
-	{
-		CreateOrUpdateCheckbox('IRI_AutoManageUniform_ListItem', CustomizeScreen, true, 
-			strEnableAutoManageUniform, bAutoManageUniform, OnAutoManageUniformCheckboxChanged);
-	}
-
-	// ## Manage Appearance Button - always
-	CreateOrUpdateListItem('IRI_ManageAppearance_ListItem', CustomizeScreen, true, 
-		strManageAppearance, OnManageAppearanceItemClicked);
-
-	// ## Appearance Store Button - always
-	CreateOrUpdateListItem('IRI_AppearanceStore_ListItem', CustomizeScreen, true, 
-		strStoredAppearance, OnAppearanceStoreItemClicked);
-
-	if (!CustomizeScreen.bInArmory)
-	{
-		// ## Convert to Uniform / Convert to Soldier - always while in Character Pool interface
-		if (bUnitIsUniform)
+		// ## Loadout Button - while in Character Pool interface.
+		if (!CustomizeScreen.bInArmory)
 		{
-			CreateOrUpdateButton('IRI_ConvertUniformSoldier_ListItem', CustomizeScreen, true, 
-				strConvertToSoldier, strConvertButtonTitle, OnSoldierButtonClicked);
+			CreateOrUpdateListItem(ListIndex, CustomizeScreen, 
+				class'UIArmory_MainMenu'.default.m_strLoadout, OnLoadoutItemClicked);
+		}
+
+		if (CustomizeScreen.bInArmory)
+		{
+			bAutoManageUniform = class'Help'.static.IsAutoManageUniformValueSet(UnitState);
 		}
 		else
 		{
-			CreateOrUpdateButton('IRI_ConvertUniformSoldier_ListItem', CustomizeScreen, true, 
-				strConverToUniform, strConvertButtonTitle, OnUniformButtonClicked);
+			bAutoManageUniform = CharPoolMgr.IsAutoManageUniform(UnitState);
+		}
+
+		// ## Auto Manage Uniform toggle - always.
+		if (bUnitIsUniform)
+		{
+			CreateOrUpdateCheckbox(ListIndex, CustomizeScreen, 
+				strUseForAutoManageUniform, bAutoManageUniform, OnAutoManageUniformCheckboxChanged);
+		}
+		else if (`GETMCMVAR(AUTOMATIC_UNIFORM_MANAGEMENT))
+		{
+			CreateOrUpdateCheckbox(ListIndex, CustomizeScreen, 
+				strDisableAutoManageUniform, bAutoManageUniform, OnAutoManageUniformCheckboxChanged);
+		}
+		else
+		{
+			CreateOrUpdateCheckbox(ListIndex, CustomizeScreen, 
+				strEnableAutoManageUniform, bAutoManageUniform, OnAutoManageUniformCheckboxChanged);
+		}
+
+		// ## Manage Appearance Button - always
+		CreateOrUpdateListItem(ListIndex, CustomizeScreen, 
+			strManageAppearance, OnManageAppearanceItemClicked);
+
+		// ## Appearance Store Button - always
+		CreateOrUpdateListItem(ListIndex, CustomizeScreen, 
+			strStoredAppearance, OnAppearanceStoreItemClicked);
+
+		if (!CustomizeScreen.bInArmory)
+		{
+			// ## Convert to Uniform / Convert to Soldier - always while in Character Pool interface
+			if (bUnitIsUniform)
+			{
+				CreateOrUpdateButton(ListIndex, CustomizeScreen, 
+					strConvertToSoldier, strConvertButtonTitle, OnSoldierButtonClicked);
+			}
+			else
+			{
+				CreateOrUpdateButton(ListIndex, CustomizeScreen, 
+					strConverToUniform, strConvertButtonTitle, OnUniformButtonClicked);
+			}
+		}
+
+			// ## Validate Appearance Button - if MCM is configured to not validate appearance automatically in the current game mode
+		if (!`XENGINE.bReviewFlagged && `GETMCMVAR(DISABLE_APPEARANCE_VALIDATION_DEBUG) || 
+			`XENGINE.bReviewFlagged && `GETMCMVAR(DISABLE_APPEARANCE_VALIDATION_REVIEW))
+		{
+			CreateOrUpdateButton(ListIndex, CustomizeScreen, 
+					strVadlidateAppearance, strVadlidateAppearanceButton, OnValidateButtonClicked);
+		}
+
+		// ## Configure Uniform Button - if the unit is uniform
+		if (bUnitIsUniform)
+		{
+			CreateOrUpdateListItem(ListIndex, CustomizeScreen, 
+				strConfigureUniform, OnConfigureUniformItemClicked);
 		}
 	}
-
-		// ## Validate Appearance Button - if MCM is configured to not validate appearance automatically in the current game mode
-	if (!`XENGINE.bReviewFlagged && `GETMCMVAR(DISABLE_APPEARANCE_VALIDATION_DEBUG) || 
-		`XENGINE.bReviewFlagged && `GETMCMVAR(DISABLE_APPEARANCE_VALIDATION_REVIEW))
-	{
-		CreateOrUpdateButton('IRI_ValidateAppearance_ListItem', CustomizeScreen, true, 
-				strVadlidateAppearance, strVadlidateAppearanceButton, OnValidateButtonClicked);
-	}
-
-	// ## Configure Uniform Button - if the unit is uniform
-	CreateOrUpdateListItem('IRI_ConfigureUniform_ListItem', CustomizeScreen, bUnitIsUniform, 
-		strConfigureUniform, OnConfigureUniformItemClicked);
 	
+	// Unfortunately have to keep timer ticking in case UpdateData() is called in CustomizeScreen.
 	CustomizeScreen.SetTimer(0.25f, false, nameof(AddButtons), self);
+}
+
+private function bool ChangesAlreadyMade(UIList List)
+{	
+	local UIMechaListItem ListItem;
+	local int i;
+
+	for (i = List.ItemCount - 1; i >= 0; i--)
+	{
+		ListItem = UIMechaListItem(List.GetItem(i));
+		if (ListItem.Desc.htmlText == strManageAppearance)
+		{
+			return ListItem.bIsVisible;
+		}
+		
+	}
+	return false;
+}
+
+private function int GetIndexOfLastVisibleListItem(UIList List)
+{
+	local int i;
+
+	for (i = List.ItemCount - 1; i >= 0; i--)
+	{
+		if (List.GetItem(i).bIsVisible)
+			return i;
+	}
+	return INDEX_NONE;
 }
 
 // Get rid of "can appear as" toggles for non-uniforms.
@@ -338,6 +388,13 @@ simulated private function OnSoldierButtonClicked(UIButton ButtonSource)
 	
 	CustomizeScreen.List.ClearItems();
 	CustomizeScreen.UpdateData();
+
+	// If we relied on the existing timer for AddButtons() after doing UpdateData(),
+	// there would be a visible delay between the list updating and the new buttons being added.
+	// So we want to call AddButtons() immediately, but it would set a second timer, 
+	// so to prevent timer-ception, first remove the existing timer.l
+	CustomizeScreen.ClearTimer(nameof(AddButtons), self);
+	AddButtons();
 }
 
 private function OnUniformButtonClicked(UIButton ButtonSource)
@@ -349,11 +406,11 @@ private function OnUniformButtonClicked(UIButton ButtonSource)
 	kDialogData.strText = strConvertToUniformPopupText;
 	kDialogData.strAccept = class'UISimpleScreen'.default.m_strAccept;
 	kDialogData.strCancel = class'UISimpleScreen'.default.m_strCancel;
-	kDialogData.fnCallback = OnCloseScreenDialogCallback;
+	kDialogData.fnCallback = OnUniformButtonCallback;
 	`PRESBASE.UIRaiseDialog(kDialogData);
 }
 
-private function OnCloseScreenDialogCallback(Name eAction)
+private function OnUniformButtonCallback(Name eAction)
 {
 	local UICustomize_Menu			CustomizeScreen;
 	local XComGameState_Unit		UnitState;
@@ -390,6 +447,9 @@ private function OnCloseScreenDialogCallback(Name eAction)
 	
 	CustomizeScreen.List.ClearItems();
 	CustomizeScreen.UpdateData();	
+
+	CustomizeScreen.ClearTimer(nameof(AddButtons), self);
+	AddButtons();
 }
 
 private function OnValidateButtonClicked(UIButton ButtonSource)
@@ -444,105 +504,58 @@ private function OnValidateButtonClicked(UIButton ButtonSource)
 	CustomizeScreen.CustomizeManager.CommitChanges();
 	CustomizeScreen.CustomizeManager.ReCreatePawnVisuals(CustomizeScreen.CustomizeManager.ActorPawn, true);
 	CustomizeScreen.UpdateData();
+
+	CustomizeScreen.ClearTimer(nameof(AddButtons), self);
+	AddButtons();
 }
 
 // ===================================================================
 // INTERNAL HELPERS
 
-private function UIMechaListItem CreateOrUpdateListItem(const name MCName, UICustomize_Menu CustomizeScreen, bool bShouldShow, string strDesc, delegate<OnClickDelegate> OnListItemClicked)
+private function CreateOrUpdateListItem(out int ListIndex, UICustomize_Menu CustomizeScreen, string strDesc, delegate<OnClickDelegate> OnListItemClicked)
 {
 	local UIMechaListItem ListItem;
 
-	ListItem = UIMechaListItem(CustomizeScreen.List.ItemContainer.GetChildByName(MCName, false));
-	if (ListItem != none) 
-	{	
-		if (bShouldShow)
-		{
-			if (!ListItem.bIsVisible) 
-				ListItem.Show();
+	ListItem = CustomizeScreen.GetListItem(ListIndex++);
 
-			// Update only when necessary to prevent UI flickering.
-			if (ListItem.Desc.htmlText != strDesc || string(ListItem.OnClickDelegate) != string(OnListItemClicked))
-				ListItem.UpdateDataDescription(strDesc, OnListItemClicked);
-		}
-		else
-		{
-			ListItem.Hide();
-		}
-	}
-	else if (bShouldShow)
+	// Update only when necessary to prevent UI flickering.
+	if (ListItem.Desc.htmlText != strDesc || string(ListItem.OnClickDelegate) != string(OnListItemClicked))
 	{
-		ListItem = CustomizeScreen.Spawn(class'UIMechaListItem', CustomizeScreen.List.ItemContainer);
-		ListItem.InitListItem(MCName).bAnimateOnInit = false;
 		ListItem.UpdateDataDescription(strDesc, OnListItemClicked);
 	}
-	return ListItem;
+
+	ListItem.Show();
 }
 
-private function UIMechaListItem CreateOrUpdateCheckbox(const name MCName, UICustomize_Menu CustomizeScreen, bool bShouldShow, string strDesc, bool bIsChecked, delegate<OnCheckboxChangedCallback> OnCheckboxChanged)
+private function CreateOrUpdateCheckbox(out int ListIndex, UICustomize_Menu CustomizeScreen, string strDesc, bool bIsChecked, delegate<OnCheckboxChangedCallback> OnCheckboxChanged)
 {
 	local UIMechaListItem ListItem;
 
-	ListItem = UIMechaListItem(CustomizeScreen.List.ItemContainer.GetChildByName(MCName, false));
-	if (ListItem != none) 
-	{	
-		if (bShouldShow)
-		{
-			if (!ListItem.bIsVisible) 
-				ListItem.Show();
+	ListItem = CustomizeScreen.GetListItem(ListIndex++);
 
-			if (ListItem.Desc.htmlText != strDesc || ListItem.Checkbox.bChecked != bIsChecked || string(ListItem.Checkbox.onChangedDelegate) != string(OnCheckboxChanged))
-				ListItem.UpdateDataCheckbox(strDesc, "", bIsChecked, OnCheckboxChanged);
-		}
-		else
-		{
-			ListItem.Hide();
-		}
-	}
-	else if (bShouldShow)
+	if (ListItem.Desc.htmlText != strDesc || ListItem.Checkbox.bChecked != bIsChecked || string(ListItem.Checkbox.onChangedDelegate) != string(OnCheckboxChanged))
 	{
-		ListItem = CustomizeScreen.Spawn(class'UIMechaListItem', CustomizeScreen.List.ItemContainer);
-		ListItem.InitListItem(MCName).bAnimateOnInit = false;
 		ListItem.UpdateDataCheckbox(strDesc, "", bIsChecked, OnCheckboxChanged);
 	}
-	return ListItem;
+
+	ListItem.Show();
 }
 
-private function UIMechaListItem CreateOrUpdateButton(const name MCName, UICustomize_Menu CustomizeScreen, bool bShouldShow, string strDesc, string strButtonLabel, delegate<OnButtonClickedCallback> OnButtonClicked)
+private function CreateOrUpdateButton(out int ListIndex, UICustomize_Menu CustomizeScreen, string strDesc, string strButtonLabel, delegate<OnButtonClickedCallback> OnButtonClicked)
 {
 	local UIMechaListItem ListItem;
 
-	ListItem = UIMechaListItem(CustomizeScreen.List.ItemContainer.GetChildByName(MCName, false));
-	if (ListItem != none) 
-	{	
-		if (bShouldShow)
-		{
-			if (!ListItem.bIsVisible) 
-				ListItem.Show();
-
-			if (ListItem.Desc.htmlText != strDesc || ListItem.Button.Text !=  strButtonLabel || string(ListItem.OnButtonClickedCallback) != string(OnButtonClicked))
-				ListItem.UpdateDataButton(strDesc, strButtonLabel, OnButtonClicked);
-		}
-		else
-		{
-			ListItem.Hide();
-		}
-	}
-	else if (bShouldShow)
+	ListItem = CustomizeScreen.GetListItem(ListIndex++);
+	if (ListItem.Desc.htmlText != strDesc || ListItem.Button.Text !=  strButtonLabel || string(ListItem.OnButtonClickedCallback) != string(OnButtonClicked))
 	{
-		ListItem = CustomizeScreen.Spawn(class'UIMechaListItem', CustomizeScreen.List.ItemContainer);
-		ListItem.InitListItem(MCName).bAnimateOnInit = false;
 		ListItem.UpdateDataButton(strDesc, strButtonLabel, OnButtonClicked);
 	}
-	return ListItem;
+
+	ListItem.Show();
 }
 
 // ----------------------------------------------------------------------
 
-event OnReceiveFocus(UIScreen Screen)
-{
-	OnInit(Screen);
-}
 
 defaultproperties
 {
