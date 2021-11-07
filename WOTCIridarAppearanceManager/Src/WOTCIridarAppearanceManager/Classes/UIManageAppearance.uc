@@ -4,6 +4,13 @@ class UIManageAppearance extends UICustomize;
 /*
 # Priority
 
+If global uniform managemenet has been enabled in MCM, then the player put a flag on specific units to exclude them from the system, and then the player turned off the global system, the flag will remain on those units, telling the system the player wants to auto-manage their uniforms, despite it being turned off globally.
+This is undesirable. Either need a separate flag to exclude units from the system (preferable, so specific units can never get uniforms regardless of the global toggle)
+
+Save modlist in CP files, and warn if mods are missing.
+
+Use UITextContainer to add a vertical scrollbar to biography text
+
 # Character Pool
 Fix weapons / Dual Wielding not working in CP?
 Search bar for CP units?
@@ -11,9 +18,6 @@ Sorting buttons for CP units?
 
 Fix wrong unit being opened in CP sometimes. (Has to do with deleting units?)
 -- Apparently the problem is the CP opens the unit you had selected when the interface раздупляется, а не тот юнит по которому кликал. Это ваниллы проблема. Можно пофиксить, наверное
-
-If the MCM setting was enabled globally, and the player disabled it for some soldiers, and then the player disabled it globally, the setting will be enabled for those specific soldiers. 
-This is undesirable. Figure out what to do about it. (probably wipe the setting when the MCM setting is disabled)
 
 # This screen
 
@@ -32,6 +36,10 @@ Make clicking an item toggle its checkbox?
 Maybe allow Appearance Store button to work as a "reskin armor" button? - redundant, can be done with this mod's customization screen by importing unit's own appearance from another armor.
 
 ## Ideas for later
+
+Uniforms for resistance fighters
+
+Investigate customizing off-duty (Underlay?) appearance.
 
 Make GetApplyChangesNumUnits() take into account gender of the targeted soldier, as depending on selected cosmetic options they may not receive any changes.
 

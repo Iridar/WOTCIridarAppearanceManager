@@ -12,6 +12,8 @@ var localized string strVadlidateAppearance;
 var localized string strVadlidateAppearanceButton;
 var localized string strConfigureUniform;
 var localized string strUniformSoldierFirstName;
+var localized string strAutoManageUniformForUnitTitle;
+var localized array<string> strAutoManageUniformForUnit;
 
 `include(WOTCIridarAppearanceManager\Src\ModConfigMenuAPI\MCM_API_CfgHelpers.uci)
 
@@ -45,7 +47,6 @@ private function AddButtons()
 {
 	local UICustomize_Menu			CustomizeScreen;;
 	local bool						bUnitIsUniform;
-	local bool						bAutoManageUniform;
 	local XComGameState_Unit		UnitState;
 	local CharacterPoolManager_AM	CharPoolMgr;
 	local int						ListIndex;
@@ -78,30 +79,20 @@ private function AddButtons()
 				class'UIArmory_MainMenu'.default.m_strLoadout, OnLoadoutItemClicked);
 		}
 
-		if (CustomizeScreen.bInArmory)
+		// ## Auto Manage Uniform toggle - always for uniforms. Uniforms are accessible only in Character Pool.
+		if (bUnitIsUniform && !CustomizeScreen.bInArmory)
 		{
-			bAutoManageUniform = class'Help'.static.IsAutoManageUniformValueSet(UnitState);
+			CreateOrUpdateCheckbox(ListIndex, CustomizeScreen, 
+				strUseForAutoManageUniform, CharPoolMgr.IsAutoManageUniform(UnitState), OnAutoManageUniformCheckboxChanged);
+		}
+		else if (CustomizeScreen.bInArmory) // ## Manage uniform for units dropdown - always for non-uniforms.
+		{
+			// While in armory, use Unit Values to control this.
+			CreateOrUpdateSpinner(ListIndex, CustomizeScreen, class'Help'.static.GetAutoManageUniformForUnitValue(UnitState));
 		}
 		else
 		{
-			bAutoManageUniform = CharPoolMgr.IsAutoManageUniform(UnitState);
-		}
-
-		// ## Auto Manage Uniform toggle - always.
-		if (bUnitIsUniform)
-		{
-			CreateOrUpdateCheckbox(ListIndex, CustomizeScreen, 
-				strUseForAutoManageUniform, bAutoManageUniform, OnAutoManageUniformCheckboxChanged);
-		}
-		else if (`GETMCMVAR(AUTOMATIC_UNIFORM_MANAGEMENT))
-		{
-			CreateOrUpdateCheckbox(ListIndex, CustomizeScreen, 
-				strDisableAutoManageUniform, bAutoManageUniform, OnAutoManageUniformCheckboxChanged);
-		}
-		else
-		{
-			CreateOrUpdateCheckbox(ListIndex, CustomizeScreen, 
-				strEnableAutoManageUniform, bAutoManageUniform, OnAutoManageUniformCheckboxChanged);
+			CreateOrUpdateSpinner(ListIndex, CustomizeScreen, CharPoolMgr.GetAutoManageUniformForUnit(UnitState));
 		}
 
 		// ## Manage Appearance Button - always
@@ -211,12 +202,6 @@ private function OnAutoManageUniformCheckboxChanged(UICheckbox CheckBox)
 	local CharacterPoolManager_AM	CharPoolMgr;
 	local XComGameState_Unit		UnitState;
 
-	//if (UIMechaListItem(CheckBox.GetParent(class'UIMechaListItem')).bDisabled)
-	//{
-	//	CheckBox.SetChecked(false, false);
-	//	return;
-	//}
-
 	CustomizeScreen = UICustomize_Menu(CheckBox.Screen);
 	if (CustomizeScreen == none)
 		return;
@@ -229,32 +214,7 @@ private function OnAutoManageUniformCheckboxChanged(UICheckbox CheckBox)
 	if (CharPoolMgr == none)
 		return;
 
-	if (CustomizeScreen.bInArmory)
-	{
-		SetIsAutoManageUniform(UnitState, CheckBox.bChecked);
-	}
-	else
-	{
-		CharPoolMgr.SetIsAutoManageUniform(UnitState, CheckBox.bChecked);
-	}
-}
-
-private function SetIsAutoManageUniform(XComGameState_Unit UnitState, const bool bValue)
-{
-	local XComGameState NewGameState;
-
-	NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState(GetFuncName() @ UnitState.GetFullName() @ bValue);
-
-	UnitState = XComGameState_Unit(NewGameState.ModifyStateObject(UnitState.Class, UnitState.ObjectID));
-	if (bValue)
-	{
-		UnitState.SetUnitFloatValue(class'Help'.default.AutoManageUniformValueName, 1.0f, eCleanup_Never);
-	}
-	else
-	{
-		UnitState.ClearUnitValue(class'Help'.default.AutoManageUniformValueName);
-	}
-	`GAMERULES.SubmitGameState(NewGameState);
+	CharPoolMgr.SetIsAutoManageUniform(UnitState, CheckBox.bChecked);
 }
 
 private function OnManageAppearanceItemClicked()
@@ -526,6 +486,34 @@ private function OnValidateButtonClicked(UIButton ButtonSource)
 	AddButtons();
 }
 
+ private function OnDropdownSelectionChanged(UIDropdown DropdownControl)
+{
+	local XComGameState_Unit			UnitState;
+	local UICustomize_Menu				CustomizeScreen;
+	local CharacterPoolManager_AM		CharPool;
+
+	CustomizeScreen = UICustomize_Menu(`SCREENSTACK.GetCurrentScreen());
+	if (CustomizeScreen == none)
+		return;
+
+	UnitState = CustomizeScreen.CustomizeManager.UpdatedUnitState;
+	if (UnitState == none)
+		return;
+
+	if (CustomizeScreen.bInArmory)
+	{
+		class'Help'.static.SetAutoManageUniformForUnitValue_SubmitGameState(UnitState, DropdownControl.SelectedItem);
+	}
+	else
+	{
+		CharPool = `CHARACTERPOOLMGRAM;
+		if (CharPool == none)
+			return;
+
+		CharPool.SetAutoManageUniformForUnit(UnitState, DropdownControl.SelectedItem);
+	}	
+}
+
 // ===================================================================
 // INTERNAL HELPERS
 
@@ -550,7 +538,7 @@ private function CreateOrUpdateCheckbox(out int ListIndex, UICustomize_Menu Cust
 
 	ListItem = CustomizeScreen.GetListItem(ListIndex++);
 
-	if (ListItem.Desc.htmlText != strDesc || ListItem.Checkbox.bChecked != bIsChecked || string(ListItem.Checkbox.onChangedDelegate) != string(OnCheckboxChanged))
+	if (ListItem.Desc.htmlText != strDesc || ListItem.Checkbox == none || ListItem.Checkbox.bChecked != bIsChecked || string(ListItem.Checkbox.onChangedDelegate) != string(OnCheckboxChanged))
 	{
 		ListItem.UpdateDataCheckbox(strDesc, "", bIsChecked, OnCheckboxChanged);
 	}
@@ -563,7 +551,7 @@ private function CreateOrUpdateButton(out int ListIndex, UICustomize_Menu Custom
 	local UIMechaListItem ListItem;
 
 	ListItem = CustomizeScreen.GetListItem(ListIndex++);
-	if (ListItem.Desc.htmlText != strDesc || ListItem.Button.Text !=  strButtonLabel || string(ListItem.OnButtonClickedCallback) != string(OnButtonClicked))
+	if (ListItem.Desc.htmlText != strDesc || ListItem.Button == none || ListItem.Button.Text !=  strButtonLabel || string(ListItem.OnButtonClickedCallback) != string(OnButtonClicked))
 	{
 		ListItem.UpdateDataButton(strDesc, strButtonLabel, OnButtonClicked);
 	}
@@ -571,7 +559,68 @@ private function CreateOrUpdateButton(out int ListIndex, UICustomize_Menu Custom
 	ListItem.Show();
 }
 
+private function CreateOrUpdateSpinner(out int ListIndex, UICustomize_Menu CustomizeScreen, int SelectedValue)
+{
+	local UIMechaListItem ListItem;
+
+	ListItem = CustomizeScreen.GetListItem(ListIndex++);
+
+	if (ListItem.Desc.htmlText != strAutoManageUniformForUnitTitle || ListItem.Dropdown == none || string(ListItem.Dropdown.OnItemSelectedDelegate) != string(OnDropdownSelectionChanged))
+	{
+		ListItem.UpdateDataDropdown(strAutoManageUniformForUnitTitle, strAutoManageUniformForUnit, SelectedValue, OnDropdownSelectionChanged);
+		ListItem.MoveToHighestDepth();
+	}
+
+	ListItem.Show();
+}
+
 // ----------------------------------------------------------------------
+
+/*
+//if (ListItem.Desc.htmlText != strAutoManageUniformForUnitTitle || ListItem.Spinner == none || string(ListItem.Spinner.OnSpinnerChangedCallback) != string(OnSpinnerSelectionChanged))
+//ListItem.UpdateDataSpinner(strAutoManageUniformForUnitTitle, strAutoManageUniformForUnit[SelectedValue], OnSpinnerSelectionChanged);
+
+ private function OnSpinnerSelectionChanged(UIListItemSpinner SpinnerControl, int Direction)
+ {
+	local XComGameState_Unit			UnitState;
+	local UICustomize_Menu				CustomizeScreen;
+	local CharacterPoolManager_AM		CharPool;
+	local int							NewValue;
+
+	CustomizeScreen = UICustomize_Menu(`SCREENSTACK.GetCurrentScreen());
+	if (CustomizeScreen == none)
+		return;
+
+	UnitState = CustomizeScreen.CustomizeManager.UpdatedUnitState;
+	if (UnitState == none)
+		return;
+
+	if (CustomizeScreen.bInArmory)
+	{
+		// Direction == -1 - left
+		// Direction == 1 - right
+		NewValue = class'Help'.static.GetAutoManageUniformForUnitValue(UnitState) + Direction;
+		if (NewValue < 0 || NewValue >= EAutoManageUniformForUnit_MAX)
+			return;
+
+		class'Help'.static.SetAutoManageUniformForUnitValue_SubmitGameState(UnitState, NewValue);
+		SpinnerControl.SetValue(strAutoManageUniformForUnit[NewValue]);	
+	}
+	else
+	{
+		CharPool = `CHARACTERPOOLMGRAM;
+		if (CharPool == none)
+			return;
+
+		NewValue = CharPool.GetAutoManageUniformForUnit(UnitState) + Direction;
+		if (NewValue < 0 || NewValue >= EAutoManageUniformForUnit_MAX)
+			return;
+
+		CharPool.SetAutoManageUniformForUnit(UnitState, NewValue);
+		SpinnerControl.SetValue(strAutoManageUniformForUnit[NewValue]);	
+	}	
+ }
+ */
 
 
 defaultproperties

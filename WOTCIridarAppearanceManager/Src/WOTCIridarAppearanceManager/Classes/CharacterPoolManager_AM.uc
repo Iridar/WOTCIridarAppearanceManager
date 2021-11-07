@@ -25,6 +25,13 @@ struct UniformSettingsStruct
 	var array<CosmeticOptionStruct> CosmeticOptions;
 };
 
+enum EAutoManageUniformForUnit
+{
+	EAMUFU_Default,
+	EAMUFU_AlwaysOn,
+	EAMUMU_AlwaysOff
+};
+
 struct CharacterPoolExtraData
 {
 	// Used to sync Extra Data with specific UnitStates while the game is in play.
@@ -39,13 +46,10 @@ struct CharacterPoolExtraData
 
 	var array<UniformSettingsStruct> UniformSettings; // For each stored appearance, determines which part of the appearance counts as a part of the uniform.
 	var bool bIsUniform;		// Whether this unit is a uniform.
-	var bool bIsAnyClassUniform;// Whether this unit's appearance can be applied to any soldier class, or only the matching ones.
-	var bool bAutoManageUniform;// Universal flag. 
-								// If this unit is a uniform, then they will be considered by the automated Uniform Manager only if this flag is set to true.
-								// This allows having uniforms that can be used only by the player manually. 
-								// If this unit is NOT a uniform, and:
-								// If automatic uniform management is enabled in MCM, then if this flag is 'true', this unit will be excluded from uniform management.
-								// If automatic uniform management is disabled in MCM, then if this flag is 'true', this unit will receive uniform management.
+	var bool bIsAnyClassUniform;// Whether this uniform can be applied to any soldier class, or only the matching ones.
+	var bool bAutoManageUniform;// Whether this uniform should be applied automatically to valid units. Setting this to "false" allows having uniforms that can be used only manually by the player. 
+								
+	var EAutoManageUniformForUnit AutoManageUniformForUnit;
 };
 var array<CharacterPoolExtraData> ExtraDatas;
 
@@ -210,6 +214,21 @@ function RemoveUnit(XComGameState_Unit Character)
 	}
 }
 
+function XComGameState_Unit CreateCharacter(XComGameState StartState, optional ECharacterPoolSelectionMode SelectionModeOverride = eCPSM_None, optional name CharacterTemplateName, optional name ForceCountry, optional string UnitName )
+{
+	local XComGameState_Unit UnitState;
+
+	UnitState = super.CreateCharacter(StartState, SelectionModeOverride, CharacterTemplateName, ForceCountry, UnitName);
+
+	// Newly created units' AutoManageUniformForUnit flag should be the same as the eponymous setting in character pool.
+	if (IsCharacterPoolCharacter(UnitState))
+	{
+		class'Help'.static.SetAutoManageUniformForUnitValue(UnitState, GetAutoManageUniformForUnit(UnitState));
+	}	
+
+	return UnitState;
+}
+
 // ============================================================================================
 // INTERFACE FUNCTIONS 
 
@@ -243,6 +262,10 @@ final function bool IsAutoManageUniform(XComGameState_Unit UnitState)
 {
 	return ExtraDatas[ GetExtraDataIndexForUnit(UnitState) ].bAutoManageUniform;
 }
+final function EAutoManageUniformForUnit GetAutoManageUniformForUnit(XComGameState_Unit UnitState)
+{
+	return ExtraDatas[ GetExtraDataIndexForUnit(UnitState) ].AutoManageUniformForUnit;
+}
 final function SetIsUnitUniform(XComGameState_Unit UnitState, bool bValue)
 {
 	ExtraDatas[ GetExtraDataIndexForUnit(UnitState) ].bIsUniform = bValue;
@@ -256,6 +279,11 @@ final function SetIsUnitAnyClassUniform(XComGameState_Unit UnitState, bool bValu
 final function SetIsAutoManageUniform(const XComGameState_Unit UnitState, const bool bValue)
 {
 	ExtraDatas[ GetExtraDataIndexForUnit(UnitState) ].bAutoManageUniform = bValue;
+	SaveCharacterPool();
+}
+final function SetAutoManageUniformForUnit(const XComGameState_Unit UnitState, const int eValue)
+{
+	ExtraDatas[ GetExtraDataIndexForUnit(UnitState) ].AutoManageUniformForUnit = EAutoManageUniformForUnit(eValue);
 	SaveCharacterPool();
 }
 
@@ -300,10 +328,17 @@ final function SaveCosmeticOptionsForUnit(const array<CosmeticOptionStruct> Cosm
 // Called from X2EventListener_AM.
 final function bool ShouldAutoManageUniform(const XComGameState_Unit UnitState)
 {
-	// If MCM setting of global uniform management is NOT enabled, we want to manage this unit's uniform if the flag on the unit IS set.
-	// If MCM setting of global uniform management IS enabled, we want to mange this unit's uniform if the flag on the unit is NOT set.
-	// Which boils down to "exclusive OR" logical operation.
-	return `GETMCMVAR(AUTOMATIC_UNIFORM_MANAGEMENT) != IsAutoManageUniformFlagSet(UnitState);
+	switch (GetAutoManageUniformForUnit(UnitState))
+	{
+		case EAMUFU_Default:
+			return `GETMCMVAR(AUTOMATIC_UNIFORM_MANAGEMENT);
+		case EAMUFU_AlwaysOn:
+			return true;
+		case EAMUMU_AlwaysOff:
+			return false;
+		default:
+			return false;
+	}
 }
 
 // Direct copy of the original CreateSoldier() with the option to force specific gender. Used to save soldier appearance as uniform.
@@ -366,15 +401,6 @@ event XComGameState_Unit CreateSoldierForceGender(name DataTemplateName, optiona
 
 // ============================================================================================
 // INTERNAL FUNCTIONS
-
-private function bool IsAutoManageUniformFlagSet(const XComGameState_Unit UnitState)
-{
-	if (IsCharacterPoolCharacter(UnitState))
-	{
-		return IsAutoManageUniform(UnitState);
-	}
-	return class'Help'.static.IsAutoManageUniformValueSet(UnitState);
-}
 
 final function bool IsCharacterPoolCharacter(const XComGameState_Unit UnitState)
 {

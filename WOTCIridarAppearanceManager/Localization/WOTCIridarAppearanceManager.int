@@ -76,6 +76,11 @@ strVadlidateAppearanceButton = "Validate"
 strConfigureUniform = "Configure Uniform"
 strUniformSoldierFirstName = "UNIFORM"
 
+strAutoManageUniformForUnitTitle = "Uniform management"
+strAutoManageUniformForUnit[0] = "Global"
+strAutoManageUniformForUnit[1] = "Always"
+strAutoManageUniformForUnit[2] = "Never"
+
 [AM_MCM_Screen]
 ModName = "Appearance Manager"
 PageTitle = "Appearance Manager"

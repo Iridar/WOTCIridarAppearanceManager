@@ -2,7 +2,7 @@ class Help extends Object abstract config(AppearanceManager_DEFAULT);
 
 var config array<string> EmptyCosmeticPartialNames;
 
-var name AutoManageUniformValueName;
+var private name AutoManageUniformForUnitValueName;
 
 var localized string strCurrentAppearance;
 
@@ -47,11 +47,28 @@ static final function string GetFriendlyGender(int iGender)
 }
 
 
-static final function bool IsAutoManageUniformValueSet(const XComGameState_Unit UnitState)
+static final function int GetAutoManageUniformForUnitValue(const XComGameState_Unit UnitState)
 {
 	local UnitValue UV;
 
-	return UnitState.GetUnitValue(default.AutoManageUniformValueName, UV);
+	UnitState.GetUnitValue(default.AutoManageUniformForUnitValueName, UV);
+
+	return UV.fValue;
+}
+
+static final function SetAutoManageUniformForUnitValue_SubmitGameState(XComGameState_Unit UnitState, int NewValue)
+{
+	local XComGameState NewGameState;
+
+	NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState(GetFuncName() @ UnitState.GetFullName() @ NewValue);
+	UnitState = XComGameState_Unit(NewGameState.ModifyStateObject(UnitState.Class, UnitState.ObjectID));
+	UnitState.SetUnitFloatValue(default.AutoManageUniformForUnitValueName, NewValue, eCleanup_Never);
+	`GAMERULES.SubmitGameState(NewGameState);
+}
+
+static final function SetAutoManageUniformForUnitValue(XComGameState_Unit UnitState, int NewValue)
+{
+	UnitState.SetUnitFloatValue(default.AutoManageUniformForUnitValueName, NewValue, eCleanup_Never);
 }
 
 static final function X2ItemTemplate GetItemTemplateFromCosmeticTorso(const name nmTorso)
@@ -158,7 +175,7 @@ static final function PlayStrategySoundEvent(string strKey, Actor InActor)
 
 defaultproperties
 {
-	AutoManageUniformValueName = "IRI_AutoManageUniform_Value"
+	AutoManageUniformForUnitValueName = "IRI_AutoManageUniform_Value"
 }
 
 // Unused stuff below

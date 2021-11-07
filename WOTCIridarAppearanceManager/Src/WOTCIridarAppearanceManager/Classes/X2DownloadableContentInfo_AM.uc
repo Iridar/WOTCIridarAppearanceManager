@@ -14,6 +14,7 @@ static event OnPostTemplatesCreated()
 {
 	class'UIManageAppearance'.static.SetInitialSoldierListSettings();
 }
+
 /*
 static event OnLoadedSavedGame()
 {
