@@ -412,7 +412,7 @@ private function OnUniformButtonClicked(UIButton ButtonSource)
 	kData.strTitle = class'UIManageAppearance'.default.strEnterUniformName;
 	kData.iMaxChars = 99;
 	kData.strInputBoxText = class'Help'.static.GetFriendlyGender(UnitState.kAppearance.iGender);
-	kData.fnCallback = OnConvertToUniformInputBoxAccepted;
+	kData.fnCallbackAccepted = OnConvertToUniformInputBoxAccepted;
 
 	`PRESBASE.UIInputDialog(kData);
 }

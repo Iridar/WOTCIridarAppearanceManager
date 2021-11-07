@@ -4,8 +4,6 @@ class UIManageAppearance extends UICustomize;
 /*
 # Priority
 
-Make it possible to delete presets.
-
 # Character Pool
 Fix weapons / Dual Wielding not working in CP?
 Search bar for CP units?
@@ -76,9 +74,9 @@ var localized string strExitScreenPopup_Leave;
 var localized string strExitScreenPopup_Stay;
 var localized string strShowAllOptions;
 var localized string strCopyPreset;
+var localized string strCopyPresetButtonDisabled;
 var localized string strNotAvailableInCharacterPool;
 var localized string strSameGenderRequired;
-var localized string strCopyPresetButtonDisabled;
 var localized string strConfirmApplyChangesTitle;
 var localized string strConfirmApplyChangesText;
 var localized string strCreatePreset;
@@ -92,6 +90,8 @@ var localized string strFailedToCreateUnitTitle;
 var localized string strFailedToCreateUnitText;
 var localized string strInvalidEmptyUniformNameTitle;
 var localized string strInvalidEmptyUniformNameText;
+var localized string strDeletePreset;
+var localized string strCannotDeleteThisPreset;
 
 // ==============================================================================
 // Screen Options - preserved between game restarts.
@@ -1459,7 +1459,7 @@ private function bool IsCheckboxChecked(name OptionName)
 {
 	local UIMechaListItem ListItem;
 
-	ListItem = UIMechaListItem(OptionsList.GetChildByName(OptionName, false));
+	ListItem = UIMechaListItem(OptionsList.ItemContainer.GetChildByName(OptionName, false));
 
 	return ListItem != none && ListItem.Checkbox.bChecked;
 }
@@ -1468,7 +1468,7 @@ final function SetOptionsListCheckbox(name OptionName, bool bChecked)
 {
 	local UIMechaListItem ListItem;
 
-	ListItem = UIMechaListItem(OptionsList.GetChildByName(OptionName, false));
+	ListItem = UIMechaListItem(OptionsList.ItemContainer.GetChildByName(OptionName, false));
 
 	if (ListItem != none)
 	{
@@ -1574,6 +1574,11 @@ private function MaybeCreateAppearanceOption(name OptionName, coerce string Curr
 	local bool						bNewIsSameAsCurrent;
 
 	`AMLOG(`showvar(OptionName) @ `showvar(CurrentCosmetic) @ `showvar(NewCosmetic));
+
+	//if (OptionName == 'nmBeard' && ArmoryUnit.kAppearance.iGender == eGender_Female)
+	//{
+	//	return;
+	//}
 
 	// Don't create the cosmetic option if both the current appearance and selected appearance are the same or empty.
 	switch (CosmeticType)
@@ -1850,9 +1855,8 @@ private function bool GetOptionCheckboxPosition(const name OptionName)
 
 private function CreateOptionPresets()
 {
-	local string strFriendlyPresetName;
 	local UIMechaListItem_Button SpawnedItem;
-	local int i;
+	local name PresetName;
 
 	if (Presets.Length == 0)
 		return;
@@ -1868,17 +1872,11 @@ private function CreateOptionPresets()
 	if (!bShowPresets)
 		return;
 
-	for (i = 0; i < Presets.Length; i++)
+	foreach Presets(PresetName)
 	{
-		strFriendlyPresetName = Localize("UIManageAppearance", string(Presets[i]), "WOTCIridarAppearanceManager");
-		if (strFriendlyPresetName == "" || 
-			InStr(strFriendlyPresetName, "WOTCIridarAppearanceManager.UIManageAppearance.") != INDEX_NONE) // Happens if there's no localization for this preset.
-		{
-			strFriendlyPresetName = string(Presets[i]);
-		}
-
-		CreateOptionPreset(Presets[i], strFriendlyPresetName, "", CurrentPreset == Presets[i]);
+		CreateOptionPreset(PresetName, GetPresetFriendlyName(PresetName), "", CurrentPreset == PresetName);
 	}
+	UpdatePresetListItemsButtons();
 }
 
 private function CreateOptionPreset(name OptionName, string strText, string strTooltip, optional bool bChecked)
@@ -1891,11 +1889,6 @@ private function CreateOptionPreset(name OptionName, string strText, string strT
 	SpawnedItem.UpdateDataCheckbox(strText, strTooltip, bChecked, OptionPresetCheckboxChanged, none);
 
 	`AMLOG(`showvar(OptionName) @ `showvar(bChecked));
-
-	if (OptionName != 'PresetDefault')
-	{
-		SpawnedItem.UpdateDataButton(strText, strCopyPreset, OnCopyPresetButtonClicked);
-	}
 }
 
 private function OnCopyPresetButtonClicked(UIButton ButtonSource)
@@ -1941,15 +1934,17 @@ private function OnCreatePresetButtonClicked(UIButton ButtonSource)
 
 	kData.strTitle = strCreatePresetTitle;
 	kData.iMaxChars = 63;
-	kData.strInputBoxText = strCreatePresetText;
-	kData.fnCallback = OnCreatePresetInputBoxAccepted;
+	kData.strInputBoxText = Repl(GetPresetFriendlyName(CurrentPreset), " ", "_") $ strCreatePresetText;
+	kData.fnCallbackAccepted = OnCreatePresetInputBoxAccepted;
 
 	Movie.Pres.UIInputDialog(kData);
 }
 
 function OnCreatePresetInputBoxAccepted(string text)
 {
-	local name NewPresetName;
+	local CheckboxPresetStruct	NewPresetStruct;
+	local name					NewPresetName;
+	local int i;
 
 	text = Repl(text, " ", "_"); // Oh, you want to break this preset by putting spaces into a 'name'? I'm afraid I can't let you do that, Dave..
 
@@ -1959,14 +1954,29 @@ function OnCreatePresetInputBoxAccepted(string text)
 	{
 		// Not letting you create duplicates either.
 		ShowInfoPopup(strDuplicatePresetDisallowedTitle, strDuplicatePresetDisallowedText, eDialog_Warning);
+		return;
 	}
-	else
+
+	Presets.AddItem(NewPresetName);
+
+	// Copy settings from current preset to the new preset
+	for (i = CheckboxPresets.Length - 1; i >= 0; i--)
 	{
-		Presets.AddItem(NewPresetName);
-		default.Presets = Presets;
-		self.SaveConfig();
-		UpdateOptionsList();
+		if (CheckboxPresets[i].Preset == CurrentPreset)
+		{
+			NewPresetStruct = CheckboxPresets[i];
+			NewPresetStruct.Preset = NewPresetName;
+			CheckboxPresets.AddItem(NewPresetStruct);
+		}
 	}
+
+	default.CheckboxPresets = CheckboxPresets;
+	default.Presets = Presets;
+	self.SaveConfig();
+
+	CurrentPreset = NewPresetName;
+	//ApplyPresetCheckboxPositions(); // No need, settins would be identical.
+	UpdateOptionsList();
 }
 
 function OptionsListItemClicked(UIList ContainerList, int ItemIndex)
@@ -1994,7 +2004,6 @@ function OptionShowPresetsChanged(UICheckbox CheckBox)
 
 function OptionPresetCheckboxChanged(UICheckbox CheckBox)
 {
-	local UIMechaListItem_Button ListItem;
 	local name PresetName;
 	local name CyclePreset;
 
@@ -2013,17 +2022,80 @@ function OptionPresetCheckboxChanged(UICheckbox CheckBox)
 		}
 		ApplyPresetCheckboxPositions();
 		UpdateUnitAppearance();
+		UpdatePresetListItemsButtons();
+	}
+}
 
-		// If currently selected preset is not the default one, lock the "Copy Preset" buttons so that the player can't accidentally ruin them.
-		foreach Presets(PresetName)
-		{
-			ListItem = UIMechaListItem_Button(OptionsList.GetChildByName(PresetName));
-			if (ListItem != none && ListItem.Button != none)
+private function UpdatePresetListItemsButtons()
+{
+	local UIMechaListItem_Button	ListItem;
+	local name						PresetName;
+	
+	foreach Presets(PresetName)
+	{
+		if (PresetName == 'PresetDefault') // Default preset doesn't have a button to update.
+			continue;
+
+		ListItem = UIMechaListItem_Button(OptionsList.ItemContainer.GetChildByName(PresetName));
+		if (ListItem != none)
+		{		
+			// If the currently selected preset is the default one, then set all buttons to copy mode and enable them.
+			if (CurrentPreset == 'PresetDefault')
 			{
-				ListItem.Button.SetDisabled(CurrentPreset != 'PresetDefault', strCopyPresetButtonDisabled);
+				ListItem.UpdateDataButton(ListItem.Desc.htmlText, strCopyPreset, OnCopyPresetButtonClicked);
+				ListItem.Button.SetDisabled(false);
+				ListItem.Button.RemoveTooltip();
 			}
+			else if (PresetName == CurrentPreset) // Otherwise - currently selected preset can be deleted.
+			{
+				ListItem.UpdateDataButton(ListItem.Desc.htmlText, strDeletePreset, OnDeletePresetButtonClicked);
+				if (PresetName == 'PresetUniform')
+				{
+					ListItem.Button.SetDisabled(true, strCannotDeleteThisPreset); // Cannot allow deleting the uniform preset.
+				}
+				else
+				{
+					ListItem.Button.SetDisabled(false);
+					ListItem.Button.RemoveTooltip();
+				}
+			}
+			else // And all other preset buttons are set to copy mode and disabled.
+			{
+				ListItem.UpdateDataButton(ListItem.Desc.htmlText, strCopyPreset, OnCopyPresetButtonClicked);
+				ListItem.Button.SetDisabled(true, strCopyPresetButtonDisabled);
+			}							
 		}
 	}
+}
+
+private function OnDeletePresetButtonClicked(UIButton ButtonSource)
+{
+	//local name DeletePreset;
+	local int i;
+
+	//DeletePreset = ButtonSource.GetParent(class'UIMechaListItem_Button').MCName;
+
+	`AMLOG("Deleting preset:" @ CurrentPreset @ "This preset exists:" @ Presets.Find(CurrentPreset) != INDEX_NONE);
+
+	Presets.RemoveItem(CurrentPreset);
+
+	// Wipe preset settings for the preset we're deleting.
+	for (i = CheckboxPresets.Length - 1; i >= 0; i--)
+	{
+		if (CheckboxPresets[i].Preset == CurrentPreset)
+		{
+			CheckboxPresets.Remove(i, 1);
+		}
+	}
+
+	default.Presets = Presets;
+	default.CheckboxPresets = CheckboxPresets;
+	SaveConfig();
+
+	CurrentPreset = 'PresetDefault';
+	UpdateOptionsList();
+	ApplyPresetCheckboxPositions();
+	UpdateUnitAppearance();
 }
 
 // ================================================================================================================================================
@@ -2407,6 +2479,18 @@ static private function string GetOptionFriendlyName(name OptionName)
 	default:
 		return string(OptionName);
 	}
+}
+
+private function string GetPresetFriendlyName(const name PresetName)
+{
+	local string strFriendlyName;
+
+	strFriendlyName = Localize("UIManageAppearance", string(PresetName), "WOTCIridarAppearanceManager");
+	if (strFriendlyName != "" && InStr(strFriendlyName, "WOTCIridarAppearanceManager.UIManageAppearance.") == INDEX_NONE) // Happens if there's no localization for this preset.
+	{
+		return strFriendlyName;
+	}
+	return string(PresetName);
 }
 
 // =============================================================================================================================

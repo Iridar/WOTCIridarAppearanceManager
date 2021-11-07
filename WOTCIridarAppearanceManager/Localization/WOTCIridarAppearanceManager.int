@@ -29,23 +29,25 @@ strExitScreenPopup_Leave = "Exit without changes"
 strExitScreenPopup_Stay = "Stay on screen"
 
 strShowAllOptions = "SHOW ALL OPTIONS"
-strCopyPreset = "Copy Preset"
 
 strNotAvailableInCharacterPool = "Not available in Character Pool"
 strSameGenderRequired = "This appearance option is locked due to gender mismatch with the selected appearance."
+strCopyPreset = "Copy Preset"
 strCopyPresetButtonDisabled = "Presets can be copied only into the Default Preset"
+strDeletePreset = "Delete Preset"
+strCannotDeleteThisPreset = "The mod cannot function without this preset, it cannot be deleted."
 
 strConfirmApplyChangesTitle = "APPLY CHANGES?"
 strConfirmApplyChangesText = "Warning! You are about to apply appearance changes to %NUM_UNITS% units. Proceed?"
 
 strCreatePreset = "Create Preset""
 strCreatePresetTitle = "Create new preset?"
-strCreatePresetText = "Enter preset name"
+strCreatePresetText = "_Copy"
 
 strDuplicatePresetDisallowedTitle = "Failed to add new preset!"
 strDuplicatePresetDisallowedText = "A preset with that name already exists. Aborting."
 
-strSaveAsUniform = "SAVE AS UNIFORM"
+strSaveAsUniform = "Save as Uniform"
 strEnterUniformName = "Enter Uniform's name:"
 
 strFailedToCreateUnitTitle = "ERROR!"
