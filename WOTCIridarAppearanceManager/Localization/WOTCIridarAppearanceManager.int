@@ -57,10 +57,6 @@ strInvalidEmptyUniformNameTitle = "Invalid Uniform name"
 strInvalidEmptyUniformNameText = "Uniform name cannot be empty."
 
 [UISL_AppearanceManager]
-strUseForAutoManageUniform = "Use for automatic uniform management"
-
-strDisableAutoManageUniform = "Disable automatic uniform management"
-strEnableAutoManageUniform = "Enable automatic uniform management"
 
 strManageAppearance = "Manage Appearance"
 strStoredAppearance = "Stored Appearance"
@@ -80,6 +76,13 @@ strAutoManageUniformForUnitTitle = "Uniform management"
 strAutoManageUniformForUnit[0] = "Global"
 strAutoManageUniformForUnit[1] = "Always"
 strAutoManageUniformForUnit[2] = "Never"
+
+strUniformStatusTitle = "Uniform status"
+;strUniformStatus[0] = "Not a uniform"
+strUniformStatus[0] = "Manual"
+strUniformStatus[1] = "Any class"
+strUniformStatus[2] = "Class-specific"
+strUniformStatus[3] = "Militia"
 
 [AM_MCM_Screen]
 ModName = "Appearance Manager"

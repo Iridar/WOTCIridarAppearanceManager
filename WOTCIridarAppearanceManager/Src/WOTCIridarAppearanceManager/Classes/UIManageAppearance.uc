@@ -520,7 +520,7 @@ function UpdateAppearanceList()
 	{
 		foreach PoolMgr.CharacterPool(CheckUnit)
 		{
-			if (PoolMgr.IsUnitUniform(CheckUnit))
+			if (PoolMgr.GetUniformStatus(CheckUnit) > EUS_NotUniform)
 			{
 				CreateAppearanceStoreEntriesForUnit(CheckUnit, true);
 			}
@@ -537,7 +537,7 @@ function UpdateAppearanceList()
 	{
 		foreach PoolMgr.CharacterPool(CheckUnit)
 		{
-			if (!PoolMgr.IsUnitUniform(CheckUnit))
+			if (PoolMgr.GetUniformStatus(CheckUnit) == EUS_NotUniform)
 			{
 				CreateAppearanceStoreEntriesForUnit(CheckUnit, true);
 			}
@@ -732,8 +732,7 @@ private function OnSaveAsUniformInputBoxAccepted(string strLastName)
 		NewUnit.SetTAppearance(ArmoryPawn.m_kAppearance);
 
 		NewUnit.SetCharacterName(class'UISL_AppearanceManager'.default.strUniformSoldierFirstName, strLastName, "");
-		PoolMgr.SetIsAutoManageUniform(NewUnit, true); 
-		PoolMgr.SetIsUnitUniform(NewUnit, true);
+		PoolMgr.SetUniformStatus(NewUnit, EUS_Manual);
 
 		NewUnit.kAppearance.iAttitude = 0;
 		NewUnit.UpdatePersonalityTemplate();

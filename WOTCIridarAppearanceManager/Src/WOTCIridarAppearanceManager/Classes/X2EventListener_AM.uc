@@ -4,7 +4,8 @@ static function array<X2DataTemplate> CreateTemplates()
 {
 	local array<X2DataTemplate> Templates;
 
-	Templates.AddItem(Create_ListenerTemplate_StrategyAndTactical());
+	Templates.AddItem(Create_ListenerTemplate_Tactical());
+	Templates.AddItem(Create_ListenerTemplate_Strategy());
 	Templates.AddItem(Create_ListenerTemplate_CampaignStart());
 	
 	return Templates;
@@ -15,17 +16,30 @@ static function array<X2DataTemplate> CreateTemplates()
 // If a unit equips an armor they don't have stored appearance for, the mod will check if this unit exists in the character pool, and attempt to load CP unit's stored appearance for that armor.
 // If that fails, the mod will look for an appropriate uniform for this soldier.
 
-static function CHEventListenerTemplate Create_ListenerTemplate_StrategyAndTactical()
+static function CHEventListenerTemplate Create_ListenerTemplate_Strategy()
+{
+	local CHEventListenerTemplate Template;
+
+	`CREATE_X2TEMPLATE(class'CHEventListenerTemplate', Template, 'IRI_X2EventListener_AppearanceManager_Strategy');
+
+	Template.RegisterInStrategy = true;
+
+	Template.AddCHEvent('ItemAddedToSlot', OnItemAddedToSlot, ELD_Immediate, 50);
+	Template.AddCHEvent('UnitRankUp', OnUnitRankUp, ELD_Immediate, 50);
+
+	return Template;
+}
+static function CHEventListenerTemplate Create_ListenerTemplate_Tactical()
 {
 	local CHEventListenerTemplate Template;
 
 	`CREATE_X2TEMPLATE(class'CHEventListenerTemplate', Template, 'IRI_X2EventListener_AppearanceManager_StrategyAndTactical');
 
 	Template.RegisterInTactical = true; // Units shouldn't be able to swap armor mid-mission, but you never know
-	Template.RegisterInStrategy = true;
 
 	Template.AddCHEvent('ItemAddedToSlot', OnItemAddedToSlot, ELD_Immediate, 50);
 	Template.AddCHEvent('UnitRankUp', OnUnitRankUp, ELD_Immediate, 50);
+	Template.AddCHEvent('PostAliensSpawned', OnPostAliensSpawned, ELD_Immediate, 50);
 
 	return Template;
 }
@@ -146,7 +160,40 @@ static function EventListenerReturn OnUnitRankUp(Object EventData, Object EventS
 
 	`AMLOG(UnitState.GetFullName() @ "promoted to rank:" @ UnitState.GetRank() @ ", and has armor equipped:" @ ItemState.GetMyTemplateName());
 
-	MaybeApplyUniformAppearance(UnitState, ItemState.GetMyTemplateName(), true);
+	
+
+	return ELR_NoInterrupt;
+}
+
+static function EventListenerReturn OnPostAliensSpawned(Object EventData, Object EventSource, XComGameState StartState, Name Event, Object CallbackData)
+{
+	local XComGameState_Unit		UnitState;
+	local CharacterPoolManager_AM	CharacterPool;
+	local TAppearance				NewAppearance;
+
+	CharacterPool = `CHARACTERPOOLMGRAM;
+	if (CharacterPool == none)
+		return ELR_NoInterrupt;
+
+	foreach StartState.IterateByClassType(class'XComGameState_Unit', UnitState)
+	{
+		`AMLOG(UnitState.GetFullName() @ UnitState.GetMyTemplateGroupName());
+
+		if (UnitState.GetMyTemplateGroupName() == 'CivilianMilitia')
+		{
+			`AMLOG(UnitState.GetFullName() @ "is militia" @ UnitState.GetMyTemplateName() @ UnitState.GetItemInSlot(eInvSlot_Armor, StartState).GetMyTemplateName());
+			/*
+			NewAppearance = UnitState.kAppearance;
+			if (CharacterPool.GetUniformAppearanceForMilitia(NewAppearance, UnitState))
+			{
+				`AMLOG("Aplying uniform appearance");
+
+				UnitState.SetTAppearance(NewAppearance);
+				UnitState.StoreAppearance();
+			}
+			else `AMLOG("Has no uniform");*/
+		}
+	}
 
 	return ELR_NoInterrupt;
 }

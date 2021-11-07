@@ -27,9 +27,18 @@ struct UniformSettingsStruct
 
 enum EAutoManageUniformForUnit
 {
-	EAMUFU_Default,
-	EAMUFU_AlwaysOn,
-	EAMUMU_AlwaysOff
+	EAMUFU_Default,		// Use global MCM setting.
+	EAMUFU_AlwaysOn,	// Always automatically apply uniforms to this unit, if there are any valid ones.
+	EAMUMU_AlwaysOff	// Never auto apply uniforms to this unit.
+};
+
+enum EUniformStatus
+{
+	EUS_NotUniform,		// This unit is not a uniform.
+	EUS_Manual,			// This uniform will be disregarded by the automated uniform manager.
+	EUS_AnyClass,		// This uniform will be automatically applied to soldiers of any class.
+	EUS_ClassSpecific,	// This uniform will be auto applied only to soldiers of the same class.
+	EUS_Militia		// This uniform will be auto applied to resistance militia.
 };
 
 struct CharacterPoolExtraData
@@ -45,11 +54,9 @@ struct CharacterPoolExtraData
 	var array<AppearanceInfo> AppearanceStore;
 
 	var array<UniformSettingsStruct> UniformSettings; // For each stored appearance, determines which part of the appearance counts as a part of the uniform.
-	var bool bIsUniform;		// Whether this unit is a uniform.
-	var bool bIsAnyClassUniform;// Whether this uniform can be applied to any soldier class, or only the matching ones.
-	var bool bAutoManageUniform;// Whether this uniform should be applied automatically to valid units. Setting this to "false" allows having uniforms that can be used only manually by the player. 
-								
-	var EAutoManageUniformForUnit AutoManageUniformForUnit;
+
+	var EUniformStatus UniformStatus;	// Only for uniforms.
+	var EAutoManageUniformForUnit AutoManageUniformForUnit; // Only for non-uniforms.
 };
 var array<CharacterPoolExtraData> ExtraDatas;
 
@@ -250,36 +257,20 @@ simulated final function ValidateUnitAppearance(XComGameState_Unit UnitState)
 }
 
 
-final function bool IsUnitUniform(XComGameState_Unit UnitState) 
+final function EUniformStatus GetUniformStatus(XComGameState_Unit UnitState)
 {
-	return ExtraDatas[ GetExtraDataIndexForUnit(UnitState) ].bIsUniform;
+	return ExtraDatas[ GetExtraDataIndexForUnit(UnitState) ].UniformStatus;
 }
-final function bool IsUnitAnyClassUniform(XComGameState_Unit UnitState)
+
+final function SetUniformStatus(const XComGameState_Unit UnitState, const EUniformStatus eValue)
 {
-	return ExtraDatas[ GetExtraDataIndexForUnit(UnitState) ].bIsAnyClassUniform;
+	ExtraDatas[ GetExtraDataIndexForUnit(UnitState) ].UniformStatus = eValue;
+	SaveCharacterPool();
 }
-final function bool IsAutoManageUniform(XComGameState_Unit UnitState)
-{
-	return ExtraDatas[ GetExtraDataIndexForUnit(UnitState) ].bAutoManageUniform;
-}
+
 final function EAutoManageUniformForUnit GetAutoManageUniformForUnit(XComGameState_Unit UnitState)
 {
 	return ExtraDatas[ GetExtraDataIndexForUnit(UnitState) ].AutoManageUniformForUnit;
-}
-final function SetIsUnitUniform(XComGameState_Unit UnitState, bool bValue)
-{
-	ExtraDatas[ GetExtraDataIndexForUnit(UnitState) ].bIsUniform = bValue;
-	SaveCharacterPool();
-}
-final function SetIsUnitAnyClassUniform(XComGameState_Unit UnitState, bool bValue)
-{
-	ExtraDatas[ GetExtraDataIndexForUnit(UnitState) ].bIsAnyClassUniform = bValue;
-	SaveCharacterPool();
-}
-final function SetIsAutoManageUniform(const XComGameState_Unit UnitState, const bool bValue)
-{
-	ExtraDatas[ GetExtraDataIndexForUnit(UnitState) ].bAutoManageUniform = bValue;
-	SaveCharacterPool();
 }
 final function SetAutoManageUniformForUnit(const XComGameState_Unit UnitState, const int eValue)
 {
@@ -499,9 +490,7 @@ private function array<XComGameState_Unit> GetClassSpecificUniforms(const name A
 
 	foreach CharacterPool(UniformState)
 	{
-		if (IsUnitUniform(UniformState) && 
-			IsAutoManageUniform(UniformState) && // Only Auto Manage Uniforms are used for the automated system.
-			!IsUnitAnyClassUniform(UniformState) && 
+		if (GetUniformStatus(UniformState) == EUS_ClassSpecific && 
 			UniformState.GetSoldierClassTemplateName() == SoldierClass && 
 			UniformState.HasStoredAppearance(iGender, ArmorTemplateName))
 		{
@@ -518,9 +507,7 @@ private function array<XComGameState_Unit> GetAnyClassUniforms(const name ArmorT
 
 	foreach CharacterPool(UniformState)
 	{
-		if (IsUnitUniform(UniformState) && 
-			IsAutoManageUniform(UniformState) &&
-			IsUnitAnyClassUniform(UniformState) &&
+		if (GetUniformStatus(UniformState) == EUS_AnyClass &&
 			UniformState.HasStoredAppearance(iGender, ArmorTemplateName))
 		{
 			`AMLOG(UniformState.GetFullName() @ "is a non-class uniform");
@@ -530,6 +517,54 @@ private function array<XComGameState_Unit> GetAnyClassUniforms(const name ArmorT
 	return UniformStates;
 }
 
+final function bool GetUniformAppearanceForMilitia(out TAppearance NewAppearance, const XComGameState_Unit UnitState, const name ArmorTemplateName)
+{
+	local array<XComGameState_Unit> UniformStates;
+	local XComGameState_Unit		UniformState;
+	
+	UniformStates = GetClassSpecificUniforms(ArmorTemplateName, NewAppearance.iGender, UnitState.GetSoldierClassTemplateName());
+	if (UniformStates.Length > 0)
+	{
+		UniformState = UniformStates[`SYNC_RAND(UniformStates.Length)];
+
+		`AMLOG(UnitState.GetFullName() @ "selected random class uniform:" @ UniformState.GetFullName() @ "out of possible:" @ UniformStates.Length);
+
+		CopyUniformAppearance(NewAppearance, UniformState, ArmorTemplateName);
+		return true;		
+	}
+
+	UniformStates = GetAnyClassUniforms(ArmorTemplateName, NewAppearance.iGender);
+	if (UniformStates.Length > 0)
+	{
+		UniformState = UniformStates[`SYNC_RAND(UniformStates.Length)];
+
+		`AMLOG(UnitState.GetFullName() @ "selected random non-class uniform:" @ UniformState.GetFullName() @ "out of possible:" @ UniformStates.Length);
+
+		CopyUniformAppearance(NewAppearance, UniformState, ArmorTemplateName);
+		return true;
+	}
+
+	return false;
+}
+/*
+private function array<XComGameState_Unit> GetMilitiaUniforms(const int iGender)
+{
+	local array<XComGameState_Unit> UniformStates;
+	local XComGameState_Unit		UniformState;
+
+	foreach CharacterPool(UniformState)
+	{
+		if (GetUniformStatus(UniformState) == EUS_Militia 
+			&& UniformState.kAppearance.iGender == iGender && // TODO: Unnoodle this.
+			UniformState.HasStoredAppearance(iGender, ArmorTemplateName))
+		{
+			`AMLOG(UniformState.GetFullName() @ "is a militia uniform");
+			UniformStates.AddItem(UniformState);
+		}
+	}
+	return UniformStates;
+}
+*/
 
 private function CopyUniformAppearance(out TAppearance NewAppearance, const XComGameState_Unit UniformState, const name ArmorTemplateName)
 {

@@ -1,8 +1,5 @@
 class UISL_AppearanceManager extends UIScreenListener;
 
-var localized string strUseForAutoManageUniform;
-var localized string strDisableAutoManageUniform;
-var localized string strEnableAutoManageUniform;
 var localized string strManageAppearance;
 var localized string strStoredAppearance;
 var localized string strConvertButtonTitle;
@@ -12,6 +9,8 @@ var localized string strVadlidateAppearance;
 var localized string strVadlidateAppearanceButton;
 var localized string strConfigureUniform;
 var localized string strUniformSoldierFirstName;
+var localized string strUniformStatusTitle;
+var localized array<string> strUniformStatus;
 var localized string strAutoManageUniformForUnitTitle;
 var localized array<string> strAutoManageUniformForUnit;
 
@@ -19,7 +18,7 @@ var localized array<string> strAutoManageUniformForUnit;
 
 delegate OnClickDelegate();
 delegate OnButtonClickedCallback(UIButton ButtonSource);
-delegate OnCheckboxChangedCallback(UICheckbox CheckboxControl);
+delegate OnDropdownSelectionChangedCallback(UIDropdown DropdownControl);
 
 event OnInit(UIScreen Screen)
 {
@@ -46,7 +45,7 @@ event OnReceiveFocus(UIScreen Screen)
 private function AddButtons()
 {
 	local UICustomize_Menu			CustomizeScreen;;
-	local bool						bUnitIsUniform;
+	local EUniformStatus			UniformStatus;
 	local XComGameState_Unit		UnitState;
 	local CharacterPoolManager_AM	CharPoolMgr;
 	local int						ListIndex;
@@ -66,8 +65,8 @@ private function AddButtons()
 	// Check if "Manage Appearance" list item already exists and is visible - then we don't know need to do anything else.
 	if (!ChangesAlreadyMade(CustomizeScreen.List))
 	{
-		bUnitIsUniform = CharPoolMgr.IsUnitUniform(UnitState);
-		if (bUnitIsUniform) 
+		UniformStatus = CharPoolMgr.GetUniformStatus(UnitState);
+		if (UniformStatus > 0) // Is Uniform
 			RemoveCanAppearAsListItems(CustomizeScreen);
 
 		ListIndex = GetIndexOfLastVisibleListItem(CustomizeScreen.List) + 1;
@@ -80,19 +79,21 @@ private function AddButtons()
 		}
 
 		// ## Auto Manage Uniform toggle - always for uniforms. Uniforms are accessible only in Character Pool.
-		if (bUnitIsUniform && !CustomizeScreen.bInArmory)
+		if (UniformStatus > 0 && !CustomizeScreen.bInArmory)
 		{
-			CreateOrUpdateCheckbox(ListIndex, CustomizeScreen, 
-				strUseForAutoManageUniform, CharPoolMgr.IsAutoManageUniform(UnitState), OnAutoManageUniformCheckboxChanged);
+			CreateOrUpdateDropdown(ListIndex, CustomizeScreen, UniformStatus - 1, // -1 because the list is displayed without 0th member. 
+				strUniformStatusTitle, strUniformStatus, OnUniformStatusDropdownSelectionChanged);
 		}
 		else if (CustomizeScreen.bInArmory) // ## Manage uniform for units dropdown - always for non-uniforms.
 		{
 			// While in armory, use Unit Values to control this.
-			CreateOrUpdateSpinner(ListIndex, CustomizeScreen, class'Help'.static.GetAutoManageUniformForUnitValue(UnitState));
+			CreateOrUpdateDropdown(ListIndex, CustomizeScreen, class'Help'.static.GetAutoManageUniformForUnitValue(UnitState),
+				strAutoManageUniformForUnitTitle, strAutoManageUniformForUnit, OnAutoManageUniformDropdownSelectionChanged);
 		}
 		else
 		{
-			CreateOrUpdateSpinner(ListIndex, CustomizeScreen, CharPoolMgr.GetAutoManageUniformForUnit(UnitState));
+			CreateOrUpdateDropdown(ListIndex, CustomizeScreen, CharPoolMgr.GetAutoManageUniformForUnit(UnitState),
+				strAutoManageUniformForUnitTitle, strAutoManageUniformForUnit, OnAutoManageUniformDropdownSelectionChanged);
 		}
 
 		// ## Manage Appearance Button - always
@@ -106,7 +107,7 @@ private function AddButtons()
 		if (!CustomizeScreen.bInArmory)
 		{
 			// ## Convert to Uniform / Convert to Soldier - always while in Character Pool interface
-			if (bUnitIsUniform)
+			if (UniformStatus > 0)
 			{
 				CreateOrUpdateButton(ListIndex, CustomizeScreen, 
 					strConvertToSoldier, strConvertButtonTitle, OnSoldierButtonClicked);
@@ -127,7 +128,7 @@ private function AddButtons()
 		}
 
 		// ## Configure Uniform Button - if the unit is uniform
-		if (bUnitIsUniform)
+		if (UniformStatus > 0)
 		{
 			CreateOrUpdateListItem(ListIndex, CustomizeScreen, 
 				strConfigureUniform, OnConfigureUniformItemClicked);
@@ -195,27 +196,6 @@ private function RemoveCanAppearAsListItems(UICustomize_Menu CustmozeMenu)
 
 // ===================================================================
 // ON CLICK METHODS
-
-private function OnAutoManageUniformCheckboxChanged(UICheckbox CheckBox)
-{
-	local UICustomize_Menu			CustomizeScreen;
-	local CharacterPoolManager_AM	CharPoolMgr;
-	local XComGameState_Unit		UnitState;
-
-	CustomizeScreen = UICustomize_Menu(CheckBox.Screen);
-	if (CustomizeScreen == none)
-		return;
-
-	UnitState = CustomizeScreen.GetUnit();
-	if (UnitState == none)
-		return;
-
-	CharPoolMgr = `CHARACTERPOOLMGRAM;
-	if (CharPoolMgr == none)
-		return;
-
-	CharPoolMgr.SetIsAutoManageUniform(UnitState, CheckBox.bChecked);
-}
 
 private function OnManageAppearanceItemClicked()
 {
@@ -341,8 +321,7 @@ simulated private function OnSoldierButtonClicked(UIButton ButtonSource)
 	UnitState.SetCharacterName(strFirstName, strLastName, CharGen.kSoldier.strNickName);
 	CustomizeScreen.CustomizeManager.CommitChanges();
 	
-	CharPoolMgr.SetIsAutoManageUniform(UnitState, false);
-	CharPoolMgr.SetIsUnitUniform(UnitState, false);
+	CharPoolMgr.SetUniformStatus(UnitState, EUS_NotUniform);
 	
 	CustomizeScreen.List.ClearItems();
 	CustomizeScreen.UpdateData();
@@ -419,8 +398,7 @@ private function OnConvertToUniformInputBoxAccepted(string strLastName)
 	CustomizeScreen.CustomizeManager.CommitChanges();
 	CustomizeScreen.CustomizeManager.ReCreatePawnVisuals(CustomizeScreen.CustomizeManager.ActorPawn, true);
 
-	CharPoolMgr.SetIsAutoManageUniform(UnitState, true); 
-	CharPoolMgr.SetIsUnitUniform(UnitState, true);
+	CharPoolMgr.SetUniformStatus(UnitState, EUS_Manual);
 	
 	CustomizeScreen.List.ClearItems();
 	CustomizeScreen.UpdateData();	
@@ -486,7 +464,28 @@ private function OnValidateButtonClicked(UIButton ButtonSource)
 	AddButtons();
 }
 
- private function OnDropdownSelectionChanged(UIDropdown DropdownControl)
+ private function OnUniformStatusDropdownSelectionChanged(UIDropdown DropdownControl)
+{
+	local XComGameState_Unit			UnitState;
+	local UICustomize_Menu				CustomizeScreen;
+	local CharacterPoolManager_AM		CharPool;
+
+	CustomizeScreen = UICustomize_Menu(`SCREENSTACK.GetCurrentScreen());
+	if (CustomizeScreen == none)
+		return;
+
+	UnitState = CustomizeScreen.CustomizeManager.UpdatedUnitState;
+	if (UnitState == none)
+		return;
+
+	CharPool = `CHARACTERPOOLMGRAM;
+	if (CharPool == none)
+		return;
+
+	CharPool.SetUniformStatus(UnitState, EUniformStatus(DropdownControl.SelectedItem + 1)); // Add +1 because the array doesn't include 0th member, the "unit is not uniform" one.
+}
+
+private function OnAutoManageUniformDropdownSelectionChanged(UIDropdown DropdownControl)
 {
 	local XComGameState_Unit			UnitState;
 	local UICustomize_Menu				CustomizeScreen;
@@ -532,20 +531,6 @@ private function CreateOrUpdateListItem(out int ListIndex, UICustomize_Menu Cust
 	ListItem.Show();
 }
 
-private function CreateOrUpdateCheckbox(out int ListIndex, UICustomize_Menu CustomizeScreen, string strDesc, bool bIsChecked, delegate<OnCheckboxChangedCallback> OnCheckboxChanged)
-{
-	local UIMechaListItem ListItem;
-
-	ListItem = CustomizeScreen.GetListItem(ListIndex++);
-
-	if (ListItem.Desc.htmlText != strDesc || ListItem.Checkbox == none || ListItem.Checkbox.bChecked != bIsChecked || string(ListItem.Checkbox.onChangedDelegate) != string(OnCheckboxChanged))
-	{
-		ListItem.UpdateDataCheckbox(strDesc, "", bIsChecked, OnCheckboxChanged);
-	}
-
-	ListItem.Show();
-}
-
 private function CreateOrUpdateButton(out int ListIndex, UICustomize_Menu CustomizeScreen, string strDesc, string strButtonLabel, delegate<OnButtonClickedCallback> OnButtonClicked)
 {
 	local UIMechaListItem ListItem;
@@ -559,15 +544,15 @@ private function CreateOrUpdateButton(out int ListIndex, UICustomize_Menu Custom
 	ListItem.Show();
 }
 
-private function CreateOrUpdateSpinner(out int ListIndex, UICustomize_Menu CustomizeScreen, int SelectedValue)
+private function CreateOrUpdateDropdown(out int ListIndex, UICustomize_Menu CustomizeScreen, int SelectedValue, string strTitle, array<string> strValues, delegate<OnDropdownSelectionChangedCallback> DropdownSelectionChanged)
 {
 	local UIMechaListItem ListItem;
 
 	ListItem = CustomizeScreen.GetListItem(ListIndex++);
 
-	if (ListItem.Desc.htmlText != strAutoManageUniformForUnitTitle || ListItem.Dropdown == none || string(ListItem.Dropdown.OnItemSelectedDelegate) != string(OnDropdownSelectionChanged))
+	if (ListItem.Desc.htmlText != strTitle || ListItem.Dropdown == none || string(ListItem.Dropdown.OnSelectionChangedCallback) != string(DropdownSelectionChanged))
 	{
-		ListItem.UpdateDataDropdown(strAutoManageUniformForUnitTitle, strAutoManageUniformForUnit, SelectedValue, OnDropdownSelectionChanged);
+		ListItem.UpdateDataDropdown(strTitle, strValues, SelectedValue, DropdownSelectionChanged);
 		ListItem.MoveToHighestDepth();
 	}
 
@@ -620,6 +605,42 @@ private function CreateOrUpdateSpinner(out int ListIndex, UICustomize_Menu Custo
 		SpinnerControl.SetValue(strAutoManageUniformForUnit[NewValue]);	
 	}	
  }
+
+ delegate OnCheckboxChangedCallback(UICheckbox CheckboxControl);
+ private function CreateOrUpdateCheckbox(out int ListIndex, UICustomize_Menu CustomizeScreen, string strDesc, bool bIsChecked, delegate<OnCheckboxChangedCallback> OnCheckboxChanged)
+{
+	local UIMechaListItem ListItem;
+
+	ListItem = CustomizeScreen.GetListItem(ListIndex++);
+
+	if (ListItem.Desc.htmlText != strDesc || ListItem.Checkbox == none || ListItem.Checkbox.bChecked != bIsChecked || string(ListItem.Checkbox.onChangedDelegate) != string(OnCheckboxChanged))
+	{
+		ListItem.UpdateDataCheckbox(strDesc, "", bIsChecked, OnCheckboxChanged);
+	}
+
+	ListItem.Show();
+}
+
+private function OnAutoManageUniformCheckboxChanged(UICheckbox CheckBox)
+{
+	local UICustomize_Menu			CustomizeScreen;
+	local CharacterPoolManager_AM	CharPoolMgr;
+	local XComGameState_Unit		UnitState;
+
+	CustomizeScreen = UICustomize_Menu(CheckBox.Screen);
+	if (CustomizeScreen == none)
+		return;
+
+	UnitState = CustomizeScreen.GetUnit();
+	if (UnitState == none)
+		return;
+
+	CharPoolMgr = `CHARACTERPOOLMGRAM;
+	if (CharPoolMgr == none)
+		return;
+
+	CharPoolMgr.SetIsAutoManageUniform(UnitState, CheckBox.bChecked);
+}
  */
 
 
