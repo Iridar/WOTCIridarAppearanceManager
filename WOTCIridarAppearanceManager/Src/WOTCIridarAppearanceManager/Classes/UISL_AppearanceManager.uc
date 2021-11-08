@@ -95,6 +95,8 @@ private function AddButtons()
 
 		RemoveCanAppearAsListItems(CustomizeScreen);
 
+		ListIndex = GetIndexOfLastVisibleListItem(CustomizeScreen.List) + 1;
+
 		// ## Configure Uniform Button
 		CreateOrUpdateListItem(ListIndex, CustomizeScreen, 
 			strConfigureUniform, OnConfigureUniformItemClicked);
