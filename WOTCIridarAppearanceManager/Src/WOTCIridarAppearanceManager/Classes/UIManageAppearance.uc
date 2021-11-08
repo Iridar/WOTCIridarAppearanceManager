@@ -4,8 +4,7 @@ class UIManageAppearance extends UICustomize;
 /*
 # Priority
 
-If global uniform managemenet has been enabled in MCM, then the player put a flag on specific units to exclude them from the system, and then the player turned off the global system, the flag will remain on those units, telling the system the player wants to auto-manage their uniforms, despite it being turned off globally.
-This is undesirable. Either need a separate flag to exclude units from the system (preferable, so specific units can never get uniforms regardless of the global toggle)
+Militia uniforms and raider factions: expand the list of character types in character pool (the one where you select soldier\spark\reaper\skirmisher\templar).
 
 Save modlist in CP files, and warn if mods are missing.
 

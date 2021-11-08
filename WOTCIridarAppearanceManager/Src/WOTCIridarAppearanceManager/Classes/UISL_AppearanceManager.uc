@@ -44,7 +44,7 @@ event OnReceiveFocus(UIScreen Screen)
 
 private function AddButtons()
 {
-	local UICustomize_Menu			CustomizeScreen;;
+	local UICustomize_Menu			CustomizeScreen;
 	local EUniformStatus			UniformStatus;
 	local XComGameState_Unit		UnitState;
 	local CharacterPoolManager_AM	CharPoolMgr;
@@ -62,88 +62,96 @@ private function AddButtons()
 	if (UnitState == none) 
 		return;
 
-	// Check if "Manage Appearance" list item already exists and is visible - then we don't know need to do anything else.
-	if (!ChangesAlreadyMade(CustomizeScreen.List))
-	{
-		UniformStatus = CharPoolMgr.GetUniformStatus(UnitState);
-		if (UniformStatus > 0) // Is Uniform
-			RemoveCanAppearAsListItems(CustomizeScreen);
-
-		ListIndex = GetIndexOfLastVisibleListItem(CustomizeScreen.List) + 1;
-
-		// ## Loadout Button - while in Character Pool interface.
-		if (!CustomizeScreen.bInArmory)
-		{
-			CreateOrUpdateListItem(ListIndex, CustomizeScreen, 
-				class'UIArmory_MainMenu'.default.m_strLoadout, OnLoadoutItemClicked);
-		}
-
-		// ## Auto Manage Uniform toggle - always for uniforms. Uniforms are accessible only in Character Pool.
-		if (UniformStatus > 0 && !CustomizeScreen.bInArmory)
-		{
-			CreateOrUpdateDropdown(ListIndex, CustomizeScreen, UniformStatus - 1, // -1 because the list is displayed without 0th member. 
-				strUniformStatusTitle, strUniformStatus, OnUniformStatusDropdownSelectionChanged);
-		}
-		else if (CustomizeScreen.bInArmory) // ## Manage uniform for units dropdown - always for non-uniforms.
-		{
-			// While in armory, use Unit Values to control this.
-			CreateOrUpdateDropdown(ListIndex, CustomizeScreen, class'Help'.static.GetAutoManageUniformForUnitValue(UnitState),
-				strAutoManageUniformForUnitTitle, strAutoManageUniformForUnit, OnAutoManageUniformDropdownSelectionChanged);
-		}
-		else
-		{
-			CreateOrUpdateDropdown(ListIndex, CustomizeScreen, CharPoolMgr.GetAutoManageUniformForUnit(UnitState),
-				strAutoManageUniformForUnitTitle, strAutoManageUniformForUnit, OnAutoManageUniformDropdownSelectionChanged);
-		}
-
-		// ## Manage Appearance Button - always
-		CreateOrUpdateListItem(ListIndex, CustomizeScreen, 
-			strManageAppearance, OnManageAppearanceItemClicked);
-
-		// ## Appearance Store Button - always
-		CreateOrUpdateListItem(ListIndex, CustomizeScreen, 
-			strStoredAppearance, OnAppearanceStoreItemClicked);
-
-		if (!CustomizeScreen.bInArmory)
-		{
-			// ## Convert to Uniform / Convert to Soldier - always while in Character Pool interface
-			if (UniformStatus > 0)
-			{
-				CreateOrUpdateButton(ListIndex, CustomizeScreen, 
-					strConvertToSoldier, strConvertButtonTitle, OnSoldierButtonClicked);
-			}
-			else
-			{
-				CreateOrUpdateButton(ListIndex, CustomizeScreen, 
-					strConverToUniform, strConvertButtonTitle, OnUniformButtonClicked);
-			}
-		}
-
-			// ## Validate Appearance Button - if MCM is configured to not validate appearance automatically in the current game mode
-		if (!`XENGINE.bReviewFlagged && `GETMCMVAR(DISABLE_APPEARANCE_VALIDATION_DEBUG) || 
-			`XENGINE.bReviewFlagged && `GETMCMVAR(DISABLE_APPEARANCE_VALIDATION_REVIEW))
-		{
-			CreateOrUpdateButton(ListIndex, CustomizeScreen, 
-					strVadlidateAppearance, strVadlidateAppearanceButton, OnValidateButtonClicked);
-		}
-
-		// ## Configure Uniform Button - if the unit is uniform
-		if (UniformStatus > 0)
-		{
-			CreateOrUpdateListItem(ListIndex, CustomizeScreen, 
-				strConfigureUniform, OnConfigureUniformItemClicked);
-		}
-	}
-	
 	// Unfortunately have to keep timer ticking in case UpdateData() is called in CustomizeScreen.
 	CustomizeScreen.SetTimer(0.25f, false, nameof(AddButtons), self);
+
+	if (ChangesAlreadyMade(CustomizeScreen.List))
+		return; 
+
+	ListIndex = GetIndexOfLastVisibleListItem(CustomizeScreen.List) + 1;
+
+	// ## Loadout Button - while in Character Pool interface.
+	if (!CustomizeScreen.bInArmory)
+	{
+		CreateOrUpdateListItem(ListIndex, CustomizeScreen, 
+			class'UIArmory_MainMenu'.default.m_strLoadout, OnLoadoutItemClicked);
+	}
+
+	// ## Manage Appearance Button
+	CreateOrUpdateListItem(ListIndex, CustomizeScreen, 
+		strManageAppearance, OnManageAppearanceItemClicked);
+
+	// ## Appearance Store Button
+	CreateOrUpdateListItem(ListIndex, CustomizeScreen, 
+		strStoredAppearance, OnAppearanceStoreItemClicked);
+
+
+	// If unit is uniform and we're in Character Pool
+	UniformStatus = CharPoolMgr.GetUniformStatus(UnitState);
+	if (UniformStatus > 0)
+	{
+		if (CustomizeScreen.bInArmory) // Uniform units should never be able to exist inside actual campaigns. We're in Character Pool past this point.
+			return;
+
+		RemoveCanAppearAsListItems(CustomizeScreen);
+
+		// ## Configure Uniform Button
+		CreateOrUpdateListItem(ListIndex, CustomizeScreen, 
+			strConfigureUniform, OnConfigureUniformItemClicked);
+
+		// ## Uniform Status
+		CreateOrUpdateDropdown(ListIndex, CustomizeScreen, UniformStatus - 1, // -1 because the list is displayed without 0th member. 
+				strUniformStatusTitle, strUniformStatus, OnUniformStatusDropdownSelectionChanged);
+
+		// ## Convert to Soldier
+		CreateOrUpdateButton(ListIndex, CustomizeScreen, 
+					strConvertToSoldier, strConvertButtonTitle, OnSoldierButtonClicked);
+	}
+	else if (CustomizeScreen.bInArmory) 
+	{
+		// ## Manage uniform for units dropdown in Armory - using unit values.
+		CreateOrUpdateDropdown(ListIndex, CustomizeScreen, class'Help'.static.GetAutoManageUniformForUnitValue(UnitState),
+			strAutoManageUniformForUnitTitle, strAutoManageUniformForUnit, OnAutoManageUniformDropdownSelectionChanged);
+	}
+	else
+	{
+		// ## Manage uniform for units dropdown in Character Pool - using character pool.
+		CreateOrUpdateDropdown(ListIndex, CustomizeScreen, CharPoolMgr.GetAutoManageUniformForUnit(UnitState),
+			strAutoManageUniformForUnitTitle, strAutoManageUniformForUnit, OnAutoManageUniformDropdownSelectionChanged);
+
+		// ## Convert to Uniform
+		CreateOrUpdateButton(ListIndex, CustomizeScreen, 
+				strConverToUniform, strConvertButtonTitle, OnUniformButtonClicked);
+	}
+		
+	// ## Validate Appearance Button - if MCM is configured to not validate appearance automatically in the current game mode
+	if (class'Help'.static.IsAppearanceValidationDisabled())
+	{
+		CreateOrUpdateButton(ListIndex, CustomizeScreen, 
+				strVadlidateAppearance, strVadlidateAppearanceButton, OnValidateButtonClicked);
+	}
 }
 
+/*
+if (Unit.IsSoldier())
+			{
+				GetListItem(i++).UpdateDataValue(m_strCustomizeClass,
+					CustomizeManager.FormatCategoryDisplay(eUICustomizeCat_Class, eUIState_Normal, FontSize), CustomizeClass, true);
+
+				bBasicSoldierClass = (Unit.GetSoldierClassTemplate().RequiredCharacterClass == '');
+				GetListItem(i++, !bBasicSoldierClass, m_strNoClassVariants).UpdateDataValue(m_strViewClass,
+					CustomizeManager.FormatCategoryDisplay(eUICustomizeCat_ViewClass, bBasicSoldierClass ? eUIState_Normal : eUIState_Disabled, FontSize), CustomizeViewClass, true);
+			}
+			*/
+
+// Check if "Manage Appearance" list item already exists and is visible - then we don't know need to do anything else.
 private function bool ChangesAlreadyMade(UIList List)
 {	
 	local UIMechaListItem ListItem;
 	local int i;
 
+	// Unfortunately and annoyingly cannot use MCName to seek list items, 
+	// because the way UICustomize_Menu::UpdateData() is set up, it can "eat" list items regardless of who added them.
 	for (i = List.ItemCount - 1; i >= 0; i--)
 	{
 		ListItem = UIMechaListItem(List.GetItem(i));

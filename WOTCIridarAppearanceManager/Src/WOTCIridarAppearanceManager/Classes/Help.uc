@@ -6,6 +6,8 @@ var private name AutoManageUniformForUnitValueName;
 
 var localized string strCurrentAppearance;
 
+`include(WOTCIridarAppearanceManager\Src\ModConfigMenuAPI\MCM_API_CfgHelpers.uci)
+
 static final function string GetUnitDisplayString(const XComGameState_Unit UnitState)
 {
 	local X2SoldierClassTemplate	ClassTemplate;
@@ -171,6 +173,11 @@ static final function PlayStrategySoundEvent(string strKey, Actor InActor)
 			}
 		}
 	}
+}
+
+static final function bool IsAppearanceValidationDisabled()
+{	
+	return !`XENGINE.bReviewFlagged && `GETMCMVAR(DISABLE_APPEARANCE_VALIDATION_DEBUG) || `XENGINE.bReviewFlagged && `GETMCMVAR(DISABLE_APPEARANCE_VALIDATION_REVIEW);
 }
 
 defaultproperties

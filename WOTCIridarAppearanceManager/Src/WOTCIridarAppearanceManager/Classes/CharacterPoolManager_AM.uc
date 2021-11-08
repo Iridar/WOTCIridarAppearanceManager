@@ -61,7 +61,6 @@ struct CharacterPoolExtraData
 var array<CharacterPoolExtraData> ExtraDatas;
 
 `include(WOTCIridarAppearanceManager\Src\ModConfigMenuAPI\MCM_API_CfgHelpers.uci)
-`define XOR(a, b) !`a && `b || `a && !`b
 
 // ============================================================================================
 // OVERRIDES OF EXISTING FUNCTIONS
@@ -90,8 +89,7 @@ simulated final function InitSoldierAppearance(XComGameState_Unit Unit, const ou
 
 	// ADDED
 	// Skip appearance validation if MCM is configured so.
-	if (!`XENGINE.bReviewFlagged && `GETMCMVAR(DISABLE_APPEARANCE_VALIDATION_DEBUG) || 
-		`XENGINE.bReviewFlagged && `GETMCMVAR(DISABLE_APPEARANCE_VALIDATION_REVIEW))
+	if (!class'Help'.static.IsAppearanceValidationDisabled())
 		return;
 	// END OF ADDED
 
