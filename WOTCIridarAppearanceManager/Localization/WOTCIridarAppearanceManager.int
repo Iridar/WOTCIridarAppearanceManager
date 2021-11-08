@@ -78,11 +78,11 @@ strAutoManageUniformForUnit[1] = "Always"
 strAutoManageUniformForUnit[2] = "Never"
 
 strUniformStatusTitle = "Uniform status"
-;strUniformStatus[0] = "Not a uniform"
+;strUniformStatus[0] = "Not a uniform" - not actually displayed.
 strUniformStatus[0] = "Manual"
 strUniformStatus[1] = "Any class"
 strUniformStatus[2] = "Class-specific"
-strUniformStatus[3] = "Militia"
+strUniformStatus[3] = "Non-soldier"
 
 [AM_MCM_Screen]
 ModName = "Appearance Manager"

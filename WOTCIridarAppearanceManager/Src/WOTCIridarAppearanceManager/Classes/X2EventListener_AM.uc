@@ -178,22 +178,16 @@ static function EventListenerReturn OnPostAliensSpawned(Object EventData, Object
 	foreach StartState.IterateByClassType(class'XComGameState_Unit', UnitState)
 	{
 		`AMLOG(UnitState.GetFullName() @ UnitState.GetMyTemplateGroupName());
-
-		if (UnitState.GetMyTemplateGroupName() == 'CivilianMilitia')
+			
+		NewAppearance = UnitState.kAppearance;
+		if (CharacterPool.GetUniformAppearanceForNonSoldier(NewAppearance, UnitState))
 		{
-			`AMLOG(UnitState.GetFullName() @ "is militia" @ UnitState.GetMyTemplateName() @ UnitState.GetItemInSlot(eInvSlot_Armor, StartState).GetMyTemplateName());
-			/*
-			NewAppearance = UnitState.kAppearance;
-			if (CharacterPool.GetUniformAppearanceForMilitia(NewAppearance, UnitState))
-			{
-				`AMLOG("Aplying uniform appearance");
+			`AMLOG("Aplying uniform appearance");
 
-				UnitState.SetTAppearance(NewAppearance);
-				UnitState.StoreAppearance();
-			}
-			else `AMLOG("Has no uniform");*/
+			UnitState.SetTAppearance(NewAppearance);
+			UnitState.StoreAppearance();
 		}
+		else `AMLOG("Has no uniform");
 	}
-
 	return ELR_NoInterrupt;
 }

@@ -115,6 +115,9 @@
     <Content Include="Src\WOTCIridarAppearanceManager\Classes\UIMechaListItem_Soldier.uc">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Src\WOTCIridarAppearanceManager\Classes\UINonSoldierUniform.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\WOTCIridarAppearanceManager\Classes\UIScreen_Biography.uc">
       <SubType>Content</SubType>
     </Content>

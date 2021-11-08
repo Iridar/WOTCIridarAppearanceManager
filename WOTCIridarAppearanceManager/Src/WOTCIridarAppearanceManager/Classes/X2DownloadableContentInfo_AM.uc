@@ -19,11 +19,30 @@ static event OnPostTemplatesCreated()
 static event OnLoadedSavedGame()
 {
 	class'UICustomize_CPExtended'.static.SetInitialSoldierListSettings();
-}
+}*/
 
 static event InstallNewCampaign(XComGameState StartState)
 {
-	class'UICustomize_CPExtended'.static.SetInitialSoldierListSettings();
+	local XComGameState_Unit		UnitState;
+	local CharacterPoolManager_AM	CharacterPool;
+	local TAppearance				NewAppearance;
 
-	`CPOLOG("Num extra datas:" @ `CHARACTERPOOLMGRXTD.CPExtraDatas.Length);
-}*/
+	CharacterPool = `CHARACTERPOOLMGRAM;
+	if (CharacterPool == none)
+		return;
+
+	foreach StartState.IterateByClassType(class'XComGameState_Unit', UnitState)
+	{
+		`AMLOG(UnitState.GetFullName() @ UnitState.GetMyTemplateGroupName());
+			
+		NewAppearance = UnitState.kAppearance;
+		if (CharacterPool.GetUniformAppearanceForNonSoldier(NewAppearance, UnitState))
+		{
+			`AMLOG("Aplying uniform appearance");
+
+			UnitState.SetTAppearance(NewAppearance);
+			UnitState.StoreAppearance();
+		}
+		else `AMLOG("Has no uniform");
+	}
+}

@@ -38,7 +38,7 @@ enum EUniformStatus
 	EUS_Manual,			// This uniform will be disregarded by the automated uniform manager.
 	EUS_AnyClass,		// This uniform will be automatically applied to soldiers of any class.
 	EUS_ClassSpecific,	// This uniform will be auto applied only to soldiers of the same class.
-	EUS_Militia		// This uniform will be auto applied to resistance militia.
+	EUS_NonSoldier		// This uniform will be auto applied to non-soldier units, like resistance militia. Separate button is displayed to select which units, exactly.
 };
 
 struct CharacterPoolExtraData
@@ -57,6 +57,8 @@ struct CharacterPoolExtraData
 
 	var EUniformStatus UniformStatus;	// Only for uniforms.
 	var EAutoManageUniformForUnit AutoManageUniformForUnit; // Only for non-uniforms.
+
+	var array<name> NonSoldierUniformTemplates; // List of character templates this non-soldier uniform should be used for.
 };
 var array<CharacterPoolExtraData> ExtraDatas;
 
@@ -175,7 +177,7 @@ event XComGameState_Unit CreateSoldier(name DataTemplateName)
 	CharacterGenerator = `XCOMGAME.Spawn(CharacterTemplate.CharacterGeneratorClass);
 	if (CharacterGenerator == none)
 	{
-		`AMLOG("ERROR :: Failed to spawn CharacterGeneratorClass:" @ CharacterTemplate.CharacterGeneratorClass.Name @ "for Character Template:" @ CharacterTemplate);
+		`AMLOG("ERROR :: Failed to spawn CharacterGeneratorClass:" @ CharacterTemplate.CharacterGeneratorClass.Name @ "for Character Template:" @ CharacterTemplate.DataName);
 		return none;
 	}
 
@@ -290,6 +292,25 @@ final function array<CosmeticOptionStruct> GetCosmeticOptionsForUnit(const XComG
 	}
 	
 	return ReturnArray;
+}
+
+final function bool IsUnitNonSoldierUniformForCharTemplate(const XComGameState_Unit UnitState, const name CharTemplateName)
+{
+	local array<name> NonSoldierUniformTemplates;
+
+	NonSoldierUniformTemplates = ExtraDatas[ GetExtraDataIndexForUnit(UnitState) ].NonSoldierUniformTemplates;
+
+	return NonSoldierUniformTemplates.Find(CharTemplateName) != INDEX_NONE;
+}
+final function AddUnitNonSoldierUniformForCharTemplate(const XComGameState_Unit UnitState, const name CharTemplateName)
+{
+	ExtraDatas[ GetExtraDataIndexForUnit(UnitState) ].NonSoldierUniformTemplates.AddItem(CharTemplateName);
+	SaveCharacterPool();
+}
+final function RemoveUnitNonSoldierUniformForCharTemplate(const XComGameState_Unit UnitState, const name CharTemplateName)
+{
+	ExtraDatas[ GetExtraDataIndexForUnit(UnitState) ].NonSoldierUniformTemplates.RemoveItem(CharTemplateName);
+	SaveCharacterPool();
 }
 
 final function SaveCosmeticOptionsForUnit(const array<CosmeticOptionStruct> CosmeticOptions, const XComGameState_Unit UnitState, const string GenderArmorTemplate)
@@ -515,54 +536,42 @@ private function array<XComGameState_Unit> GetAnyClassUniforms(const name ArmorT
 	return UniformStates;
 }
 
-final function bool GetUniformAppearanceForMilitia(out TAppearance NewAppearance, const XComGameState_Unit UnitState, const name ArmorTemplateName)
+final function bool GetUniformAppearanceForNonSoldier(out TAppearance NewAppearance, const XComGameState_Unit UnitState)
 {
 	local array<XComGameState_Unit> UniformStates;
 	local XComGameState_Unit		UniformState;
 	
-	UniformStates = GetClassSpecificUniforms(ArmorTemplateName, NewAppearance.iGender, UnitState.GetSoldierClassTemplateName());
+	UniformStates = GetNonSoldierUniformsForUnit(NewAppearance.iGender, UnitState);
 	if (UniformStates.Length > 0)
 	{
 		UniformState = UniformStates[`SYNC_RAND(UniformStates.Length)];
 
 		`AMLOG(UnitState.GetFullName() @ "selected random class uniform:" @ UniformState.GetFullName() @ "out of possible:" @ UniformStates.Length);
 
-		CopyUniformAppearance(NewAppearance, UniformState, ArmorTemplateName);
+		CopyUniformAppearance(NewAppearance, UniformState, ''); // TODO: Add uniform options here
 		return true;		
-	}
-
-	UniformStates = GetAnyClassUniforms(ArmorTemplateName, NewAppearance.iGender);
-	if (UniformStates.Length > 0)
-	{
-		UniformState = UniformStates[`SYNC_RAND(UniformStates.Length)];
-
-		`AMLOG(UnitState.GetFullName() @ "selected random non-class uniform:" @ UniformState.GetFullName() @ "out of possible:" @ UniformStates.Length);
-
-		CopyUniformAppearance(NewAppearance, UniformState, ArmorTemplateName);
-		return true;
 	}
 
 	return false;
 }
-/*
-private function array<XComGameState_Unit> GetMilitiaUniforms(const int iGender)
+
+private function array<XComGameState_Unit> GetNonSoldierUniformsForUnit(const int iGender, const XComGameState_Unit UnitState)
 {
 	local array<XComGameState_Unit> UniformStates;
 	local XComGameState_Unit		UniformState;
 
 	foreach CharacterPool(UniformState)
 	{
-		if (GetUniformStatus(UniformState) == EUS_Militia 
-			&& UniformState.kAppearance.iGender == iGender && // TODO: Unnoodle this.
-			UniformState.HasStoredAppearance(iGender, ArmorTemplateName))
+		if (GetUniformStatus(UniformState) == EUS_NonSoldier &&
+			UniformState.kAppearance.iGender == iGender &&
+			IsUnitNonSoldierUniformForCharTemplate(UniformState, UnitState.GetMyTemplateName()))
 		{
-			`AMLOG(UniformState.GetFullName() @ "is a militia uniform");
+			`AMLOG(UniformState.GetFullName() @ "is a non-soldier uniform for" @ UnitState.GetFullName() @ UniformState.kAppearance.iGender @ UnitState.GetMyTemplateName());
 			UniformStates.AddItem(UniformState);
 		}
 	}
 	return UniformStates;
 }
-*/
 
 private function CopyUniformAppearance(out TAppearance NewAppearance, const XComGameState_Unit UniformState, const name ArmorTemplateName)
 {

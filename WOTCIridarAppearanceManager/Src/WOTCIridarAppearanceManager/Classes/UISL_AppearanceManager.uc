@@ -105,6 +105,12 @@ private function AddButtons()
 		CreateOrUpdateDropdown(ListIndex, CustomizeScreen, UniformStatus - 1, // -1 because the list is displayed without 0th member. 
 				strUniformStatusTitle, strUniformStatus, OnUniformStatusDropdownSelectionChanged);
 
+		if (UniformStatus == EUS_NonSoldier)
+		{
+			CreateOrUpdateListItem(ListIndex, CustomizeScreen, 
+				"Uniform unit types", OnChooseNonSoldierUniformTypesClicked);
+		}
+
 		// ## Convert to Soldier
 		CreateOrUpdateButton(ListIndex, CustomizeScreen, 
 					strConvertToSoldier, strConvertButtonTitle, OnSoldierButtonClicked);
@@ -206,6 +212,23 @@ private function RemoveCanAppearAsListItems(UICustomize_Menu CustmozeMenu)
 
 // ===================================================================
 // ON CLICK METHODS
+
+private function OnChooseNonSoldierUniformTypesClicked()
+{
+	local UINonSoldierUniform		CustomizeScreen;
+	local XComPresentationLayerBase	Pres;
+	
+	Pres = `PRESBASE;
+	if (Pres == none || Pres.ScreenStack == none)
+	{
+		`AMLOG("ERROR :: No PresBase:" @ Pres == none @ "or no ScreenStack:" @  Pres.ScreenStack == none @ ", exiting.");
+		return;
+	}
+
+	CustomizeScreen = Pres.Spawn(class'UINonSoldierUniform', Pres);
+	Pres.ScreenStack.Push(CustomizeScreen);
+	CustomizeScreen.UpdateData();
+}
 
 private function OnManageAppearanceItemClicked()
 {
