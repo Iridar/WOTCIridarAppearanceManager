@@ -49,6 +49,7 @@ private function AddButtons()
 	local XComGameState_Unit		UnitState;
 	local CharacterPoolManager_AM	CharPoolMgr;
 	local int						ListIndex;
+	local UIMechaListItem			ListItem;
 
 	CustomizeScreen = UICustomize_Menu(`SCREENSTACK.GetCurrentScreen());
 	if (CustomizeScreen == none) 
@@ -102,7 +103,7 @@ private function AddButtons()
 			strConfigureUniform, OnConfigureUniformItemClicked);
 
 		// ## Uniform Status
-		CreateOrUpdateDropdown(ListIndex, CustomizeScreen, UniformStatus - 1, // -1 because the list is displayed without 0th member. 
+		ListItem = CreateOrUpdateDropdown(ListIndex, CustomizeScreen, UniformStatus - 1, // -1 because the list is displayed without 0th member. 
 				strUniformStatusTitle, strUniformStatus, OnUniformStatusDropdownSelectionChanged);
 
 		if (UniformStatus == EUS_NonSoldier)
@@ -138,6 +139,10 @@ private function AddButtons()
 		CreateOrUpdateButton(ListIndex, CustomizeScreen, 
 				strVadlidateAppearance, strVadlidateAppearanceButton, OnValidateButtonClicked);
 	}
+
+	// Move dropdown lists to highest depth so the list itself doesn't go under other list items. Yes, it's uber dumb that this needs to be a thing.
+	if (ListItem != none)
+		ListItem.MoveToHighestDepth();
 }
 
 /*
@@ -502,6 +507,8 @@ private function OnValidateButtonClicked(UIButton ButtonSource)
 	local XComGameState_Unit			UnitState;
 	local UICustomize_Menu				CustomizeScreen;
 	local CharacterPoolManager_AM		CharPool;
+	local EUniformStatus				OldStatus;
+	local EUniformStatus				NewStatus;
 
 	CustomizeScreen = UICustomize_Menu(`SCREENSTACK.GetCurrentScreen());
 	if (CustomizeScreen == none)
@@ -515,7 +522,18 @@ private function OnValidateButtonClicked(UIButton ButtonSource)
 	if (CharPool == none)
 		return;
 
-	CharPool.SetUniformStatus(UnitState, EUniformStatus(DropdownControl.SelectedItem + 1)); // Add +1 because the array doesn't include 0th member, the "unit is not uniform" one.
+	OldStatus = CharPool.GetUniformStatus(UnitState);
+	NewStatus = EUniformStatus(DropdownControl.SelectedItem + 1); // Add +1 because the array doesn't include 0th member, the "unit is not uniform" one.
+	CharPool.SetUniformStatus(UnitState, NewStatus);
+
+	// Update list only if changing from non-soldier uniform or to non-soldier uniform.
+	// Since we need to either add or remove the "choose non-soldier character types" list item.
+	if (OldStatus != NewStatus && (OldStatus == EUS_NonSoldier || NewStatus == EUS_NonSoldier))
+	{
+		CustomizeScreen.UpdateData();
+		CustomizeScreen.ClearTimer(nameof(AddButtons), self);
+		AddButtons();
+	}
 }
 
 private function OnAutoManageUniformDropdownSelectionChanged(UIDropdown DropdownControl)
@@ -577,7 +595,7 @@ private function CreateOrUpdateButton(out int ListIndex, UICustomize_Menu Custom
 	ListItem.Show();
 }
 
-private function CreateOrUpdateDropdown(out int ListIndex, UICustomize_Menu CustomizeScreen, int SelectedValue, string strTitle, array<string> strValues, delegate<OnDropdownSelectionChangedCallback> DropdownSelectionChanged)
+private function UIMechaListItem CreateOrUpdateDropdown(out int ListIndex, UICustomize_Menu CustomizeScreen, int SelectedValue, string strTitle, array<string> strValues, delegate<OnDropdownSelectionChangedCallback> DropdownSelectionChanged)
 {
 	local UIMechaListItem ListItem;
 
@@ -586,10 +604,10 @@ private function CreateOrUpdateDropdown(out int ListIndex, UICustomize_Menu Cust
 	if (ListItem.Desc.htmlText != strTitle || ListItem.Dropdown == none || string(ListItem.Dropdown.OnSelectionChangedCallback) != string(DropdownSelectionChanged))
 	{
 		ListItem.UpdateDataDropdown(strTitle, strValues, SelectedValue, DropdownSelectionChanged);
-		ListItem.MoveToHighestDepth();
 	}
 
 	ListItem.Show();
+	return ListItem;
 }
 
 // ----------------------------------------------------------------------

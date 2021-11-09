@@ -62,6 +62,8 @@ struct CharacterPoolExtraData
 };
 var array<CharacterPoolExtraData> ExtraDatas;
 
+const NonSoldierUniformSettings = 'NonSoldierUniformSettings';
+
 `include(WOTCIridarAppearanceManager\Src\ModConfigMenuAPI\MCM_API_CfgHelpers.uci)
 
 // ============================================================================================
@@ -548,7 +550,7 @@ final function bool GetUniformAppearanceForNonSoldier(out TAppearance NewAppeara
 
 		`AMLOG(UnitState.GetFullName() @ "selected random class uniform:" @ UniformState.GetFullName() @ "out of possible:" @ UniformStates.Length);
 
-		CopyUniformAppearance(NewAppearance, UniformState, ''); // TODO: Add uniform options here
+		CopyUniformAppearance(NewAppearance, UniformState, NonSoldierUniformSettings);
 		return true;		
 	}
 
@@ -580,11 +582,19 @@ private function CopyUniformAppearance(out TAppearance NewAppearance, const XCom
 	local bool							bGenderChange;
 	local string						GenderArmorTemplate;
 
-	UniformState.GetStoredAppearance(UniformAppearance, NewAppearance.iGender, ArmorTemplateName);
+	if (GetUniformStatus(UniformState) == EUS_NonSoldier)
+	{
+		UniformAppearance = UniformState.kAppearance;
+		CosmeticOptions = GetCosmeticOptionsForUnit(UniformState, string(NonSoldierUniformSettings));
+	}
+	else
+	{
+		UniformState.GetStoredAppearance(UniformAppearance, NewAppearance.iGender, ArmorTemplateName);
+		GenderArmorTemplate = ArmorTemplateName $ NewAppearance.iGender;
+		CosmeticOptions = GetCosmeticOptionsForUnit(UniformState, GenderArmorTemplate);
+	}
 
-	GenderArmorTemplate = ArmorTemplateName $ NewAppearance.iGender;
-	CosmeticOptions = GetCosmeticOptionsForUnit(UniformState, GenderArmorTemplate);
-	
+
 	if (CosmeticOptions.Length > 0)
 	{	
 		if (ShouldCopyUniformPiece('iGender', CosmeticOptions)) {bGenderChange = true;

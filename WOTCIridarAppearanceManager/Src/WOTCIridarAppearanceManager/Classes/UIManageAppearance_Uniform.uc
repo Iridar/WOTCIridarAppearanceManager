@@ -120,6 +120,13 @@ simulated function SaveCosmeticOptions()
 		CosmeticOption.bChecked = ListItem.Checkbox.bChecked;
 		CosmeticOptions.AddItem(CosmeticOption);
 	}
-
-	PoolMgr.SaveCosmeticOptionsForUnit(CosmeticOptions, ArmoryUnit, GetGenderArmorTemplate());
+	
+	if (PoolMgr.GetUniformStatus(ArmoryUnit) == EUS_NonSoldier)
+	{
+		PoolMgr.SaveCosmeticOptionsForUnit(CosmeticOptions, ArmoryUnit, string(PoolMgr.NonSoldierUniformSettings));
+	}
+	else
+	{
+		PoolMgr.SaveCosmeticOptionsForUnit(CosmeticOptions, ArmoryUnit, GetGenderArmorTemplate());
+	}
 }
