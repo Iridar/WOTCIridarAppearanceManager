@@ -4,11 +4,9 @@ class UIManageAppearance extends UICustomize;
 /*
 # Priority
 
-Pawn sometimes hangs on character pool screen.
+Pawn sometimes hangs on character pool screen. Fixed already?
 
 Save modlist in CP files, and warn if mods are missing.
-
-Use UITextContainer to add a vertical scrollbar to biography text
 
 # Character Pool
 Fix weapons / Dual Wielding not working in CP?
@@ -36,7 +34,7 @@ Maybe allow Appearance Store button to work as a "reskin armor" button? - redund
 
 ## Ideas for later
 
-Uniforms for resistance fighters
+Make character pool loadout actually show up in game, with a toggle.
 
 Investigate customizing off-duty (Underlay?) appearance.
 

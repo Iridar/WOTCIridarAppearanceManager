@@ -84,7 +84,7 @@ simulated function UpdateData()
 
 		SpawnedItem = Spawn(class'UIMechaListItem', List.itemContainer);
 		SpawnedItem.InitListItem(CharTemplate.DataName).bAnimateOnInit = false;
-		SpawnedItem.UpdateDataCheckbox(DisplayName, "", GetCheckboxState(CharTemplate.DataName), OnCheckboxChanged); // TODO: Localize character template name
+		SpawnedItem.UpdateDataCheckbox(DisplayName, "", GetCheckboxState(CharTemplate.DataName), OnCheckboxChanged);
 	}
 }
 

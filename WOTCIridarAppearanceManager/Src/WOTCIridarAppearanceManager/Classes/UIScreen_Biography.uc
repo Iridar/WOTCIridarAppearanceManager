@@ -1,7 +1,7 @@
 class UIScreen_Biography extends UICustomize;
 
-var private UIText	Text_1;
-var private UIText	Text_2;
+var private UITextContainer	Text_1;
+var private UITextContainer	Text_2;
 var private UIText	ArrowText;
 var private UIBGBox	TextBG;
 
@@ -28,8 +28,8 @@ simulated final function ShowText(string Biography_1, string Biography_2)
 	TextBG.SetPosition(50, 50);
 	TextBG.Show();
 	
-	Text_1 = Spawn(class'UIText', self);
-	Text_1.InitText();
+	Text_1 = Spawn(class'UITextContainer', self);
+	Text_1.InitTextContainer();
 	Text_1.SetPosition(100, 100);
 	Text_1.SetHeight(880);
 	Text_1.SetWidth(835);
@@ -44,8 +44,8 @@ simulated final function ShowText(string Biography_1, string Biography_2)
 	ArrowText.bAnimateOnInit = true;
 	ArrowText.Show();
 
-	Text_2 = Spawn(class'UIText', self);
-	Text_2.InitText();
+	Text_2 = Spawn(class'UITextContainer', self);
+	Text_2.InitTextContainer();
 	Text_2.SetPosition(985, 100);
 	Text_2.SetHeight(880);
 	Text_2.SetWidth(835);
