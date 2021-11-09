@@ -53,6 +53,7 @@ simulated function UpdateData()
 	local X2CharacterTemplate	CharTemplate;
 	local X2DataTemplate		DataTemplate;
 	local UIMechaListItem		SpawnedItem;
+	local string				DisplayName;
 
 	super.UpdateData();
 
@@ -75,9 +76,15 @@ simulated function UpdateData()
 			!CharTemplateIsHumanPawn(CharTemplate, EGender(Unit.kAppearance.iGender)))
 			continue;
 
+		if (CharTemplate.strCharacterName != "")
+		{
+			DisplayName = CharTemplate.strCharacterName @ "(" $ string(CharTemplate.DataName) $ ")";
+		}
+		else DisplayName = string(CharTemplate.DataName);
+
 		SpawnedItem = Spawn(class'UIMechaListItem', List.itemContainer);
 		SpawnedItem.InitListItem(CharTemplate.DataName).bAnimateOnInit = false;
-		SpawnedItem.UpdateDataCheckbox(string(CharTemplate.DataName), "", GetCheckboxState(CharTemplate.DataName), OnCheckboxChanged); // TODO: Localize character template name
+		SpawnedItem.UpdateDataCheckbox(DisplayName, "", GetCheckboxState(CharTemplate.DataName), OnCheckboxChanged); // TODO: Localize character template name
 	}
 }
 

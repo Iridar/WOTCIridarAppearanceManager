@@ -61,7 +61,14 @@ simulated private function SetCheckboxPositions()
 	local CosmeticOptionStruct			CosmeticOption;
 	local CheckboxPresetStruct			CheckboxPreset;
 
-	CosmeticOptions = PoolMgr.GetCosmeticOptionsForUnit(ArmoryUnit, GetGenderArmorTemplate());
+	if (PoolMgr.GetUniformStatus(ArmoryUnit) == EUS_NonSoldier)
+	{
+		CosmeticOptions = PoolMgr.GetCosmeticOptionsForUnit(ArmoryUnit, string(PoolMgr.NonSoldierUniformSettings));
+	}
+	else
+	{
+		CosmeticOptions = PoolMgr.GetCosmeticOptionsForUnit(ArmoryUnit, GetGenderArmorTemplate());
+	}
 	if (CosmeticOptions.Length != 0)
 	{
 		`AMLOG("Loading CosmeticOptions for unit" @ CosmeticOptions.Length);

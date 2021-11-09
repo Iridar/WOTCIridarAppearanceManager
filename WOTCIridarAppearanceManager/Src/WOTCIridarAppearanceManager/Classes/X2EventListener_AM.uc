@@ -26,6 +26,7 @@ static function CHEventListenerTemplate Create_ListenerTemplate_Strategy()
 
 	Template.AddCHEvent('ItemAddedToSlot', OnItemAddedToSlot, ELD_Immediate, 50);
 	Template.AddCHEvent('UnitRankUp', OnUnitRankUp, ELD_Immediate, 50);
+	Template.AddCHEvent('OnCreateCinematicPawn', OnCreateCinematicPawn, ELD_Immediate, 50);
 
 	return Template;
 }
@@ -40,6 +41,7 @@ static function CHEventListenerTemplate Create_ListenerTemplate_Tactical()
 	Template.AddCHEvent('ItemAddedToSlot', OnItemAddedToSlot, ELD_Immediate, 50);
 	Template.AddCHEvent('UnitRankUp', OnUnitRankUp, ELD_Immediate, 50);
 	Template.AddCHEvent('PostAliensSpawned', OnPostAliensSpawned, ELD_Immediate, 50);
+	Template.AddCHEvent('OnCreateCinematicPawn', OnCreateCinematicPawn, ELD_Immediate, 50);
 
 	return Template;
 }
@@ -160,7 +162,7 @@ static function EventListenerReturn OnUnitRankUp(Object EventData, Object EventS
 
 	`AMLOG(UnitState.GetFullName() @ "promoted to rank:" @ UnitState.GetRank() @ ", and has armor equipped:" @ ItemState.GetMyTemplateName());
 
-	
+	// TODO: ??? Shouldn't this apply a uniform
 
 	return ELR_NoInterrupt;
 }
@@ -189,5 +191,35 @@ static function EventListenerReturn OnPostAliensSpawned(Object EventData, Object
 		}
 		else `AMLOG("Has no uniform");
 	}
+	return ELR_NoInterrupt;
+}
+
+
+static function EventListenerReturn OnCreateCinematicPawn(Object EventData, Object EventSource, XComGameState StartState, Name Event, Object CallbackData)
+{
+	local XComGameState_Unit		UnitState;
+	local XComHumanPawn				HumanPawn;
+	local CharacterPoolManager_AM	CharacterPool;
+	local TAppearance				NewAppearance;
+
+	CharacterPool = `CHARACTERPOOLMGRAM;
+	if (CharacterPool == none)
+		return ELR_NoInterrupt;
+
+	UnitState = XComGameState_Unit(EventSource);
+	HumanPawn = XComHumanPawn(EventData);
+	if (UnitState == none || HumanPawn == none)
+		return ELR_NoInterrupt;
+
+	`AMLOG(UnitState.GetFullName() @ UnitState.GetMyTemplateGroupName());
+			
+	NewAppearance = HumanPawn.m_kAppearance;
+	if (CharacterPool.GetUniformAppearanceForNonSoldier(NewAppearance, UnitState))
+	{
+		`AMLOG("Aplying uniform appearance");
+		HumanPawn.SetAppearance(NewAppearance);
+	}
+	else `AMLOG("Has no uniform");
+	
 	return ELR_NoInterrupt;
 }

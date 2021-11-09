@@ -386,6 +386,8 @@ final function bool IsUnitNonSoldierUniformForCharTemplate(const XComGameState_U
 
 	NonSoldierUniformTemplates = ExtraDatas[ GetExtraDataIndexForUnit(UnitState) ].NonSoldierUniformTemplates;
 
+	`AMLOG(UnitState.GetFullName() @ "is for this many templates:" @ NonSoldierUniformTemplates.Length);
+
 	return NonSoldierUniformTemplates.Find(CharTemplateName) != INDEX_NONE;
 }
 final function AddUnitNonSoldierUniformForCharTemplate(const XComGameState_Unit UnitState, const name CharTemplateName)
@@ -649,11 +651,20 @@ private function array<XComGameState_Unit> GetNonSoldierUniformsForUnit(const in
 	foreach CharacterPool(UniformState)
 	{
 		if (GetUniformStatus(UniformState) == EUS_NonSoldier &&
-			UniformState.kAppearance.iGender == iGender &&
+			(UniformState.kAppearance.iGender == iGender || UnitState.GetMyTemplate().bForceAppearance) && // You'd never tell, but apparently Bradford is a female at least sometimes. 
 			IsUnitNonSoldierUniformForCharTemplate(UniformState, UnitState.GetMyTemplateName()))
 		{
 			`AMLOG(UniformState.GetFullName() @ "is a non-soldier uniform for" @ UnitState.GetFullName() @ UniformState.kAppearance.iGender @ UnitState.GetMyTemplateName());
 			UniformStates.AddItem(UniformState);
+		}
+		else 
+		{
+			if (UniformState.kAppearance.iGender != iGender)	
+			{
+				`AMLOG("Uniform:" @ UniformState.GetFullName() @ "Unit:" @ UnitState.GetFullName());
+				`AMLOG("Uniform gender:" @ GetEnum(enum'EGender', UniformState.kAppearance.iGender) @ "given gender:" @ GetEnum(enum'EGender', iGender) @ "Unit state gender:" @ GetEnum(enum'EGender', UnitState.kAppearance.iGender));
+			}		
+			//`AMLOG(UniformState.GetFullName() @ "is a non-soldier uniform:" @ GetUniformStatus(UniformState) == EUS_NonSoldier @ "is gender match:" @ UniformState.kAppearance.iGender == iGender @ "is for char template:" @ IsUnitNonSoldierUniformForCharTemplate(UniformState, UnitState.GetMyTemplateName()));
 		}
 	}
 	return UniformStates;

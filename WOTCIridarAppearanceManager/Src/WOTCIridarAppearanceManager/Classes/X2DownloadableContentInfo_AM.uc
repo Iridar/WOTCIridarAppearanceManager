@@ -38,9 +38,11 @@ static event InstallNewCampaign(XComGameState StartState)
 		NewAppearance = UnitState.kAppearance;
 		if (CharacterPool.GetUniformAppearanceForNonSoldier(NewAppearance, UnitState))
 		{
-			`AMLOG("Aplying uniform appearance");
+			`AMLOG("Aplying uniform appearance" @ NewAppearance.nmTorso);
 
 			UnitState.SetTAppearance(NewAppearance);
+
+			`AMLOG("New torso:" @ UnitState.kAppearance.nmTorso);
 			UnitState.StoreAppearance();
 		}
 		else `AMLOG("Has no uniform");
