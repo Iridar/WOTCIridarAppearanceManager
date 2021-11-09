@@ -22,14 +22,49 @@ delegate OnDropdownSelectionChangedCallback(UIDropdown DropdownControl);
 
 event OnInit(UIScreen Screen)
 {
-	if (UICustomize_Menu(Screen) != none)
+	local UICustomize_Menu CustomizeScreen;
+
+	CustomizeScreen = UICustomize_Menu(Screen);
+	if (CustomizeScreen != none)
 	{	 
 		// When screen is initialized, list has no items yet, so need to wait for the list to init.
-		UICustomize_Menu(Screen).List.AddOnInitDelegate(OnListInited);
+		CustomizeScreen.List.AddOnInitDelegate(OnListInited);
+
+		// When customize manager creates a character pool pawn, it is automatically equipped with the default loadout,
+		// so we need to wait for pawn to exist before we can equip character pool loadout on it.
+		if (!CustomizeScreen.bInArmory)
+		{
+			if (CustomizeScreen.CustomizeManager.ActorPawn != none)
+			{
+				class'UIArmory_Loadout_CharPool'.static.EquipCharacterPoolLoadout();
+			}
+			else
+			{
+				CustomizeScreen.SetTimer(0.01f, false, nameof(OnPawnCreated), self);
+			}
+		}
 	}
 }
 
-simulated function OnListInited(UIPanel Panel)
+private function OnPawnCreated()
+{
+	local UICustomize_Menu CustomizeScreen;
+
+	CustomizeScreen = UICustomize_Menu(`SCREENSTACK.GetCurrentScreen());
+	if (CustomizeScreen == none) 
+		return;
+
+	if (CustomizeScreen.CustomizeManager.ActorPawn != none)
+	{
+		class'UIArmory_Loadout_CharPool'.static.EquipCharacterPoolLoadout();
+	}
+	else
+	{
+		CustomizeScreen.SetTimer(0.01f, false, nameof(OnPawnCreated), self);
+	}
+}
+
+private function OnListInited(UIPanel Panel)
 {
 	AddButtons();
 }
@@ -314,6 +349,7 @@ private function OnLoadoutItemClicked()
 	Pres.ScreenStack.Push(ArmoryScreen);
 	ArmoryScreen.CustomizationManager = Pres.GetCustomizeManager();
 	ArmoryScreen.InitArmory(UnitState.GetReference());
+	ArmoryScreen.UpdateData();
 }
 
 simulated private function OnSoldierButtonClicked(UIButton ButtonSource)

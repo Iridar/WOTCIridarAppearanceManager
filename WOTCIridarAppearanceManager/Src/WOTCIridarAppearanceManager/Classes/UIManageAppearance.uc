@@ -4,7 +4,7 @@ class UIManageAppearance extends UICustomize;
 /*
 # Priority
 
-Militia uniforms and raider factions: expand the list of character types in character pool (the one where you select soldier\spark\reaper\skirmisher\templar).
+Pawn sometimes hangs on character pool screen.
 
 Save modlist in CP files, and warn if mods are missing.
 

@@ -19,6 +19,12 @@ struct CosmeticOptionStruct
 	var bool bChecked;	// Bool flag that determines whether this part of TAppearance is a part of the uniform.
 };
 
+struct CharacterPoolLoadoutStruct
+{
+	var name TemplateName;
+	var EInventorySlot InventorySlot;
+};
+
 struct UniformSettingsStruct
 {
 	var string GenderArmorTemplate; // Same as in the AppearanceStore. These uniform options are for this armor and gender.
@@ -59,6 +65,8 @@ struct CharacterPoolExtraData
 	var EAutoManageUniformForUnit AutoManageUniformForUnit; // Only for non-uniforms.
 
 	var array<name> NonSoldierUniformTemplates; // List of character templates this non-soldier uniform should be used for.
+
+	var array<CharacterPoolLoadoutStruct> CharacterPoolLoadout; // List of items that should be equipped on this unit in Character Pool.
 };
 var array<CharacterPoolExtraData> ExtraDatas;
 
@@ -279,6 +287,82 @@ final function SetAutoManageUniformForUnit(const XComGameState_Unit UnitState, c
 	ExtraDatas[ GetExtraDataIndexForUnit(UnitState) ].AutoManageUniformForUnit = EAutoManageUniformForUnit(eValue);
 	SaveCharacterPool();
 }
+
+final function array<CharacterPoolLoadoutStruct> GetCharacterPoolLoadout(const XComGameState_Unit UnitState)
+{
+	return ExtraDatas[ GetExtraDataIndexForUnit(UnitState) ].CharacterPoolLoadout;
+}
+final function UpdateCharacterPoolLoadout(const XComGameState_Unit UnitState, const EInventorySlot InventorySlot, const name TemplateName)
+{
+	local array<CharacterPoolLoadoutStruct>	CharacterPoolLoadout;
+	local CharacterPoolLoadoutStruct		LoadoutElement;
+	local int	iMaxNumItems;
+	local int	iNumItems;
+	local int	ExtraDataIndex;
+	local bool	bUpdateExistingItem;
+	local bool	bItemUpdated;
+	local int i;
+
+	// This function needs to decide whether it wants to create a new loadout item or replace an existing one.
+	// In case of regular slots, a new item replaces existing item, if any. If none exist, new item is added.
+	// For multi-item slots, a new item replaces existing item if no more items can fit the slot. If there's still room, new item is added.
+
+	`AMLOG(UnitState.GetFullName() @ InventorySlot @ TemplateName);
+
+	ExtraDataIndex =  GetExtraDataIndexForUnit(UnitState);
+	CharacterPoolLoadout = ExtraDatas[ExtraDataIndex].CharacterPoolLoadout;
+
+	if (class'CHItemSlot'.static.SlotIsMultiItem(InventorySlot))
+	{
+		// Get max number of items that can fit into the slot.
+		iMaxNumItems = class'CHItemSlot'.static.SlotGetMaxItemCount(InventorySlot, UnitState);
+
+		// Calculate how many items are actually equipped.
+		foreach CharacterPoolLoadout(LoadoutElement)
+		{
+			if (LoadoutElement.InventorySlot == InventorySlot) iNumItems++;
+		}
+
+		// If the slot is already at capacity, we tell it to replace the first item it can find in the slot.
+		if (iNumItems >= iMaxNumItems)
+		{
+			`AMLOG("No more room in this multi item slot, should replace other item");
+			bUpdateExistingItem = true;
+		}
+	}
+	else 
+	{
+		bUpdateExistingItem = true;
+	}
+
+	// Replace first item in the slot we can find.
+	if (bUpdateExistingItem)
+	{
+		for (i = 0; i < CharacterPoolLoadout.Length; i++)
+		{
+			if (CharacterPoolLoadout[i].InventorySlot == InventorySlot)
+			{	
+				`AMLOG(i @ "Replacing existing item:" @ CharacterPoolLoadout[i].TemplateName);
+				CharacterPoolLoadout[i].TemplateName = TemplateName;
+				bItemUpdated = true;
+				break;
+			}
+		}
+	}
+
+	// If the function was unable to update an existing item because it doesn't exist, we add one.
+	if (!bItemUpdated)
+	{
+		`AMLOG("Adding new item into loadout");
+		LoadoutElement.InventorySlot = InventorySlot;
+		LoadoutElement.TemplateName = TemplateName;
+		CharacterPoolLoadout.AddItem(LoadoutElement);
+	}
+
+	ExtraDatas[ExtraDataIndex].CharacterPoolLoadout = CharacterPoolLoadout;
+	SaveCharacterPool();
+}
+
 
 final function array<CosmeticOptionStruct> GetCosmeticOptionsForUnit(const XComGameState_Unit UnitState, const string GenderArmorTemplate)
 {

@@ -1,7 +1,7 @@
 class UIArmory_Loadout_CharPool extends UIArmory_Loadout;
 
 var XComCharacterCustomization		CustomizationManager;
-var private CharacterPoolManager	CharPoolMgr;
+var private CharacterPoolManager_AM	CharPoolMgr;
 
 var private config(ExcludedItems) array<name> EXCLUDED_SKINS;
 
@@ -12,7 +12,7 @@ simulated function InitArmory(StateObjectReference UnitRef, optional name DispEv
 {
 	super.InitArmory(UnitRef, DispEvent, SoldSpawnEvent, NavBackEvent, HideEvent, RemoveEvent, bInstant, InitCheckGameState);
 
-	CharPoolMgr = `CHARACTERPOOLMGR;
+	CharPoolMgr = `CHARACTERPOOLMGRAM;
 	Header.Hide();
 }
 
@@ -108,90 +108,42 @@ private function bool ShouldShowTemplate(const X2ItemTemplate ItemTemplate)
 // Cosmetically equip new item. Mostly intended for Armor, but works with other items too.
 simulated function bool EquipItem(UIArmory_LoadoutItem Item)
 {
-	local XComGameState_Item					NewItem;
-	local EInventorySlot						SelectedSlot;
-	local bool									EquipSucceeded;
-	local X2WeaponTemplate						WeaponTemplate;
-	local X2EquipmentTemplate					EquipmentTemplate;
-	local XComGameStateHistory					History;	
-	local XComGameState							TempGameState;
-	local XComGameStateContext_ChangeContainer	TempContainer;	
-	local TAppearance							NewAppearance;
-	local XComGameState_Unit					UnitState;
+	local XComGameState_Unit UnitState;
 
 	UnitState = GetUnit();
 	if (UnitState == none)
 		return false;
 
-	History = `XCOMHISTORY;
-	SelectedSlot = GetSelectedSlot();
-	if (SelectedSlot == eInvSlot_Armor)
-	{
-		UnitState.StoreAppearance();
-		CustomizationManager.CommitChanges();
-	}
+	`AMLOG(UnitState.GetFullName() @ "adding" @ Item.ItemTemplate.DataName @ GetSelectedSlot() @ "into loadout");
 
-	`AMLOG(UnitState.GetFullName() @ "attempting to equip item:" @ Item.ItemTemplate.DataName @ "into slot:" @ SelectedSlot $ ". Current torso:" @ UnitState.kAppearance.nmTorso);
+	CharPoolMgr.UpdateCharacterPoolLoadout(UnitState, GetSelectedSlot(), Item.ItemTemplate.DataName);
+	CharPoolMgr.SaveCharacterPool();
 
-	// Create and equip new item.
-	TempContainer = class'XComGameStateContext_ChangeContainer'.static.CreateEmptyChangeContainer("Fake Loadout");
-	TempGameState = History.CreateNewGameState(true, TempContainer);
-	NewItem = Item.ItemTemplate.CreateInstanceFromTemplate(TempGameState);
+	CustomizationManager.ReCreatePawnVisuals(CustomizationManager.ActorPawn, true);
+
+	SetTimer(0.01f, false, nameof(OnRefreshPawn), self);
 	
-	EquipSucceeded = UnitState.AddItemToInventory(NewItem, SelectedSlot, TempGameState); 
-	if (EquipSucceeded)
-	{
-		`AMLOG("Item equipped. New torso:" @ UnitState.kAppearance.nmTorso);
-
-		WeaponTemplate = X2WeaponTemplate(Item.ItemTemplate);
-		if (WeaponTemplate != none && WeaponTemplate.bUseArmorAppearance)
-		{
-			NewItem.WeaponAppearance.iWeaponTint = UnitState.kAppearance.iArmorTint;
-		}
-		else
-		{
-			NewItem.WeaponAppearance.iWeaponTint = UnitState.kAppearance.iWeaponTint;
-		}
-		NewItem.WeaponAppearance.nmWeaponPattern = UnitState.kAppearance.nmWeaponPattern;
-
-		EquipmentTemplate = X2EquipmentTemplate(Item.ItemTemplate);
-		if (EquipmentTemplate != none && EquipmentTemplate.EquipSound != "")
-		{
-			class'Help'.static.PlayStrategySoundEvent(EquipmentTemplate.EquipSound, self);
-		}
-	}
-
-	History.AddGameStateToHistory(TempGameState);
-	
-	CreateVisualAttachments(UnitState);
-	
-	History.ObliterateGameStatesFromHistory(1);	
-
-	UnitState.EmptyInventoryItems();
-
-	if (EquipSucceeded)
-	{
-		// Always refresh and save unit's appearance in case equipping the item modified it.
-		NewAppearance = UnitState.kAppearance;
-		XComUnitPawn(CustomizationManager.ActorPawn).SetAppearance(NewAppearance);
-
-		if (SelectedSlot == eInvSlot_Armor)
-		{
-			UnitState.StoreAppearance(NewAppearance.iGender, Item.ItemTemplate.DataName);
-		}
-		else
-		{
-			UnitState.StoreAppearance(NewAppearance.iGender);
-		}
-		CustomizationManager.CommitChanges();
-		
-
-		CharPoolMgr.SaveCharacterPool();
-	}
-	return EquipSucceeded;
+	return true;
 }
 
-simulated private function CreateVisualAttachments(XComGameState_Unit UnitState)
+private function OnRefreshPawn()
+{
+	if (CustomizationManager.ActorPawn != none)
+	{
+		`AMLOG("Equipping loadout");
+		EquipCharacterPoolLoadout();
+
+		// Assign the actor pawn to the mouse guard so the pawn can be rotated by clicking and dragging
+		//UIMouseGuard_RotatePawn(`SCREENSTACK.GetFirstInstanceOf(class'UIMouseGuard_RotatePawn')).SetActorPawn(CustomizationManager.ActorPawn);
+	}
+	else
+	{
+		`AMLOG("Restarting timer");
+		SetTimer(0.01f, false, nameof(OnRefreshPawn), self);
+	}
+}
+/*
+private function CreateVisualAttachments(XComGameState_Unit UnitState)
 {
 	local UIPawnMgr					PawnMgr;
 	local XComPresentationLayerBase	PresBase;
@@ -220,6 +172,110 @@ simulated private function CreateVisualAttachments(XComGameState_Unit UnitState)
 
 	`AMLOG(UnitState.GetFullName());	
 	UnitPawn.CreateVisualInventoryAttachments(PawnMgr, UnitState);
+}*/
+
+
+static final function EquipCharacterPoolLoadout()
+{
+	local CharacterPoolManager_AM				LocalPoolMgr;
+	local array<CharacterPoolLoadoutStruct>		CharacterPoolLoadout;
+	local CharacterPoolLoadoutStruct			LoadoutElement;
+	local X2ItemTemplateManager					ItemMgr;
+	local X2ItemTemplate						ItemTemplate;
+	local XComGameStateHistory					LocalHistory;
+	local XComGameState_Item					ItemState;
+	local XComGameState							TempGameState;
+	local XComGameStateContext_ChangeContainer	TempContainer;	
+	local bool									bEquippedAtLeastOneItem;
+	local X2WeaponTemplate						WeaponTemplate;
+	local XComGameState_Unit					UnitState;
+	local XComPresentationLayerBase				PresBase;
+	local UICustomize							CustomizeScreen;
+	local XComUnitPawn							UnitPawn;
+	local TAppearance							NewAppearance;
+	local XComCharacterCustomization			CustomizeManager;
+	local UIArmory_Loadout_CharPool				LoadoutScreen;
+
+	`AMLOG("Begin init");
+
+	PresBase = `PRESBASE;
+	if (PresBase == none) { `AMLOG("No presbase"); return; }
+
+	LocalPoolMgr = `CHARACTERPOOLMGRAM;
+	if (LocalPoolMgr == none) { `AMLOG("No pool mgr"); return; }
+
+	// This function is either called by UISL_AppearanceManager, which runs on UICustomize_Menu init,
+	// or from this screen. We don't really care which, we just need Customize Manager.
+	CustomizeScreen = UICustomize(PresBase.ScreenStack.GetCurrentScreen());
+	if (CustomizeScreen == none) 
+	{ 
+		LoadoutScreen = UIArmory_Loadout_CharPool(PresBase.ScreenStack.GetCurrentScreen());
+		if (LoadoutScreen == none)	return;
+
+		CustomizeManager = LoadoutScreen.CustomizationManager;
+	}
+	else CustomizeManager = CustomizeScreen.CustomizeManager;
+
+	if (CustomizeManager == none || CustomizeManager.UpdatedUnitState == none) return;
+
+	UnitPawn = XComUnitPawn(CustomizeManager.ActorPawn);
+	if (UnitPawn == nonE) { `AMLOG("No unit pawn"); return; }
+
+	UnitState = CustomizeManager.UpdatedUnitState;
+
+	CharacterPoolLoadout = LocalPoolMgr.GetCharacterPoolLoadout(UnitState);
+	if (CharacterPoolLoadout.Length == 0) { `AMLOG("No char pool loadout"); return; }
+
+	`AMLOG("Finish init");
+
+	LocalHistory = `XCOMHISTORY;
+	ItemMgr = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
+
+	TempContainer = class'XComGameStateContext_ChangeContainer'.static.CreateEmptyChangeContainer("Fake Loadout");
+	TempGameState = LocalHistory.CreateNewGameState(true, TempContainer);
+	
+	foreach CharacterPoolLoadout(LoadoutElement)
+	{
+		`AMLOG("LoadoutElement:" @ LoadoutElement.TemplateName @ LoadoutElement.InventorySlot);
+
+		ItemTemplate = ItemMgr.FindItemTemplate(LoadoutElement.TemplateName);
+		if (ItemTemplate == none)
+			continue;
+
+		ItemState = ItemTemplate.CreateInstanceFromTemplate(TempGameState);
+		if (UnitState.AddItemToInventory(ItemState, LoadoutElement.InventorySlot, TempGameState))
+		{
+			bEquippedAtLeastOneItem = true;
+
+			`AMLOG("Equipped successfully");
+
+			WeaponTemplate = X2WeaponTemplate(ItemTemplate);
+			if (WeaponTemplate != none && WeaponTemplate.bUseArmorAppearance)
+				ItemState.WeaponAppearance.iWeaponTint = UnitState.kAppearance.iArmorTint;
+			else
+				ItemState.WeaponAppearance.iWeaponTint = UnitState.kAppearance.iWeaponTint;
+			ItemState.WeaponAppearance.nmWeaponPattern = UnitState.kAppearance.nmWeaponPattern;
+		}
+	}
+
+	if (bEquippedAtLeastOneItem)
+	{
+		NewAppearance = UnitState.kAppearance;
+		UnitPawn.SetAppearance(NewAppearance);
+		CustomizeManager.CommitChanges();
+
+		LocalHistory.AddGameStateToHistory(TempGameState);
+		UnitPawn.CreateVisualInventoryAttachments(PresBase.GetUIPawnMgr(), UnitState);
+
+		if (LoadoutScreen != none) LoadoutScreen.UpdateEquippedList();
+
+		LocalHistory.ObliterateGameStatesFromHistory(1);	
+		UnitState.EmptyInventoryItems();
+	}
+	else
+	{	
+		LocalHistory.CleanupPendingGameState(TempGameState);
+	}
 }
 
 simulated function bool ShowInLockerList(XComGameState_Item Item, EInventorySlot SelectedSlot)
@@ -234,7 +290,8 @@ simulated function bool ShowInLockerList(XComGameState_Item Item, EInventorySlot
 simulated function UpdateData(optional bool bRefreshPawn)
 {
 	UpdateLockerList();
-	UpdateEquippedList();
+	
+	EquipCharacterPoolLoadout(); // This calls UpdateEquippedList();
 	//Header.PopulateData(GetUnit());
 }
 
@@ -249,6 +306,7 @@ simulated function UpdateEquippedList()
 	local int prevIndex;
 	local CHUIItemSlotEnumerator En; // Variable for Issue #118
 	local X2ItemTemplate		ItemTemplate;
+	local XComHumanPawn			UnitPawn;
 
 
 	prevIndex = EquippedList.SelectedIndex;
@@ -257,7 +315,7 @@ simulated function UpdateEquippedList()
 
 	// Clear out tooltips from removed list items
 	Movie.Pres.m_kTooltipMgr.RemoveTooltipsByPartialPath(string(EquippedList.MCPath));
-
+	
 	// Issue #171 Start
 	// Realize Inventory so mods changing utility slots get updated faster
 	UpdatedUnit.RealizeItemSlotsCount(CheckGameState);
@@ -280,14 +338,18 @@ simulated function UpdateEquippedList()
 
 		// ADDED
 		// Use cosmetic torso to figure out which armor template could have been used for it.
-		if (En.Slot == eInvSlot_Armor)
+		if (En.ItemState == none && En.Slot == eInvSlot_Armor)
 		{
-			ItemTemplate = class'Help'.static.GetItemTemplateFromCosmeticTorso(UpdatedUnit.kAppearance.nmTorso);
-			if (ItemTemplate != none)
+			UnitPawn = XComHumanPawn(CustomizationManager.ActorPawn);
+			if (UnitPawn != none)
 			{
-				SetItemImage(Item, ItemTemplate);
-				Item.SetTitle(ItemTemplate.GetItemFriendlyName());
-				Item.SetSubTitle(ItemTemplate.GetLocalizedCategory());
+				ItemTemplate = class'Help'.static.GetItemTemplateFromCosmeticTorso(UnitPawn.m_kAppearance.nmTorso);
+				if (ItemTemplate != none)
+				{
+					SetItemImage(Item, ItemTemplate);
+					Item.SetTitle(ItemTemplate.GetItemFriendlyName());
+					Item.SetSubTitle(ItemTemplate.GetLocalizedCategory());
+				}
 			}
 		}
 		// END OF ADDED
