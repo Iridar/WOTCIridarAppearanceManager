@@ -119,11 +119,29 @@ simulated function bool EquipItem(UIArmory_LoadoutItem Item)
 	CharPoolMgr.UpdateCharacterPoolLoadout(UnitState, GetSelectedSlot(), Item.ItemTemplate.DataName);
 	CharPoolMgr.SaveCharacterPool();
 
-	EquipCharacterPoolLoadout();
+	CustomizationManager.ReCreatePawnVisuals(CustomizationManager.ActorPawn, true);
+
+	SetTimer(0.01f, false, nameof(OnRefreshPawn), self);
 	
 	return true;
 }
 
+private function OnRefreshPawn()
+{
+	if (CustomizationManager.ActorPawn != none)
+	{
+		`AMLOG("Equipping loadout");
+		EquipCharacterPoolLoadout();
+
+		// Assign the actor pawn to the mouse guard so the pawn can be rotated by clicking and dragging
+		//UIMouseGuard_RotatePawn(`SCREENSTACK.GetFirstInstanceOf(class'UIMouseGuard_RotatePawn')).SetActorPawn(CustomizationManager.ActorPawn);
+	}
+	else
+	{
+		`AMLOG("Restarting timer");
+		SetTimer(0.01f, false, nameof(OnRefreshPawn), self);
+	}
+}
 /*
 private function CreateVisualAttachments(XComGameState_Unit UnitState)
 {
@@ -173,11 +191,10 @@ static final function EquipCharacterPoolLoadout()
 	local XComGameState_Unit					UnitState;
 	local XComPresentationLayerBase				PresBase;
 	local UICustomize							CustomizeScreen;
-	
-	//local TAppearance							NewAppearance;
+	local XComUnitPawn							UnitPawn;
+	local TAppearance							NewAppearance;
 	local XComCharacterCustomization			CustomizeManager;
 	local UIArmory_Loadout_CharPool				LoadoutScreen;
-	local UIScreen								CurrentScreen;
 
 	`AMLOG("Begin init");
 
@@ -189,11 +206,10 @@ static final function EquipCharacterPoolLoadout()
 
 	// This function is either called by UISL_AppearanceManager, which runs on UICustomize_Menu init,
 	// or from this screen. We don't really care which, we just need Customize Manager.
-	CurrentScreen = PresBase.ScreenStack.GetCurrentScreen();
-	CustomizeScreen = UICustomize(CurrentScreen);
+	CustomizeScreen = UICustomize(PresBase.ScreenStack.GetCurrentScreen());
 	if (CustomizeScreen == none) 
 	{ 
-		LoadoutScreen = UIArmory_Loadout_CharPool(CurrentScreen);
+		LoadoutScreen = UIArmory_Loadout_CharPool(PresBase.ScreenStack.GetCurrentScreen());
 		if (LoadoutScreen == none)	return;
 
 		CustomizeManager = LoadoutScreen.CustomizationManager;
@@ -201,6 +217,9 @@ static final function EquipCharacterPoolLoadout()
 	else CustomizeManager = CustomizeScreen.CustomizeManager;
 
 	if (CustomizeManager == none || CustomizeManager.UpdatedUnitState == none) return;
+
+	UnitPawn = XComUnitPawn(CustomizeManager.ActorPawn);
+	if (UnitPawn == nonE) { `AMLOG("No unit pawn"); return; }
 
 	UnitState = CustomizeManager.UpdatedUnitState;
 
@@ -241,19 +260,14 @@ static final function EquipCharacterPoolLoadout()
 
 	if (bEquippedAtLeastOneItem)
 	{
-		//NewAppearance = UnitState.kAppearance;
-		//UnitPawn.SetAppearance(NewAppearance);
-		
+		NewAppearance = UnitState.kAppearance;
+		UnitPawn.SetAppearance(NewAppearance);
+		CustomizeManager.CommitChanges();
+
 		LocalHistory.AddGameStateToHistory(TempGameState);
-		//CustomizeManager.CommitChanges();
+		UnitPawn.CreateVisualInventoryAttachments(PresBase.GetUIPawnMgr(), UnitState);
 
-		if (LoadoutScreen != none) 
-		{
-			LoadoutScreen.UpdateEquippedList();
-		}
-
-		CustomizeManager.ReCreatePawnVisuals(CustomizeManager.ActorPawn, true);
-		CurrentScreen.SetTimer(0.01f, false, nameof(OnRefreshPawn), CurrentScreen);
+		if (LoadoutScreen != none) LoadoutScreen.UpdateEquippedList();
 
 		LocalHistory.ObliterateGameStatesFromHistory(1);	
 		UnitState.EmptyInventoryItems();
@@ -261,30 +275,6 @@ static final function EquipCharacterPoolLoadout()
 	else
 	{	
 		LocalHistory.CleanupPendingGameState(TempGameState);
-	}
-}
-
-private function OnRefreshPawn()
-{
-	local XComUnitPawn UnitPawn;
-
-	if (CustomizationManager.ActorPawn != none)
-	{
-		`AMLOG("Equipping loadout");
-		
-		UnitPawn = XComUnitPawn(CustomizationManager.ActorPawn);
-		if (UnitPawn == none) 
-		{ 
-			`AMLOG("No unit pawn"); return; 
-		}
-		UnitPawn.CreateVisualInventoryAttachments(`PRESBASE.GetUIPawnMgr(), GetUnit());
-		// Assign the actor pawn to the mouse guard so the pawn can be rotated by clicking and dragging
-		//UIMouseGuard_RotatePawn(`SCREENSTACK.GetFirstInstanceOf(class'UIMouseGuard_RotatePawn')).SetActorPawn(CustomizationManager.ActorPawn);
-	}
-	else
-	{
-		`AMLOG("Restarting timer");
-		SetTimer(0.01f, false, nameof(OnRefreshPawn), self);
 	}
 }
 

@@ -4,16 +4,7 @@ class UIManageAppearance extends UICustomize;
 /*
 # Priority
 
-## Bugs from video:
-1. Should CP units have uniforms be applied to them?
-2. Pawn sometimes hangs on character pool screen.: 2:20
-3. Uniform preset somehow got broken. 
-4. Apply to squad, apply to barracks doesn't work. 6:30
-5. Creating a new preset doesn't seem to respect active checkboxes: 17:20
-6. Make sure stored appearance actually gets deleted
-7. On ManageAppearance screen, does the uniform preset display uniform config or the global preset?
-8. Uniform still not reliably applied to bradford
-9. Uniform management list needs to be at highest depth
+Pawn sometimes hangs on character pool screen. Fixed already?
 
 Save modlist in CP files, and warn if mods are missing.
 
