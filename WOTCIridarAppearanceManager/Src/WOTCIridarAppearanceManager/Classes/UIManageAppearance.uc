@@ -6,14 +6,13 @@ class UIManageAppearance extends UICustomize;
 
 ## Bugs from video:
 1. Should CP units have uniforms be applied to them?
-2. Pawn sometimes hangs on character pool screen.: 2:20
 3. Uniform preset somehow got broken. 
 4. Apply to squad, apply to barracks doesn't work. 6:30
-5. Creating a new preset doesn't seem to respect active checkboxes: 17:20
 6. Make sure stored appearance actually gets deleted
 7. On ManageAppearance screen, does the uniform preset display uniform config or the global preset?
 8. Uniform still not reliably applied to bradford
-9. Uniform management list needs to be at highest depth
+
+Make UIManageAppearance_Uniform not use its own config
 
 Pawn sometimes hangs on character pool screen. Fixed already?
 
@@ -682,7 +681,7 @@ private function AppearanceOptionCheckboxChanged(UICheckbox CheckBox)
 	bOriginalAppearanceSelected = SoldierListItem.bOriginalAppearance;
 
 	UpdateOptionsList();
-	ApplyPresetCheckboxPositions();
+	ApplyCheckboxPresetPositions();
 	UpdateUnitAppearance();	
 }
 
@@ -1625,24 +1624,18 @@ private function MaybeCreateAppearanceOption(name OptionName, coerce string Curr
 	SpawnedItem.bAnimateOnInit = false;
 	SpawnedItem.InitListItem(OptionName);
 
-	// If this option doesn't care about gender, then we load the saved preset for it.
-	if (IsOptionGenderAgnostic(OptionName))
-	{
-		bChecked = GetOptionCheckboxPosition(OptionName);
-	}
-	else if (OriginalAppearance.iGender != SelectedAppearance.iGender) // Is gender change required?
+	// If this cosmetic option cares about gender, and gender change is underway 
+	if (!IsOptionGenderAgnostic(OptionName) && OriginalAppearance.iGender != SelectedAppearance.iGender) // Is gender change required
 	{
 		// Disallow toggling the checkbox if the option cares about gender and we're changing either from non-empty or to non-empty.
 		bDisabled = CosmeticType == ECosmeticType_Name && (!class'Help'.static.IsCosmeticEmpty(CurrentCosmetic) || class'Help'.static.IsCosmeticEmpty(NewCosmetic));
 
-		if (IsCheckboxChecked('iGender')) // Are we doing gender change?
-		{
-			bChecked = true;
-		}
-		else
-		{
-			bChecked = false;
-		}
+		bChecked = IsCheckboxChecked('iGender');
+	}
+	else 
+	{	
+		// If this option doesn't care about gender, or gender change is not needed for this appearance import, then we load the saved preset for it.
+		bChecked = GetOptionCheckboxPosition(OptionName);
 	}
 
 	switch (CosmeticType)
@@ -1841,7 +1834,7 @@ private function SavePresetCheckboxPositions()
 	SaveConfig();
 }
 
-private function ApplyPresetCheckboxPositions()
+private function ApplyCheckboxPresetPositions()
 {
 	local CheckboxPresetStruct CheckboxPreset;
 
@@ -1939,7 +1932,7 @@ private function OnCopyPresetButtonClicked(UIButton ButtonSource)
 	SaveConfig();
 
 	UpdateOptionsList();
-	ApplyPresetCheckboxPositions();
+	ApplyCheckboxPresetPositions();
 	UpdateUnitAppearance();
 }
 
@@ -1982,6 +1975,8 @@ function OnCreatePresetInputBoxAccepted(string text)
 			NewPresetStruct = CheckboxPresets[i];
 			NewPresetStruct.Preset = NewPresetName;
 			CheckboxPresets.AddItem(NewPresetStruct);
+
+			`AMLOG("Copied:" @ i @ CurrentPreset @ NewPresetStruct.Preset @ NewPresetStruct.OptionName @ NewPresetStruct.bChecked);
 		}
 	}
 
@@ -1990,7 +1985,7 @@ function OnCreatePresetInputBoxAccepted(string text)
 	self.SaveConfig();
 
 	CurrentPreset = NewPresetName;
-	//ApplyPresetCheckboxPositions(); // No need, settins would be identical.
+	//ApplyCheckboxPresetPositions(); // No need, settings would be identical.
 	UpdateOptionsList();
 }
 
@@ -2035,7 +2030,7 @@ function OptionPresetCheckboxChanged(UICheckbox CheckBox)
 		{
 			SetOptionsListCheckbox(CyclePreset, CyclePreset == CurrentPreset);
 		}
-		ApplyPresetCheckboxPositions();
+		ApplyCheckboxPresetPositions();
 		UpdateUnitAppearance();
 		UpdatePresetListItemsButtons();
 	}
@@ -2109,7 +2104,7 @@ private function OnDeletePresetButtonClicked(UIButton ButtonSource)
 
 	CurrentPreset = 'PresetDefault';
 	UpdateOptionsList();
-	ApplyPresetCheckboxPositions();
+	ApplyCheckboxPresetPositions();
 	UpdateUnitAppearance();
 }
 

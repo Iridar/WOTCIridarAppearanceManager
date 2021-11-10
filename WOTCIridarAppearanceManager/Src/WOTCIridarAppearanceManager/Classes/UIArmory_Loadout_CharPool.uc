@@ -21,6 +21,10 @@ simulated function XComGameState_Unit GetUnit()
 	return CustomizationManager.UpdatedUnitState;
 }
 
+simulated function ResetAvailableEquipment()
+{
+}
+
 // Build a list of all items that can be potentially equipped into the selected slot on the current unit.
 // Item States are then immediately nuked, but loadout list items will retain their templates.
 simulated function UpdateLockerList()
@@ -131,8 +135,11 @@ private function OnRefreshPawn()
 	if (CustomizationManager.ActorPawn != none)
 	{
 		`AMLOG("Equipping loadout");
+		// UIArmory and children keep a reference to the pawn, and release the reference when screen is removed. 
+		// Update the reference so it can be cleaned up later. Otherwise the pawn may keep existing long after the screen is gone.
+		ActorPawn = CustomizationManager.ActorPawn; 
 		EquipCharacterPoolLoadout();
-
+		
 		// Assign the actor pawn to the mouse guard so the pawn can be rotated by clicking and dragging
 		//UIMouseGuard_RotatePawn(`SCREENSTACK.GetFirstInstanceOf(class'UIMouseGuard_RotatePawn')).SetActorPawn(CustomizationManager.ActorPawn);
 	}
@@ -142,6 +149,7 @@ private function OnRefreshPawn()
 		SetTimer(0.01f, false, nameof(OnRefreshPawn), self);
 	}
 }
+
 /*
 private function CreateVisualAttachments(XComGameState_Unit UnitState)
 {
@@ -246,6 +254,21 @@ static final function EquipCharacterPoolLoadout()
 		if (UnitState.AddItemToInventory(ItemState, LoadoutElement.InventorySlot, TempGameState))
 		{
 			bEquippedAtLeastOneItem = true;
+
+			switch (LoadoutElement.InventorySlot)
+			{
+				case eInvSlot_PrimaryWeapon:
+					CustomizeManager.PrimaryWeapon = ItemState;
+					break;
+				case eInvSlot_SecondaryWeapon:
+					CustomizeManager.SecondaryWeapon = ItemState;
+					break;
+				case eInvSlot_TertiaryWeapon:
+					CustomizeManager.TertiaryWeapon = ItemState;
+					break;
+				default:
+					break;
+			}
 
 			`AMLOG("Equipped successfully");
 
