@@ -154,13 +154,13 @@ private function AddButtons()
 	else if (CustomizeScreen.bInArmory) 
 	{
 		// ## Manage uniform for units dropdown in Armory - using unit values.
-		CreateOrUpdateDropdown(ListIndex, CustomizeScreen, class'Help'.static.GetAutoManageUniformForUnitValue(UnitState),
+		ListItem = CreateOrUpdateDropdown(ListIndex, CustomizeScreen, class'Help'.static.GetAutoManageUniformForUnitValue(UnitState),
 			strAutoManageUniformForUnitTitle, strAutoManageUniformForUnit, OnAutoManageUniformDropdownSelectionChanged);
 	}
 	else
 	{
 		// ## Manage uniform for units dropdown in Character Pool - using character pool.
-		CreateOrUpdateDropdown(ListIndex, CustomizeScreen, CharPoolMgr.GetAutoManageUniformForUnit(UnitState),
+		ListItem = CreateOrUpdateDropdown(ListIndex, CustomizeScreen, CharPoolMgr.GetAutoManageUniformForUnit(UnitState),
 			strAutoManageUniformForUnitTitle, strAutoManageUniformForUnit, OnAutoManageUniformDropdownSelectionChanged);
 
 		// ## Convert to Uniform
