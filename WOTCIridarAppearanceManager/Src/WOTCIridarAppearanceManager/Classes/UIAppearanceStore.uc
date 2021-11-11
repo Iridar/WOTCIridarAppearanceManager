@@ -9,6 +9,9 @@ var private XComGameState_Unit		UnitState;
 var private TAppearance				OriginalAppearance;
 var private TAppearance				SelectedAppearance;
 var private XComHumanPawn			ArmoryPawn;
+var private bool					bPawnRefreshIsCooldown;
+
+const PAWN_REFRESH_COOLDOWN = 0.15f;
 
 simulated function InitScreen(XComPlayerController InitController, UIMovie InitMovie, optional name InitName)
 {
@@ -26,7 +29,7 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 	}
 }
 
-simulated private function FixScreenPosition()
+private function FixScreenPosition()
 {
 	// Unrestricted Customization does two things we want to get rid of:
 	// 1. Shifts the entire screen's position (breaking the intended UI element placement)
@@ -100,22 +103,52 @@ simulated function UpdateData()
 	}
 }
 
-simulated private function OnListItemSelected(UIList ContainerList, int ItemIndex)
+private function OnListItemSelected(UIList ContainerList, int ItemIndex)
 {
-	local TAppearance StoredAppearance;
-
 	if (UnitState == none || ItemIndex == INDEX_NONE)
 		return;
 
-	StoredAppearance = UnitState.AppearanceStore[ItemIndex].Appearance;
-	SetPawnAppearance(StoredAppearance);
+	SelectedAppearance = UnitState.AppearanceStore[ItemIndex].Appearance;
+	if (ArmoryPawn != none && ArmoryPawn.m_kAppearance == SelectedAppearance)
+		return;
+
+	// Noticed that the game can crash when switching between stored appearances of certain units (Reapers) too quickly, so putting a cooldown on the whole thing.
+	if (bPawnRefreshIsCooldown)
+	{
+		if (IsTimerActive(nameof(DelayedSetPawnAppearance), self))
+		{
+			return;
+		}
+		else
+		{
+			SetTimer(PAWN_REFRESH_COOLDOWN, false, nameof(DelayedSetPawnAppearance), self);
+		}
+	}
+	else
+	{
+		SetPawnAppearance(SelectedAppearance);
+		bPawnRefreshIsCooldown = true;
+		SetTimer(PAWN_REFRESH_COOLDOWN, false, nameof(ResetPawnRefreshCooldown), self);
+	}
 }
 
-simulated private function SetPawnAppearance(TAppearance NewAppearance)
+private function ResetPawnRefreshCooldown()
 {
-	// Have to update appearance in the unit state as well, since it will be used to recreate the pawn.
+	bPawnRefreshIsCooldown = false;
+}
+
+private function DelayedSetPawnAppearance()
+{
+	SetPawnAppearance(SelectedAppearance);
+	bPawnRefreshIsCooldown = true;
+	SetTimer(PAWN_REFRESH_COOLDOWN, false, nameof(ResetPawnRefreshCooldown), self);
+}
+
+private function SetPawnAppearance(TAppearance NewAppearance)
+{
+	// Have to update appearance in the unit state, since it will be used to recreate the pawn.
 	UnitState.SetTAppearance(NewAppearance);
-	ArmoryPawn.SetAppearance(NewAppearance);
+	//ArmoryPawn.SetAppearance(NewAppearance);
 		
 	// Normally we'd refresh the pawn only in case of gender change, 
 	// but here we need to refresh pawn every time to get rid of WAR Suit's exo attachments.
@@ -125,7 +158,7 @@ simulated private function SetPawnAppearance(TAppearance NewAppearance)
 	SetTimer(0.1f, false, nameof(OnRefreshPawn), self);
 }
 
-simulated final function OnRefreshPawn()
+final function OnRefreshPawn()
 {
 	ArmoryPawn = XComHumanPawn(CustomizeManager.ActorPawn);
 	if (ArmoryPawn != none)
@@ -145,7 +178,7 @@ simulated function CloseScreen()
 	super.CloseScreen();
 }
 
-simulated private function OnDeleteButtonClicked(UIButton ButtonSource)
+private function OnDeleteButtonClicked(UIButton ButtonSource)
 {
 	local int Index;
 
