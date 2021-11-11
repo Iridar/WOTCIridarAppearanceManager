@@ -29,6 +29,8 @@ This system can be disabled globally in Mod Config Menu. If disabled globally, i
 
 You can also work with Uniforms manually using the Manage Appearance screen.
 
+Uniforms can be shared with mods with character pool files.
+
 # More info on Appearance Store
 
 This mod expands the Character Pool so that Character Pool units can benefit from the game's Appearance Store mechanic.
