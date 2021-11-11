@@ -103,13 +103,22 @@ simulated function UpdateData()
 	}
 }
 
+/*
+(1) When the player mouses over an appearance entry, and the timer isn't running, the pawn is immediately updated and a timer is started. 
+Pawn won't be refreshed again until that timer runs out. 
+
+(2) But if the player does mouse over to another entry while timer is running, the second timer will be started that will refresh the pawn to that another entry's appearance.
+
+(3-A) And if the player mouses over to yet another entry while the second timer is running, nothing will happen, 
+(3-B) but the target appearance which will be applied to the unit will be updated to the one from that last entry.
+*/
 private function OnListItemSelected(UIList ContainerList, int ItemIndex)
 {
 	if (UnitState == none || ItemIndex == INDEX_NONE)
 		return;
 
 	SelectedAppearance = UnitState.AppearanceStore[ItemIndex].Appearance;
-	if (ArmoryPawn != none && ArmoryPawn.m_kAppearance == SelectedAppearance)
+	if (ArmoryPawn != none && ArmoryPawn.m_kAppearance == SelectedAppearance) // (3-B)
 		return;
 
 	// Noticed that the game can crash when switching between stored appearances of certain units (Reapers) too quickly, so putting a cooldown on the whole thing.
@@ -117,16 +126,16 @@ private function OnListItemSelected(UIList ContainerList, int ItemIndex)
 	{
 		if (IsTimerActive(nameof(DelayedSetPawnAppearance), self))
 		{
-			return;
+			return; // (3-A)
 		}
 		else
 		{
-			SetTimer(PAWN_REFRESH_COOLDOWN, false, nameof(DelayedSetPawnAppearance), self);
+			SetTimer(PAWN_REFRESH_COOLDOWN, false, nameof(DelayedSetPawnAppearance), self); // (2)
 		}
 	}
 	else
 	{
-		SetPawnAppearance(SelectedAppearance);
+		SetPawnAppearance(SelectedAppearance); // (1)
 		bPawnRefreshIsCooldown = true;
 		SetTimer(PAWN_REFRESH_COOLDOWN, false, nameof(ResetPawnRefreshCooldown), self);
 	}
@@ -185,7 +194,7 @@ private function OnDeleteButtonClicked(UIButton ButtonSource)
 	SetPawnAppearance(OriginalAppearance);
 	Index = List.GetItemIndex(ButtonSource);
 	UnitState.AppearanceStore.Remove(Index, 1);
-	CustomizeManager.CommitChanges(); // This will submit a Game State with appearance store changes.
+	CustomizeManager.CommitChanges(); // This will submit a Game State with appearance store changes and save CP.
 	List.ClearItems();
 	UpdateData();
 }

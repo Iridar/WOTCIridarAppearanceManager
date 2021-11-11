@@ -6,19 +6,14 @@ class UIManageAppearance extends UICustomize;
 
 ## Bugs from video:
 1. Should CP units have uniforms be applied to them?
-3. Uniform preset somehow got broken. 
-4. Apply to squad, apply to barracks doesn't work. 6:30
-6. Make sure stored appearance actually gets deleted
-7. On ManageAppearance screen, does the uniform preset display uniform config or the global preset?
 8. Uniform still not reliably applied to bradford
 
-No manage appearance button for SPARKs? They don't even appear in the barracks list wtf
+Fixed already?
+3. Uniform preset somehow got broken. 
+Pawn sometimes hangs on character pool screen. 
+4. Apply to squad, apply to barracks doesn't work. 6:30
 
-Make UIManageAppearance_Uniform not use its own config
-
-Pawn sometimes hangs on character pool screen. Fixed already?
-
-Save modlist in CP files, and warn if mods are missing.
+Optimize performance on this screen? Don't create options all the time, maybe?
 
 # Character Pool
 Fix weapons / Dual Wielding not working in CP?
@@ -45,6 +40,8 @@ Make clicking an item toggle its checkbox?
 Maybe allow Appearance Store button to work as a "reskin armor" button? - redundant, can be done with this mod's customization screen by importing unit's own appearance from another armor.
 
 ## Ideas for later
+
+Save modlist in CP files, and warn if mods are missing.
 
 Make character pool loadout actually show up in game, with a toggle.
 
@@ -112,8 +109,8 @@ var localized string strCannotDeleteThisPreset;
 
 // ==============================================================================
 // Screen Options - preserved between game restarts.
-var config(AppearanceManager) array<CheckboxPresetStruct> CheckboxPresets;
-var config(AppearanceManager) array<name> Presets;
+var protected config(AppearanceManager) array<CheckboxPresetStruct> CheckboxPresets;
+var protected config(AppearanceManager) array<name> Presets;
 var protected config(AppearanceManager) bool bShowPresets;
 var protected config(AppearanceManager) bool bShowCharPoolSoldiers;
 var protected config(AppearanceManager) bool bShowUniformSoldiers;
@@ -1770,6 +1767,8 @@ private function MaybeCreateOptionColorInt(name OptionName, int iValue, int iNew
 	local LinearColor				ParamColor;
 	local LinearColor				NewParamColor;
 
+	`AMLOG("Enter");
+
 	if (!bShowAllCosmeticOptions && iValue == iNewValue)
 		return;
 
@@ -1782,6 +1781,8 @@ private function MaybeCreateOptionColorInt(name OptionName, int iValue, int iNew
 			GetOptionCheckboxPosition(OptionName),
 			OnOptionCheckboxChanged, 
 			none);
+
+	`AMLOG("Middle");
 
 	Palette = `CONTENT.GetColorPalette(PaletteType);
 	if (bPrimary)
@@ -1798,6 +1799,8 @@ private function MaybeCreateOptionColorInt(name OptionName, int iValue, int iNew
 	SpawnedItem.strColorText_1 = string(iValue);
 	SpawnedItem.strColorText_2 = string(iNewValue);
 	SpawnedItem.UpdateDataColorChip(GetOptionFriendlyName(OptionName), GetHTMLColorFromLinearColor(ParamColor));	
+
+	`AMLOG("Leave");
 }
 
 private function OnPreviewBiographyButtonClicked(UIButton ButtonSource)
