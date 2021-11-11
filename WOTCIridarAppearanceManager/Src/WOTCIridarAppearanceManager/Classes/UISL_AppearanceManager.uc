@@ -22,13 +22,26 @@ delegate OnDropdownSelectionChangedCallback(UIDropdown DropdownControl);
 
 event OnInit(UIScreen Screen)
 {
-	local UICustomize_Menu CustomizeScreen;
+	local UICustomize CustomizeScreen;
 
-	CustomizeScreen = UICustomize_Menu(Screen);
-	if (CustomizeScreen != none)
+	if (ShouldApplyScreenChanges(Screen))
 	{	 
+		CustomizeScreen = UICustomize(Screen);
+
+		`AMLOG("Init UICustomize screen:" @ CustomizeScreen.Class.Name);
+
 		// When screen is initialized, list has no items yet, so need to wait for the list to init.
-		CustomizeScreen.List.AddOnInitDelegate(OnListInited);
+		if (!CustomizeScreen.List.bIsInited)
+		{
+			`AMLOG("List is not initialized, adding a delegate");
+
+			CustomizeScreen.List.AddOnInitDelegate(OnListInited);
+		}
+		else
+		{
+			`AMLOG("List is initialized, applying changes");
+			ApplyScreenChanges();
+		}
 
 		// When customize manager creates a character pool pawn, it is automatically equipped with the default loadout,
 		// so we need to wait for pawn to exist before we can equip character pool loadout on it.
@@ -46,11 +59,26 @@ event OnInit(UIScreen Screen)
 	}
 }
 
+private function bool ShouldApplyScreenChanges(UIScreen Screen)
+{
+	local UICustomize CustomizeScreen;
+	local XComGameState_Unit UnitState;
+
+	CustomizeScreen = UICustomize(Screen); // TODO: Prevent inception with UIManageAppearance here or there
+	if (CustomizeScreen != none)
+	{
+		UnitState = CustomizeScreen.GetUnit();
+		return UnitState != none && UnitState.GetMyTemplate().UICustomizationMenuClass == Screen.Class;
+	}
+	return false;
+}
+
+
 private function OnPawnCreated()
 {
-	local UICustomize_Menu CustomizeScreen;
+	local UICustomize CustomizeScreen;
 
-	CustomizeScreen = UICustomize_Menu(`SCREENSTACK.GetCurrentScreen());
+	CustomizeScreen = UICustomize(`SCREENSTACK.GetCurrentScreen());
 	if (CustomizeScreen == none) 
 		return;
 
@@ -66,27 +94,27 @@ private function OnPawnCreated()
 
 private function OnListInited(UIPanel Panel)
 {
-	AddButtons();
+	ApplyScreenChanges();
 }
 
 event OnReceiveFocus(UIScreen Screen)
 {
-	if (UICustomize_Menu(Screen) != none)
+	if (ShouldApplyScreenChanges(Screen))
 	{	 
-		AddButtons();
+		ApplyScreenChanges();
 	}
 }
 
-private function AddButtons()
+private function ApplyScreenChanges()
 {
-	local UICustomize_Menu			CustomizeScreen;
+	local UICustomize				CustomizeScreen;
 	local EUniformStatus			UniformStatus;
 	local XComGameState_Unit		UnitState;
 	local CharacterPoolManager_AM	CharPoolMgr;
 	local int						ListIndex;
 	local UIMechaListItem			ListItem;
 
-	CustomizeScreen = UICustomize_Menu(`SCREENSTACK.GetCurrentScreen());
+	CustomizeScreen = UICustomize(`SCREENSTACK.GetCurrentScreen());
 	if (CustomizeScreen == none) 
 		return;
 	
@@ -99,7 +127,7 @@ private function AddButtons()
 		return;
 
 	// Unfortunately have to keep timer ticking in case UpdateData() is called in CustomizeScreen.
-	CustomizeScreen.SetTimer(0.25f, false, nameof(AddButtons), self);
+	CustomizeScreen.SetTimer(0.25f, false, nameof(ApplyScreenChanges), self);
 
 	if (ChangesAlreadyMade(CustomizeScreen.List))
 		return; 
@@ -199,7 +227,7 @@ private function bool ChangesAlreadyMade(UIList List)
 	local int i;
 
 	// Unfortunately and annoyingly cannot use MCName to seek list items, 
-	// because the way UICustomize_Menu::UpdateData() is set up, it can "eat" list items regardless of who added them.
+	// because the way UICustomize::UpdateData() is set up, it can "eat" list items regardless of who added them.
 	for (i = List.ItemCount - 1; i >= 0; i--)
 	{
 		ListItem = UIMechaListItem(List.GetItem(i));
@@ -225,27 +253,27 @@ private function int GetIndexOfLastVisibleListItem(UIList List)
 }
 
 // Get rid of "can appear as" toggles for non-uniforms.
-private function RemoveCanAppearAsListItems(UICustomize_Menu CustmozeMenu)
+private function RemoveCanAppearAsListItems(UICustomize CustomizeScreen)
 {
 	local UIMechaListItem ListItem;
 	local int i;
 
-	for (i = CustmozeMenu.List.ItemCount - 1; i >= 0; i--)
+	for (i = CustomizeScreen.List.ItemCount - 1; i >= 0; i--)
 	{	
-		ListItem = UIMechaListItem(CustmozeMenu.List.GetItem(i));
+		ListItem = UIMechaListItem(CustomizeScreen.List.GetItem(i));
 		if (ListItem == none) continue;
 
-		if (ListItem.Checkbox != none && ListItem.Desc.htmlText == CustmozeMenu.m_strAllowTypeSoldier)
+		if (ListItem.Checkbox != none && ListItem.Desc.htmlText == class'UICustomize_Menu'.default.m_strAllowTypeSoldier)
 		{
-			CustmozeMenu.List.ItemContainer.RemoveChild(ListItem);
+			CustomizeScreen.List.ItemContainer.RemoveChild(ListItem);
 		}
-		if (ListItem.Checkbox != none && ListItem.Desc.htmlText == CustmozeMenu.m_strAllowTypeVIP)
+		if (ListItem.Checkbox != none && ListItem.Desc.htmlText == class'UICustomize_Menu'.default.m_strAllowTypeVIP)
 		{	
-			CustmozeMenu.List.ItemContainer.RemoveChild(ListItem);
+			CustomizeScreen.List.ItemContainer.RemoveChild(ListItem);
 		}
-		if (ListItem.Checkbox != none && ListItem.Desc.htmlText == CustmozeMenu.m_strAllowTypeDarkVIP)
+		if (ListItem.Checkbox != none && ListItem.Desc.htmlText == class'UICustomize_Menu'.default.m_strAllowTypeDarkVIP)
 		{
-			CustmozeMenu.List.ItemContainer.RemoveChild(ListItem);
+			CustomizeScreen.List.ItemContainer.RemoveChild(ListItem);
 		}
 	}
 }
@@ -323,7 +351,7 @@ private function OnConfigureUniformItemClicked()
 
 private function OnLoadoutItemClicked()
 {
-	local UICustomize_Menu				CustomizeScreen;
+	local UICustomize				CustomizeScreen;
 	local XComPresentationLayerBase		Pres;
 	local UIArmory_Loadout_CharPool		ArmoryScreen;
 	local XComGameState_Unit			UnitState;
@@ -335,7 +363,7 @@ private function OnLoadoutItemClicked()
 		return;
 	}
 
-	CustomizeScreen = UICustomize_Menu(Pres.ScreenStack.GetCurrentScreen());
+	CustomizeScreen = UICustomize(Pres.ScreenStack.GetCurrentScreen());
 	if (CustomizeScreen == none)
 	{
 		return;
@@ -354,7 +382,7 @@ private function OnLoadoutItemClicked()
 
 simulated private function OnSoldierButtonClicked(UIButton ButtonSource)
 {
-	local UICustomize_Menu			CustomizeScreen;
+	local UICustomize			CustomizeScreen;
 	local XComGameState_Unit		UnitState;
 	local X2CharacterTemplate		CharacterTemplate;
 	local XGCharacterGenerator		CharGen;
@@ -362,7 +390,7 @@ simulated private function OnSoldierButtonClicked(UIButton ButtonSource)
 	local string					strLastName;
 	local CharacterPoolManager_AM	CharPoolMgr;
 
-	CustomizeScreen = UICustomize_Menu(`SCREENSTACK.GetCurrentScreen());
+	CustomizeScreen = UICustomize(`SCREENSTACK.GetCurrentScreen());
 	if (CustomizeScreen == none)
 		return;
 
@@ -400,21 +428,21 @@ simulated private function OnSoldierButtonClicked(UIButton ButtonSource)
 	CustomizeScreen.List.ClearItems();
 	CustomizeScreen.UpdateData();
 
-	// If we relied on the existing timer for AddButtons() after doing UpdateData(),
+	// If we relied on the existing timer for ApplyScreenChanges() after doing UpdateData(),
 	// there would be a visible delay between the list updating and the new buttons being added.
-	// So we want to call AddButtons() immediately, but it would set a second timer, 
+	// So we want to call ApplyScreenChanges() immediately, but it would set a second timer, 
 	// so to prevent timer-ception, first remove the existing timer.l
-	CustomizeScreen.ClearTimer(nameof(AddButtons), self);
-	AddButtons();
+	CustomizeScreen.ClearTimer(nameof(ApplyScreenChanges), self);
+	ApplyScreenChanges();
 }
 
 private function OnUniformButtonClicked(UIButton ButtonSource)
 {
 	local TInputDialogData		kData;
-	local UICustomize_Menu		CustomizeScreen;
+	local UICustomize		CustomizeScreen;
 	local XComGameState_Unit	UnitState;
 
-	CustomizeScreen = UICustomize_Menu(`SCREENSTACK.GetCurrentScreen());
+	CustomizeScreen = UICustomize(`SCREENSTACK.GetCurrentScreen());
 	if (CustomizeScreen == none)
 		return;
 
@@ -432,7 +460,7 @@ private function OnUniformButtonClicked(UIButton ButtonSource)
 
 private function OnConvertToUniformInputBoxAccepted(string strLastName)
 {
-	local UICustomize_Menu			CustomizeScreen;
+	local UICustomize			CustomizeScreen;
 	local XComGameState_Unit		UnitState;
 	local CharacterPoolManager_AM	CharPoolMgr;
 	local TDialogueBoxData			kDialogData;
@@ -448,7 +476,7 @@ private function OnConvertToUniformInputBoxAccepted(string strLastName)
 		return;
 	}
 	
-	CustomizeScreen = UICustomize_Menu(`SCREENSTACK.GetCurrentScreen());
+	CustomizeScreen = UICustomize(`SCREENSTACK.GetCurrentScreen());
 	if (CustomizeScreen == none)
 		return;
 
@@ -477,20 +505,20 @@ private function OnConvertToUniformInputBoxAccepted(string strLastName)
 	CustomizeScreen.List.ClearItems();
 	CustomizeScreen.UpdateData();	
 
-	CustomizeScreen.ClearTimer(nameof(AddButtons), self);
-	AddButtons();
+	CustomizeScreen.ClearTimer(nameof(ApplyScreenChanges), self);
+	ApplyScreenChanges();
 }
 
 private function OnValidateButtonClicked(UIButton ButtonSource)
 {
 	local XComGameState_Unit			UnitState;
-	local UICustomize_Menu				CustomizeScreen;
+	local UICustomize				CustomizeScreen;
 	local CharacterPoolManager_AM		CharPool;
 	//local XComGameState_Item			ItemState;
 	local TAppearance					FixAppearance;
 	local int i;
 
-	CustomizeScreen = UICustomize_Menu(`SCREENSTACK.GetCurrentScreen());
+	CustomizeScreen = UICustomize(`SCREENSTACK.GetCurrentScreen());
 	if (CustomizeScreen == none)
 		return;
 
@@ -534,19 +562,19 @@ private function OnValidateButtonClicked(UIButton ButtonSource)
 	CustomizeScreen.CustomizeManager.ReCreatePawnVisuals(CustomizeScreen.CustomizeManager.ActorPawn, true);
 	CustomizeScreen.UpdateData();
 
-	CustomizeScreen.ClearTimer(nameof(AddButtons), self);
-	AddButtons();
+	CustomizeScreen.ClearTimer(nameof(ApplyScreenChanges), self);
+	ApplyScreenChanges();
 }
 
  private function OnUniformStatusDropdownSelectionChanged(UIDropdown DropdownControl)
 {
 	local XComGameState_Unit			UnitState;
-	local UICustomize_Menu				CustomizeScreen;
+	local UICustomize				CustomizeScreen;
 	local CharacterPoolManager_AM		CharPool;
 	local EUniformStatus				OldStatus;
 	local EUniformStatus				NewStatus;
 
-	CustomizeScreen = UICustomize_Menu(`SCREENSTACK.GetCurrentScreen());
+	CustomizeScreen = UICustomize(`SCREENSTACK.GetCurrentScreen());
 	if (CustomizeScreen == none)
 		return;
 
@@ -567,18 +595,18 @@ private function OnValidateButtonClicked(UIButton ButtonSource)
 	if (OldStatus != NewStatus && (OldStatus == EUS_NonSoldier || NewStatus == EUS_NonSoldier))
 	{
 		CustomizeScreen.UpdateData();
-		CustomizeScreen.ClearTimer(nameof(AddButtons), self);
-		AddButtons();
+		CustomizeScreen.ClearTimer(nameof(ApplyScreenChanges), self);
+		ApplyScreenChanges();
 	}
 }
 
 private function OnAutoManageUniformDropdownSelectionChanged(UIDropdown DropdownControl)
 {
 	local XComGameState_Unit			UnitState;
-	local UICustomize_Menu				CustomizeScreen;
+	local UICustomize				CustomizeScreen;
 	local CharacterPoolManager_AM		CharPool;
 
-	CustomizeScreen = UICustomize_Menu(`SCREENSTACK.GetCurrentScreen());
+	CustomizeScreen = UICustomize(`SCREENSTACK.GetCurrentScreen());
 	if (CustomizeScreen == none)
 		return;
 
@@ -603,7 +631,7 @@ private function OnAutoManageUniformDropdownSelectionChanged(UIDropdown Dropdown
 // ===================================================================
 // INTERNAL HELPERS
 
-private function CreateOrUpdateListItem(out int ListIndex, UICustomize_Menu CustomizeScreen, string strDesc, delegate<OnClickDelegate> OnListItemClicked)
+private function CreateOrUpdateListItem(out int ListIndex, UICustomize CustomizeScreen, string strDesc, delegate<OnClickDelegate> OnListItemClicked)
 {
 	local UIMechaListItem ListItem;
 
@@ -618,7 +646,7 @@ private function CreateOrUpdateListItem(out int ListIndex, UICustomize_Menu Cust
 	ListItem.Show();
 }
 
-private function CreateOrUpdateButton(out int ListIndex, UICustomize_Menu CustomizeScreen, string strDesc, string strButtonLabel, delegate<OnButtonClickedCallback> OnButtonClicked)
+private function CreateOrUpdateButton(out int ListIndex, UICustomize CustomizeScreen, string strDesc, string strButtonLabel, delegate<OnButtonClickedCallback> OnButtonClicked)
 {
 	local UIMechaListItem ListItem;
 
@@ -631,7 +659,7 @@ private function CreateOrUpdateButton(out int ListIndex, UICustomize_Menu Custom
 	ListItem.Show();
 }
 
-private function UIMechaListItem CreateOrUpdateDropdown(out int ListIndex, UICustomize_Menu CustomizeScreen, int SelectedValue, string strTitle, array<string> strValues, delegate<OnDropdownSelectionChangedCallback> DropdownSelectionChanged)
+private function UIMechaListItem CreateOrUpdateDropdown(out int ListIndex, UICustomize CustomizeScreen, int SelectedValue, string strTitle, array<string> strValues, delegate<OnDropdownSelectionChangedCallback> DropdownSelectionChanged)
 {
 	local UIMechaListItem ListItem;
 
@@ -655,11 +683,11 @@ private function UIMechaListItem CreateOrUpdateDropdown(out int ListIndex, UICus
  private function OnSpinnerSelectionChanged(UIListItemSpinner SpinnerControl, int Direction)
  {
 	local XComGameState_Unit			UnitState;
-	local UICustomize_Menu				CustomizeScreen;
+	local UICustomize				CustomizeScreen;
 	local CharacterPoolManager_AM		CharPool;
 	local int							NewValue;
 
-	CustomizeScreen = UICustomize_Menu(`SCREENSTACK.GetCurrentScreen());
+	CustomizeScreen = UICustomize(`SCREENSTACK.GetCurrentScreen());
 	if (CustomizeScreen == none)
 		return;
 
@@ -694,7 +722,7 @@ private function UIMechaListItem CreateOrUpdateDropdown(out int ListIndex, UICus
  }
 
  delegate OnCheckboxChangedCallback(UICheckbox CheckboxControl);
- private function CreateOrUpdateCheckbox(out int ListIndex, UICustomize_Menu CustomizeScreen, string strDesc, bool bIsChecked, delegate<OnCheckboxChangedCallback> OnCheckboxChanged)
+ private function CreateOrUpdateCheckbox(out int ListIndex, UICustomize CustomizeScreen, string strDesc, bool bIsChecked, delegate<OnCheckboxChangedCallback> OnCheckboxChanged)
 {
 	local UIMechaListItem ListItem;
 
@@ -710,11 +738,11 @@ private function UIMechaListItem CreateOrUpdateDropdown(out int ListIndex, UICus
 
 private function OnAutoManageUniformCheckboxChanged(UICheckbox CheckBox)
 {
-	local UICustomize_Menu			CustomizeScreen;
+	local UICustomize			CustomizeScreen;
 	local CharacterPoolManager_AM	CharPoolMgr;
 	local XComGameState_Unit		UnitState;
 
-	CustomizeScreen = UICustomize_Menu(CheckBox.Screen);
+	CustomizeScreen = UICustomize(CheckBox.Screen);
 	if (CustomizeScreen == none)
 		return;
 
