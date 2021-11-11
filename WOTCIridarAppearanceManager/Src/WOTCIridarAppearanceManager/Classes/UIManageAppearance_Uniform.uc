@@ -6,6 +6,15 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 {
 	bShowAllCosmeticOptions = true;
 
+	// Dumb hack to circumvent the fact that this screen has its own config, which we really don't need.
+	CheckboxPresets = class'UIManageAppearance'.default.CheckboxPresets;
+	Presets = class'UIManageAppearance'.default.Presets;
+	bShowPresets = class'UIManageAppearance'.default.bShowPresets;
+	bShowCharPoolSoldiers = class'UIManageAppearance'.default.bShowCharPoolSoldiers;
+	bShowUniformSoldiers = class'UIManageAppearance'.default.bShowUniformSoldiers;
+	bShowBarracksSoldiers = class'UIManageAppearance'.default.bShowBarracksSoldiers;
+	bShowDeadSoldiers = class'UIManageAppearance'.default.bShowDeadSoldiers;
+
 	super.InitScreen(InitController, InitMovie, InitName);
 
 	List.Hide();
