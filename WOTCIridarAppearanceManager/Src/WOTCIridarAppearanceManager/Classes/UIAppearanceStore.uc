@@ -103,42 +103,27 @@ simulated function UpdateData()
 	}
 }
 
-/*
-(1) When the player mouses over an appearance entry, and the timer isn't running, the pawn is immediately updated and a timer is started. 
-Pawn won't be refreshed again until that timer runs out. 
-
-(2) But if the player does mouse over to another entry while timer is running, the second timer will be started that will refresh the pawn to that another entry's appearance.
-
-(3-A) And if the player mouses over to yet another entry while the second timer is running, nothing will happen, 
-(3-B) but the target appearance which will be applied to the unit will be updated to the one from that last entry.
-*/
 private function OnListItemSelected(UIList ContainerList, int ItemIndex)
 {
 	if (UnitState == none || ItemIndex == INDEX_NONE)
 		return;
 
+	// 1. When player mouseovers a list entry, remember the appearance of that entry
 	SelectedAppearance = UnitState.AppearanceStore[ItemIndex].Appearance;
-	if (ArmoryPawn != none && ArmoryPawn.m_kAppearance == SelectedAppearance) // (3-B)
+	if (ArmoryPawn != none && ArmoryPawn.m_kAppearance == SelectedAppearance)
 		return;
 
-	// Noticed that the game can crash when switching between stored appearances of certain units (Reapers) too quickly, so putting a cooldown on the whole thing.
-	if (bPawnRefreshIsCooldown)
-	{
-		if (IsTimerActive(nameof(DelayedSetPawnAppearance), self))
-		{
-			return; // (3-A)
-		}
-		else
-		{
-			SetTimer(PAWN_REFRESH_COOLDOWN, false, nameof(DelayedSetPawnAppearance), self); // (2)
-		}
+	// 3. If the timer is already running while the player mouseovers another entry, restart the timer.
+	// That way pawn refresh will be delayed until the player stops running the mouse through the list.
+	// So no pointless pawn flickering.
+	if (IsTimerActive(nameof(DelayedSetPawnAppearance), self))
+	{	
+		ClearTimer(nameof(DelayedSetPawnAppearance), self);
 	}
-	else
-	{
-		SetPawnAppearance(SelectedAppearance); // (1)
-		bPawnRefreshIsCooldown = true;
-		SetTimer(PAWN_REFRESH_COOLDOWN, false, nameof(ResetPawnRefreshCooldown), self);
-	}
+
+	// 2. And start a timer to update the pawn to that appearance with a delay.
+	// You can thank Xym for this implementation. My own was more responsive, but also more complicated.
+	SetTimer(PAWN_REFRESH_COOLDOWN, false, nameof(DelayedSetPawnAppearance), self);
 }
 
 private function ResetPawnRefreshCooldown()
@@ -149,8 +134,6 @@ private function ResetPawnRefreshCooldown()
 private function DelayedSetPawnAppearance()
 {
 	SetPawnAppearance(SelectedAppearance);
-	bPawnRefreshIsCooldown = true;
-	SetTimer(PAWN_REFRESH_COOLDOWN, false, nameof(ResetPawnRefreshCooldown), self);
 }
 
 private function SetPawnAppearance(TAppearance NewAppearance)
