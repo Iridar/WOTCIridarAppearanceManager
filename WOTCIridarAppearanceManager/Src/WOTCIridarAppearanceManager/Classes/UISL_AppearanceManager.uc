@@ -24,7 +24,8 @@ event OnInit(UIScreen Screen)
 {
 	local UICustomize CustomizeScreen;
 
-	if (ShouldApplyScreenChanges(Screen))
+	CustomizeScreen = GetUnitCustomizeMenuScreen(Screen);
+	if (CustomizeScreen != none)
 	{	 
 		CustomizeScreen = UICustomize(Screen);
 
@@ -59,18 +60,20 @@ event OnInit(UIScreen Screen)
 	}
 }
 
-private function bool ShouldApplyScreenChanges(UIScreen Screen)
+final static function UICustomize GetUnitCustomizeMenuScreen(UIScreen Screen)
 {
 	local UICustomize CustomizeScreen;
 	local XComGameState_Unit UnitState;
 
-	CustomizeScreen = UICustomize(Screen); // TODO: Prevent inception with UIManageAppearance here or there
+	CustomizeScreen = UICustomize(Screen);
 	if (CustomizeScreen != none)
 	{
 		UnitState = CustomizeScreen.GetUnit();
-		return UnitState != none && UnitState.GetMyTemplate().UICustomizationMenuClass == Screen.Class;
+		if (UnitState != none && UnitState.GetMyTemplate().UICustomizationMenuClass == Screen.Class)
+
+		return CustomizeScreen;
 	}
-	return false;
+	return none;
 }
 
 
@@ -78,8 +81,8 @@ private function OnPawnCreated()
 {
 	local UICustomize CustomizeScreen;
 
-	CustomizeScreen = UICustomize(`SCREENSTACK.GetCurrentScreen());
-	if (CustomizeScreen == none) 
+	CustomizeScreen = GetUnitCustomizeMenuScreen(`SCREENSTACK.GetCurrentScreen());
+	if (CustomizeScreen == none)
 		return;
 
 	if (CustomizeScreen.CustomizeManager.ActorPawn != none)
@@ -99,7 +102,7 @@ private function OnListInited(UIPanel Panel)
 
 event OnReceiveFocus(UIScreen Screen)
 {
-	if (ShouldApplyScreenChanges(Screen))
+	if (GetUnitCustomizeMenuScreen(Screen) != none)
 	{	 
 		ApplyScreenChanges();
 	}
@@ -114,8 +117,8 @@ private function ApplyScreenChanges()
 	local int						ListIndex;
 	local UIMechaListItem			ListItem;
 
-	CustomizeScreen = UICustomize(`SCREENSTACK.GetCurrentScreen());
-	if (CustomizeScreen == none) 
+	CustomizeScreen = GetUnitCustomizeMenuScreen(`SCREENSTACK.GetCurrentScreen());
+	if (CustomizeScreen == none)
 		return;
 	
 	CharPoolMgr = `CHARACTERPOOLMGRAM;
@@ -351,7 +354,7 @@ private function OnConfigureUniformItemClicked()
 
 private function OnLoadoutItemClicked()
 {
-	local UICustomize				CustomizeScreen;
+	local UICustomize					CustomizeScreen;
 	local XComPresentationLayerBase		Pres;
 	local UIArmory_Loadout_CharPool		ArmoryScreen;
 	local XComGameState_Unit			UnitState;
@@ -362,6 +365,10 @@ private function OnLoadoutItemClicked()
 		`AMLOG("ERROR :: No PresBase:" @ Pres == none @ "or no ScreenStack:" @  Pres.ScreenStack == none @ ", exiting.");
 		return;
 	}
+
+	CustomizeScreen = GetUnitCustomizeMenuScreen(`SCREENSTACK.GetCurrentScreen());
+	if (CustomizeScreen == none)
+		return;
 
 	CustomizeScreen = UICustomize(Pres.ScreenStack.GetCurrentScreen());
 	if (CustomizeScreen == none)
@@ -390,7 +397,7 @@ simulated private function OnSoldierButtonClicked(UIButton ButtonSource)
 	local string					strLastName;
 	local CharacterPoolManager_AM	CharPoolMgr;
 
-	CustomizeScreen = UICustomize(`SCREENSTACK.GetCurrentScreen());
+	CustomizeScreen = GetUnitCustomizeMenuScreen(`SCREENSTACK.GetCurrentScreen());
 	if (CustomizeScreen == none)
 		return;
 
@@ -442,7 +449,7 @@ private function OnUniformButtonClicked(UIButton ButtonSource)
 	local UICustomize		CustomizeScreen;
 	local XComGameState_Unit	UnitState;
 
-	CustomizeScreen = UICustomize(`SCREENSTACK.GetCurrentScreen());
+	CustomizeScreen = GetUnitCustomizeMenuScreen(`SCREENSTACK.GetCurrentScreen());
 	if (CustomizeScreen == none)
 		return;
 
@@ -476,7 +483,7 @@ private function OnConvertToUniformInputBoxAccepted(string strLastName)
 		return;
 	}
 	
-	CustomizeScreen = UICustomize(`SCREENSTACK.GetCurrentScreen());
+	CustomizeScreen = GetUnitCustomizeMenuScreen(`SCREENSTACK.GetCurrentScreen());
 	if (CustomizeScreen == none)
 		return;
 
@@ -518,7 +525,7 @@ private function OnValidateButtonClicked(UIButton ButtonSource)
 	local TAppearance					FixAppearance;
 	local int i;
 
-	CustomizeScreen = UICustomize(`SCREENSTACK.GetCurrentScreen());
+	CustomizeScreen = GetUnitCustomizeMenuScreen(`SCREENSTACK.GetCurrentScreen());
 	if (CustomizeScreen == none)
 		return;
 
@@ -574,7 +581,7 @@ private function OnValidateButtonClicked(UIButton ButtonSource)
 	local EUniformStatus				OldStatus;
 	local EUniformStatus				NewStatus;
 
-	CustomizeScreen = UICustomize(`SCREENSTACK.GetCurrentScreen());
+	CustomizeScreen = GetUnitCustomizeMenuScreen(`SCREENSTACK.GetCurrentScreen());
 	if (CustomizeScreen == none)
 		return;
 
@@ -606,7 +613,7 @@ private function OnAutoManageUniformDropdownSelectionChanged(UIDropdown Dropdown
 	local UICustomize				CustomizeScreen;
 	local CharacterPoolManager_AM		CharPool;
 
-	CustomizeScreen = UICustomize(`SCREENSTACK.GetCurrentScreen());
+	CustomizeScreen = GetUnitCustomizeMenuScreen(`SCREENSTACK.GetCurrentScreen());
 	if (CustomizeScreen == none)
 		return;
 
