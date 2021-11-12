@@ -122,14 +122,15 @@ static private function EventListenerReturn OnItemAddedToSlot_CampaignStart(Obje
 	return ELR_NoInterrupt;
 }
 
-static private function MaybeApplyUniformAppearance(XComGameState_Unit UnitState, name ArmorTemplateName, optional bool bClassUniformOnly = false)
+static private function bool MaybeApplyUniformAppearance(XComGameState_Unit UnitState, name ArmorTemplateName, optional bool bClassUniformOnly = false)
 {
-	local CharacterPoolManager_AM	CharacterPool;
-	local TAppearance				NewAppearance;
+	local CharacterPoolManager_AM		CharacterPool;
+	local TAppearance					NewAppearance;
+	local UIArmory						ArmoryScreen;
 	
 	CharacterPool = `CHARACTERPOOLMGRAM;
 	if (CharacterPool == none || !CharacterPool.ShouldAutoManageUniform(UnitState))
-		return;
+		return false;
 
 	NewAppearance = UnitState.kAppearance;
 	if (CharacterPool.GetUniformAppearanceForUnit(NewAppearance, UnitState, ArmorTemplateName, bClassUniformOnly))
@@ -138,8 +139,19 @@ static private function MaybeApplyUniformAppearance(XComGameState_Unit UnitState
 
 		UnitState.SetTAppearance(NewAppearance);
 		UnitState.StoreAppearance(UnitState.kAppearance.iGender, ArmorTemplateName);
+
+		// Update pawn appearance as well so that uniform takes effect immediately.
+		ArmoryScreen = UIArmory(`SCREENSTACK.GetCurrentScreen());
+		if (ArmoryScreen != none && UnitState.ObjectID == ArmoryScreen.UnitReference.ObjectID)
+		{
+			XComHumanPawn(ArmoryScreen.ActorPawn).SetAppearance(NewAppearance, true);
+		}
+
+		return true;
 	}
 	else `AMLOG(UnitState.GetFullName() @ "has no uniform for:" @ ArmorTemplateName);
+
+	return false;
 }
 
 
@@ -162,7 +174,7 @@ static private function EventListenerReturn OnUnitRankUp(Object EventData, Objec
 
 	`AMLOG(UnitState.GetFullName() @ "promoted to rank:" @ UnitState.GetRank() @ ", and has armor equipped:" @ ItemState.GetMyTemplateName());
 
-	// TODO: ??? Shouldn't this apply a uniform
+	MaybeApplyUniformAppearance(UnitState, ItemState.GetMyTemplateName(), true);
 
 	return ELR_NoInterrupt;
 }
@@ -179,6 +191,9 @@ static private function EventListenerReturn OnPostAliensSpawned(Object EventData
 
 	foreach StartState.IterateByClassType(class'XComGameState_Unit', UnitState)
 	{
+		//if (UnitState.IsSoldier())
+		//	continue;
+
 		`AMLOG(UnitState.GetFullName() @ UnitState.GetMyTemplateGroupName());
 			
 		NewAppearance = UnitState.kAppearance;
@@ -202,13 +217,16 @@ static private function EventListenerReturn OnCreateCinematicPawn(Object EventDa
 	local CharacterPoolManager_AM	CharacterPool;
 	local TAppearance				NewAppearance;
 
-	CharacterPool = `CHARACTERPOOLMGRAM;
-	if (CharacterPool == none)
+	UnitState = XComGameState_Unit(EventSource);
+	if (UnitState == none || UnitState.IsSoldier()) // Used only for non-soldiers.
 		return ELR_NoInterrupt;
 
-	UnitState = XComGameState_Unit(EventSource);
 	HumanPawn = XComHumanPawn(EventData);
-	if (UnitState == none || HumanPawn == none)
+	if (HumanPawn == none)
+		return ELR_NoInterrupt;
+
+	CharacterPool = `CHARACTERPOOLMGRAM;
+	if (CharacterPool == none)
 		return ELR_NoInterrupt;
 			
 	NewAppearance = HumanPawn.m_kAppearance;

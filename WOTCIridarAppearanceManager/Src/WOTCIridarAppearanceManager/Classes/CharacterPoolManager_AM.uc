@@ -604,6 +604,7 @@ private function array<XComGameState_Unit> GetClassSpecificUniforms(const name A
 			`AMLOG(UniformState.GetFullName() @ "is class uniform for:" @ SoldierClass);
 			UniformStates.AddItem(UniformState);
 		}
+		else `AMLOG(UniformState.GetFullName() @ "is NOT class uniform for:" @ SoldierClass @ "Uniform status:" @ GetEnum(enum'EUniformStatus', GetUniformStatus(UniformState)) @ "Soldier class:" @ UniformState.GetSoldierClassTemplateName() @ "Stored appearance:" @ UniformState.HasStoredAppearance(iGender, ArmorTemplateName));
 	}
 	return UniformStates;
 }

@@ -4,8 +4,7 @@ class UIManageAppearance extends UICustomize;
 /*
 # Priority
 
-## Bugs from video:
-1. Should CP units have uniforms be applied to them?
+Validate Appearance caused double pawn
 
 Fixed already?
 3. Uniform preset somehow got broken. 
