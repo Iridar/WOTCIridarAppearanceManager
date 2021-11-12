@@ -5,7 +5,6 @@ class UIManageAppearance extends UICustomize;
 # Priority
 
 Validate Appearance caused double pawn
-When soldier is saved to CP from armory, it should mark the soldier as "can appear as soldier", cuz CP is not doing that automatically anmymore.
 
 Fixed already?
 3. Uniform preset somehow got broken. 
@@ -27,8 +26,6 @@ Fix wrong unit being opened in CP sometimes. (Has to do with deleting units?)
 Make clicking an item toggle its checkbox?
 
 ## Checks:
-1. Check if you can customize a unit with all armors in the campaign, then save them into CP, and that they will actually have all that appearance in the next campaign
-2. Working with character pool files: creating new one, creating (importing) an existing one, deleting. exporting/importing units with appearance store.
 3. Test automatic uniform managemennt settings. 
 
 ## Finalization

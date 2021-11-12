@@ -211,18 +211,6 @@ private function ApplyScreenChanges()
 		ListItem.MoveToHighestDepth();
 }
 
-/*
-if (Unit.IsSoldier())
-			{
-				GetListItem(i++).UpdateDataValue(m_strCustomizeClass,
-					CustomizeManager.FormatCategoryDisplay(eUICustomizeCat_Class, eUIState_Normal, FontSize), CustomizeClass, true);
-
-				bBasicSoldierClass = (Unit.GetSoldierClassTemplate().RequiredCharacterClass == '');
-				GetListItem(i++, !bBasicSoldierClass, m_strNoClassVariants).UpdateDataValue(m_strViewClass,
-					CustomizeManager.FormatCategoryDisplay(eUICustomizeCat_ViewClass, bBasicSoldierClass ? eUIState_Normal : eUIState_Disabled, FontSize), CustomizeViewClass, true);
-			}
-			*/
-
 // Check if "Manage Appearance" list item already exists and is visible - then we don't know need to do anything else.
 private function bool ChangesAlreadyMade(UIList List)
 {	

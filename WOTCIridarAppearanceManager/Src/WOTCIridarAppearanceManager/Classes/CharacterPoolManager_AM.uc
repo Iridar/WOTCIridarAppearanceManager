@@ -152,6 +152,17 @@ function SaveCharacterPool()
 
 		// Save actual Extra Data.
 		ExtraDatas[Index].AppearanceStore = UnitState.AppearanceStore;
+
+		// Without this mod, CP Units are automatically set to be allowed as soldiers if none of the "allowed as" checkboxes are toggled on. 
+		// This mod disables that functionality, allowing dormant CP units to be a thing.
+		// But it also means we need to set "allowed as soldier" to true when the soldier is just imported into the CP.
+		// Presumably, they're imported right from the armory, as soldiers, so it would make sense if they could appear as soldiers by default,
+		// without the player needing to go into CP and set the checkbox manually.
+		if (UnitState.PoolTimestamp == class'X2StrategyGameRulesetDataStructures'.static.GetSystemDateTimeString())
+		{
+			`AMLOG("This unit was just added to character pool. Setting \"allowed as soldier\" to true:" @ UnitState.PoolTimestamp);
+			UnitState.bAllowedTypeSoldier = true;
+		}
 	}
 
 	super.SaveCharacterPool();
