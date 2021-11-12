@@ -13,6 +13,7 @@ var localized string strUniformStatusTitle;
 var localized array<string> strUniformStatus;
 var localized string strAutoManageUniformForUnitTitle;
 var localized array<string> strAutoManageUniformForUnit;
+var localized string strUniformUnitTypes;
 
 `include(WOTCIridarAppearanceManager\Src\ModConfigMenuAPI\MCM_API_CfgHelpers.uci)
 
@@ -175,7 +176,7 @@ private function ApplyScreenChanges()
 		if (UniformStatus == EUS_NonSoldier)
 		{
 			CreateOrUpdateListItem(ListIndex, CustomizeScreen, 
-				"Uniform unit types", OnChooseNonSoldierUniformTypesClicked);
+				strUniformUnitTypes, OnChooseNonSoldierUniformTypesClicked);
 		}
 
 		// ## Convert to Soldier

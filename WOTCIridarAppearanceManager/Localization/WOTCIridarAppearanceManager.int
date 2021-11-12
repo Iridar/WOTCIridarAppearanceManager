@@ -18,30 +18,30 @@ strFiltersTitle = "FILTERS"
 
 strSelectAppearanceTitle = "SELECT APPEARANCE"
 strSearchTitle = "Search"
-strNoArmorTemplateError = "Failed to find equipped armor on this unit. Armor filter disabled."
+strNoArmorTemplateError = "Armor filter disabled. Reason: failed to find armor equipped on this unit."
 
 strOriginalAppearance = "ORIGINAL APPEARANCE"
 strUniformsTitle = "UNIFORMS"
 
-strExitScreenPopupTitle = "Exit without saving changes?"
-strExitScreenPopupText = "Are you sure?"
+strExitScreenPopupTitle = "CONFIRM EXIT"
+strExitScreenPopupText = "Appearance changes have not been applied yet. Are you sure you want to exit this screen?\n\nHint: click \"Apply Changes\" button in the top right corner of the screen to apply appearance changes."
 strExitScreenPopup_Leave = "Exit without changes"
 strExitScreenPopup_Stay = "Stay on screen"
 
 strShowAllOptions = "SHOW ALL OPTIONS"
 
-strNotAvailableInCharacterPool = "Not available in Character Pool"
+strNotAvailableInCharacterPool = "Not available in Character Pool."
 strSameGenderRequired = "This appearance option is locked due to gender mismatch with the selected appearance."
 strCopyPreset = "Copy Preset"
-strCopyPresetButtonDisabled = "Presets can be copied only into the Default Preset"
+strCopyPresetButtonDisabled = "Presets can be copied only into the Default Preset."
 strDeletePreset = "Delete Preset"
 strCannotDeleteThisPreset = "The mod cannot function without this preset, it cannot be deleted."
 
 strConfirmApplyChangesTitle = "APPLY CHANGES?"
-strConfirmApplyChangesText = "Warning! You are about to apply appearance changes to %NUM_UNITS% units. Proceed?"
+strConfirmApplyChangesText = "Attention! You are about to apply appearance changes to %NUM_UNITS% units. Proceed?"
 
 strCreatePreset = "Create Preset""
-strCreatePresetTitle = "Create new preset?"
+strCreatePresetTitle = "Enter new preset name:"
 strCreatePresetText = "_Copy"
 
 strDuplicatePresetDisallowedTitle = "Failed to add new preset!"
@@ -73,33 +73,35 @@ strConfigureUniform = "Configure Uniform"
 strUniformSoldierFirstName = "UNIFORM"
 
 strAutoManageUniformForUnitTitle = "Uniform management"
-strAutoManageUniformForUnit[0] = "Global"
-strAutoManageUniformForUnit[1] = "Always"
-strAutoManageUniformForUnit[2] = "Never"
+strAutoManageUniformForUnit[0] = "Global setting"
+strAutoManageUniformForUnit[1] = "Always accept uniforms"
+strAutoManageUniformForUnit[2] = "Never accept uniforms"
 
-strUniformStatusTitle = "Uniform status"
+strUniformStatusTitle = "Uniform management"
 ;strUniformStatus[0] = "Not a uniform" - not actually displayed.
-strUniformStatus[0] = "Manual"
-strUniformStatus[1] = "Any class"
-strUniformStatus[2] = "Class-specific"
-strUniformStatus[3] = "Non-soldier"
+strUniformStatus[0] = "Do not apply automatically"
+strUniformStatus[1] = "Apply to any soldier class"
+strUniformStatus[2] = "Apply to same soldier class"
+strUniformStatus[3] = "Apply to non-soldier characters"
+
+strUniformUnitTypes = "Select non-soldier characters"
 
 [AM_MCM_Screen]
 ModName = "Appearance Manager"
-PageTitle = "Appearance Manager"
+PageTitle = "Iridar's Appearance Manager"
 GroupHeader = "General Settings"
 
 DISABLE_APPEARANCE_VALIDATION_REVIEW_Label = "Disable appearance validation in normal mode"
-DISABLE_APPEARANCE_VALIDATION_REVIEW_Tip = "If you start the game with cosmetic mods missing, the game normally automatically regenerates appearance of units that used cosmetics parts from those mods. This setting allows to disable that feature so that your character pool units can preserve their appearance. This setting affects the normal mode of the game, when it is started with the \"-review\" launch argument."
+DISABLE_APPEARANCE_VALIDATION_REVIEW_Tip = "If you start the game with cosmetic mods missing, the game normally automatically regenerates appearance of units that used cosmetics parts from those mods. This setting allows disabling that feature so that your Character Pool units can preserve their appearance. This setting affects the normal mode of the game, when it is started with the \"-review\" launch argument."
 
 DISABLE_APPEARANCE_VALIDATION_DEBUG_Label = "Disable appearance validation in debug mode"
-DISABLE_APPEARANCE_VALIDATION_DEBUG_Tip = "If you start the game with cosmetic mods missing, the game normally automatically regenerates appearance of units that used cosmetics parts from those mods. This setting allows to disable that feature so that your character pool units can preserve their appearance. This setting affects the debug mode of the game, when it is started without the \"-review\" launch argument."
+DISABLE_APPEARANCE_VALIDATION_DEBUG_Tip = "If you start the game with cosmetic mods missing, the game normally automatically regenerates appearance of units that used cosmetics parts from those mods. This setting allows disabling that feature so that your Ñharacter Çool units can preserve their appearance. This setting affects the debug mode of the game, when it is started without the \"-review\" launch argument."
 
 DEBUG_LOGGING_Label = "Enable debug logging"
 DEBUG_LOGGING_Tip = "If enabled, the mod will print debug messages into the log file, located at:\n..\\Documents\\my games\\XCOM2 War of the Chosen\\XComGame\\Logs\\Launch.log"
 
 AUTOMATIC_UNIFORM_MANAGEMENT_Label = "Enable automatic uniform management by default"
-AUTOMATIC_UNIFORM_MANAGEMENT_Tip = "If enabled, the mod will automatically apply uniforms to soldiers when they equip armor for the first time or when they are promoted to the squaddie rank. This setting can also be configured for each soldier individually on the appearance customization screen."
+AUTOMATIC_UNIFORM_MANAGEMENT_Tip = "If enabled, the mod will automatically apply uniforms to soldiers when they equip armor for the first time or when they are promoted to the squaddie rank. These uniforms have to be created and configured in Character Pool. This setting can also be configured for each soldier individually on the appearance customization screen."
 
 MULTIPLE_UNIT_CHANGE_REQUIRES_CONFIRMATION_Label = "Require confirmation to apply changes to multiple units"
 MULTIPLE_UNIT_CHANGE_REQUIRES_CONFIRMATION_Tip = "If enabled, Appearance Manager will show a popup message when you click \"Apply Changes\" if that will result in changing appearance of multiple units."
@@ -108,4 +110,4 @@ MULTIPLE_UNIT_CHANGE_REQUIRES_CONFIRMATION_Tip = "If enabled, Appearance Manager
 strCurrentAppearance = "(Current)"
 
 [UIManageAppearance_Uniform]
-strGenderDisabled = "Uniforms that change unit's gender are not possible. Gender change disabled."
+strGenderDisabled = "It's not possible for uniforms to change unit's gender. Gender change disabled."
