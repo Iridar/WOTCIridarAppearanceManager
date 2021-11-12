@@ -71,6 +71,7 @@ struct CharacterPoolExtraData
 var array<CharacterPoolExtraData> ExtraDatas;
 
 const NonSoldierUniformSettings = 'NonSoldierUniformSettings';
+const BackupCharacterPoolPath = "CharacterPool\\Importable\\DefaultCharacterPool_AppearanceManagerBackup.bin";
 
 `include(WOTCIridarAppearanceManager\Src\ModConfigMenuAPI\MCM_API_CfgHelpers.uci)
 
@@ -124,6 +125,10 @@ event InitSoldier(XComGameState_Unit Unit, const out CharacterPoolDataElement Ch
 	InitSoldierAppearance(Unit, CharacterPoolData);
 
 	`AMLOG("Loading Extra Data for" @ Unit.GetFullName());
+	if (ExtraDatas.Length == 0)
+	{
+		LoadBackupCharacterPool();
+	}
 
 	// Use Character Pool Data to locate saved Extra Data for this unit.
 	// Save unit's ObjectID in Extra Data so we can find it later when we will be saving the Character Pool into the .bin file, 
@@ -133,6 +138,19 @@ event InitSoldier(XComGameState_Unit Unit, const out CharacterPoolDataElement Ch
 
 	// Read actual Extra Data.
 	Unit.AppearanceStore = ExtraDatas[Index].AppearanceStore;
+}
+
+private function LoadBackupCharacterPool()
+{
+	local CharacterPoolManager_AM BackupPool;
+
+	BackupPool = new class'CharacterPoolManager_AM';
+	BackupPool.PoolFileName = BackupCharacterPoolPath;
+	BackupPool.LoadCharacterPool();
+
+	`AMLOG("WARNING :: No Extra Data found in Default Character Pool. Loading Extra Data from backup:" @ BackupPool.ExtraDatas.Length);
+
+	ExtraDatas = BackupPool.ExtraDatas;
 }
 
 function SaveCharacterPool()
@@ -177,6 +195,12 @@ function SaveCharacterPool()
 	}
 
 	super.SaveCharacterPool();
+
+	// Starting the game with Appearance Manager disabled will cause all Extra Data to be lost.
+	// To prevent fatal changes to the Character Pool, always save a backup.
+	PoolFileName = BackupCharacterPoolPath;
+	super.SaveCharacterPool();
+	PoolFileName = default.PoolFileName;
 }
 
 // Replace pointless 'assert' with 'return none' so we can do error detecting
