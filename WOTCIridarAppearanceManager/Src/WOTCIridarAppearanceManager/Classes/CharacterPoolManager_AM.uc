@@ -153,13 +153,24 @@ function SaveCharacterPool()
 		// Save actual Extra Data.
 		ExtraDatas[Index].AppearanceStore = UnitState.AppearanceStore;
 
-		// Without this mod, CP Units are automatically set to be allowed as soldiers if none of the "allowed as" checkboxes are toggled on. 
-		// This mod disables that functionality, allowing dormant CP units to be a thing.
-		// But it also means we need to set "allowed as soldier" to true when the soldier is just imported into the CP.
-		// Presumably, they're imported right from the armory, as soldiers, so it would make sense if they could appear as soldiers by default,
-		// without the player needing to go into CP and set the checkbox manually.
-		if (UnitState.PoolTimestamp == class'X2StrategyGameRulesetDataStructures'.static.GetSystemDateTimeString())
+		// Originally these were set to "false" when the unit was first converted into a uniform,
+		// but 'bAllowedTypeSoldier' seemingly gets reset to "true" at some point, not sure when, but not particularly interested in finding out.
+		// Just hard reset them every time.
+		if (GetUniformStatus(UnitState) > EUS_NotUniform)
 		{
+			UnitState.bAllowedTypeSoldier = false;
+			UnitState.bAllowedTypeVIP = false;
+			UnitState.bAllowedTypeDarkVIP = false;
+		}
+		else if (UnitState.PoolTimestamp == class'X2StrategyGameRulesetDataStructures'.static.GetSystemDateTimeString())
+		{
+			// Without this mod, CP Units are automatically set to be allowed as soldiers if none of the "allowed as" checkboxes are toggled on. 
+			// This mod disables that functionality, allowing dormant CP units to be a thing.
+			// But it also means we need to set "allowed as soldier" to true when the soldier is just imported into the CP.
+			// Presumably, they're imported right from the armory, as soldiers, so it would make sense if they could appear as soldiers by default,
+			// without the player needing to go into CP and set the checkbox manually, so by doing this bit here we preserve the part of the original functionality.
+			// It's probably why it was a thing in the first place.
+			// Doing this right here specifically allows us to avoid replacing the functionaltiy of the "save to character pool" button itself.
 			`AMLOG("This unit was just added to character pool. Setting \"allowed as soldier\" to true:" @ UnitState.PoolTimestamp);
 			UnitState.bAllowedTypeSoldier = true;
 		}
@@ -601,7 +612,8 @@ final function SaveCosmeticOptionsForUnit(const array<CosmeticOptionStruct> Cosm
 // Called from X2EventListener_AM.
 final function bool ShouldAutoManageUniform(const XComGameState_Unit UnitState)
 {
-	switch (GetAutoManageUniformForUnit(UnitState))
+	// The Unit Value checked by this function is set on the Unit when the Unit is created from Character Pool.
+	switch (class'Help'.static.GetAutoManageUniformForUnitValue(UnitState))
 	{
 		case EAMUFU_Default:
 			return `GETMCMVAR(AUTOMATIC_UNIFORM_MANAGEMENT);

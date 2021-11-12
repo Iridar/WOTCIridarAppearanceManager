@@ -488,14 +488,15 @@ private function OnConvertToUniformInputBoxAccepted(string strLastName)
 	UnitState.kAppearance.iAttitude = 0; // Set by the Book attitude so the soldier stops squirming.
 	UnitState.UpdatePersonalityTemplate();
 
+	// This is also done in SaveCharacterPool().
 	UnitState.bAllowedTypeSoldier = false;
 	UnitState.bAllowedTypeVIP = false;
 	UnitState.bAllowedTypeDarkVIP = false;
 	UnitState.StoreAppearance();
-	CustomizeScreen.CustomizeManager.CommitChanges();
+	CustomizeScreen.CustomizeManager.CommitChanges(); // This saves the CP.
 	CustomizeScreen.CustomizeManager.ReCreatePawnVisuals(CustomizeScreen.CustomizeManager.ActorPawn, true);
 
-	CharPoolMgr.SetUniformStatus(UnitState, EUS_Manual);
+	CharPoolMgr.SetUniformStatus(UnitState, EUS_Manual); // This also saves CP. Much redundancy, such wow.
 	
 	CustomizeScreen.List.ClearItems();
 	CustomizeScreen.UpdateData();	
