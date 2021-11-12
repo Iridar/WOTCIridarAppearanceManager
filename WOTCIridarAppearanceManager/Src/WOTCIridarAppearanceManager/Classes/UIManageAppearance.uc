@@ -4,7 +4,7 @@ class UIManageAppearance extends UICustomize;
 /*
 # Priority
 
-Validate Appearance caused double pawn
+Validate Appearance caused double pawn. Need for Validate Appearance occured when deleting appearance stores caused the unit to glitch out.
 
 Fixed already?
 3. Uniform preset somehow got broken. 
@@ -26,7 +26,6 @@ Fix wrong unit being opened in CP sometimes. (Has to do with deleting units?)
 Make clicking an item toggle its checkbox?
 
 ## Checks:
-3. Test automatic uniform managemennt settings. 
 
 ## Finalization
 1. Polish localization

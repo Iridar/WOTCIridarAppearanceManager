@@ -203,6 +203,7 @@ static final function EquipCharacterPoolLoadout()
 	local TAppearance							NewAppearance;
 	local XComCharacterCustomization			CustomizeManager;
 	local UIArmory_Loadout_CharPool				LoadoutScreen;
+	local name									EquippedArmorName;
 
 	`AMLOG("Begin init");
 
@@ -250,6 +251,11 @@ static final function EquipCharacterPoolLoadout()
 		if (ItemTemplate == none)
 			continue;
 
+		//if (LoadoutElement.InventorySlot == eInvSlot_Armor) // This would save the Kevlar Armor appearance every time the player enters loadout screen. Let's store appearance only for armor they actually equipped.
+		//{
+		//	UnitState.StoreAppearance(UnitState.kAppearance.iGender);
+		//}
+
 		ItemState = ItemTemplate.CreateInstanceFromTemplate(TempGameState);
 		if (UnitState.AddItemToInventory(ItemState, LoadoutElement.InventorySlot, TempGameState))
 		{
@@ -265,6 +271,9 @@ static final function EquipCharacterPoolLoadout()
 					break;
 				case eInvSlot_TertiaryWeapon:
 					CustomizeManager.TertiaryWeapon = ItemState;
+					break;
+				case eInvSlot_Armor:
+					EquippedArmorName = ItemTemplate.DataName;
 					break;
 				default:
 					break;
@@ -285,6 +294,7 @@ static final function EquipCharacterPoolLoadout()
 	{
 		NewAppearance = UnitState.kAppearance;
 		UnitPawn.SetAppearance(NewAppearance);
+		UnitState.StoreAppearance(UnitState.kAppearance.iGender, EquippedArmorName);
 		CustomizeManager.CommitChanges();
 
 		LocalHistory.AddGameStateToHistory(TempGameState);

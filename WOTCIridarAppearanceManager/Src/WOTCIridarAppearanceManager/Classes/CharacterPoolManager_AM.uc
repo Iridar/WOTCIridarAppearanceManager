@@ -35,7 +35,7 @@ enum EAutoManageUniformForUnit
 {
 	EAMUFU_Default,		// Use global MCM setting.
 	EAMUFU_AlwaysOn,	// Always automatically apply uniforms to this unit, if there are any valid ones.
-	EAMUMU_AlwaysOff	// Never auto apply uniforms to this unit.
+	EAMUFU_AlwaysOff	// Never auto apply uniforms to this unit.
 };
 
 enum EUniformStatus
@@ -619,7 +619,7 @@ final function bool ShouldAutoManageUniform(const XComGameState_Unit UnitState)
 			return `GETMCMVAR(AUTOMATIC_UNIFORM_MANAGEMENT);
 		case EAMUFU_AlwaysOn:
 			return true;
-		case EAMUMU_AlwaysOff:
+		case EAMUFU_AlwaysOff:
 			return false;
 		default:
 			return false;
