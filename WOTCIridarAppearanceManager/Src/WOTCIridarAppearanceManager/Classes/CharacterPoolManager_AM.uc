@@ -241,6 +241,9 @@ function XComGameState_Unit CreateCharacter(XComGameState StartState, optional E
 	if (IsCharacterPoolCharacter(UnitState))
 	{
 		class'Help'.static.SetAutoManageUniformForUnitValue(UnitState, GetAutoManageUniformForUnit(UnitState));
+
+		// Copy over saved appearance store.
+		UnitState.AppearanceStore = ExtraDatas[ GetExtraDataIndexForUnit(UnitState) ].AppearanceStore;
 	}	
 
 	return UnitState;

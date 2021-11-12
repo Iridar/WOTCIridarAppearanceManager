@@ -112,10 +112,12 @@ static private function EventListenerReturn OnItemAddedToSlot_CampaignStart(Obje
 	
 	`AMLOG(UnitState.GetFullName() @ "equipped armor:" @ ItemState.GetMyTemplateName());
 
-	// Even the Campaign Start listener is too late - units already have stored appearance for Kevlar Armor.
-	// However, we can allow ourselves to ignore this at campaign start. 
-	// If the unit was randomly generated, then we want to replace their appearance with a uniform anyway.
-	// If the unit is present in CP, then we'll just import their appearance on top of them again anyway, and no actual changes will happen.
+	// Even the Campaign Start listener is too late - randomly generated units will already have stored appearance for Kevlar Armor, so we're skipping that check.
+	//if (UnitState.HasStoredAppearance(UnitState.kAppearance.iGender, ItemState.GetMyTemplateName()))
+	//{
+	//	`AMLOG(UnitState.GetFullName() @ "already has stored appearance for" @ ItemState.GetMyTemplateName() $ ", exiting.");
+	//	return ELR_NoInterrupt;
+	//}
 
 	MaybeApplyUniformAppearance(UnitState, ItemState.GetMyTemplateName());
 
