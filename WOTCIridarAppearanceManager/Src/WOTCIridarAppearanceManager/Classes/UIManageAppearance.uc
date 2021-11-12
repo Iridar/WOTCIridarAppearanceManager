@@ -6,6 +6,12 @@ class UIManageAppearance extends UICustomize;
 
 Validate Appearance caused double pawn. Need for Validate Appearance occured when deleting appearance stores caused the unit to glitch out.
 
+Soldier customization bug repro steps:
+1. Equip plated armor.
+2. Delete stored appearance for kevlar armor.
+3. Go to customize it.
+4. Can select only kevlar options, soldier now has kevlar equipped.
+
 Fixed already?
 3. Uniform preset somehow got broken. 
 Pawn sometimes hangs on character pool screen. 

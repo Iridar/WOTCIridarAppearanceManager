@@ -12,6 +12,7 @@ static final function string GetUnitDisplayString(const XComGameState_Unit UnitS
 {
 	local X2SoldierClassTemplate	ClassTemplate;
 	local string					SoldierString;
+	local string					strNickname;
 
 	ClassTemplate = UnitState.GetSoldierClassTemplate();
 	if (ClassTemplate != none)
@@ -19,13 +20,13 @@ static final function string GetUnitDisplayString(const XComGameState_Unit UnitS
 		SoldierString = ClassTemplate.DisplayName $ ": ";
 	}
 
+	// GetName(eNameType_FullNick) doesn't work so hot, since it adds unit's rank, which we don't need.
 	SoldierString $= UnitState.GetFirstName();
-
-	if (UnitState.GetNickName() != "")
+	strNickname = UnitState.GetNickName();
+	if (strNickname != "")
 	{
-		SoldierString @= "\"" $ UnitState.GetNickName() $ "\"";
+		SoldierString @= strNickname;
 	}
-
 	SoldierString @= UnitState.GetLastName();
 	
 	return SoldierString;

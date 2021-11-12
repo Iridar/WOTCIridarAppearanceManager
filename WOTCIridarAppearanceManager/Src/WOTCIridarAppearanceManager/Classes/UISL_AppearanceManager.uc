@@ -28,8 +28,6 @@ event OnInit(UIScreen Screen)
 	CustomizeScreen = GetUnitCustomizeMenuScreen(Screen);
 	if (CustomizeScreen != none)
 	{	 
-		CustomizeScreen = UICustomize(Screen);
-
 		`AMLOG("Init UICustomize screen:" @ CustomizeScreen.Class.Name);
 
 		// When screen is initialized, list has no items yet, so need to wait for the list to init.
@@ -60,6 +58,47 @@ event OnInit(UIScreen Screen)
 		}
 	}
 }
+/*
+event OnInit(UIScreen Screen)
+{
+	local UICustomize CustomizeScreenMenu;
+	local UICustomize GenericCustomizeScreen;
+
+	CustomizeScreenMenu = GetUnitCustomizeMenuScreen(Screen);
+	if (CustomizeScreenMenu != none)
+	{	 
+		`AMLOG("Init UICustomize screen:" @ CustomizeScreenMenu.Class.Name);
+
+		// When screen is initialized, list has no items yet, so need to wait for the list to init.
+		if (!CustomizeScreenMenu.List.bIsInited)
+		{
+			`AMLOG("List is not initialized, adding a delegate");
+
+			CustomizeScreenMenu.List.AddOnInitDelegate(OnListInited);
+		}
+		else
+		{
+			`AMLOG("List is initialized, applying changes");
+			ApplyScreenChanges();
+		}
+	}
+
+	// When customize manager creates a character pool pawn, it is automatically equipped with the default loadout,
+	// so we need to wait for pawn to exist before we can equip character pool loadout on it.
+	GenericCustomizeScreen = UICustomize(Screen);
+	if (GenericCustomizeScreen != none && !GenericCustomizeScreen.bInArmory)
+	{
+		if (GenericCustomizeScreen.CustomizeManager.ActorPawn != none)
+		{
+			class'UIArmory_Loadout_CharPool'.static.EquipCharacterPoolLoadout();
+		}
+		else
+		{
+			GenericCustomizeScreen.SetTimer(0.01f, false, nameof(OnPawnCreated), self);
+		}
+	}
+}
+*/
 
 final static function UICustomize GetUnitCustomizeMenuScreen(UIScreen Screen)
 {
