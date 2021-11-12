@@ -19,6 +19,8 @@ Optimize performance on this screen? Don't create options all the time, maybe?
 # Character Pool
 Sorting buttons for CP units?
 
+Do CP units need a way to select whether they want to accept only class-specific or AnyClass uniforms?
+
 Fix wrong unit being opened in CP sometimes. (Has to do with deleting units?)
 -- Apparently the problem is the CP opens the unit you had selected when the interface раздупляется, а не тот юнит по которому кликал. Это ваниллы проблема. Можно пофиксить, наверное
 
@@ -1196,6 +1198,9 @@ private function ApplyChanges()
 	{
 		foreach PoolMgr.CharacterPool(UnitState)
 		{
+			if (UnitState.ObjectID == ArmoryUnit.ObjectID)
+				continue;
+
 			ApplyChangesToUnit(UnitState);
 		}
 		PoolMgr.SaveCharacterPool();
@@ -1212,7 +1217,7 @@ private function ApplyChanges()
 		foreach XComHQ.Squad(SquadUnitRef)
 		{
 			UnitState = XComGameState_Unit(History.GetGameStateForObjectID(SquadUnitRef.ObjectID));
-			if (UnitState == none || UnitState.IsDead())
+			if (UnitState == none || UnitState.IsDead() || UnitState.ObjectID == ArmoryUnit.ObjectID)
 				continue;
 
 			UnitState = XComGameState_Unit(NewGameState.ModifyStateObject(UnitState.Class, UnitState.ObjectID));
@@ -1228,6 +1233,9 @@ private function ApplyChanges()
 		NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState("Apply appearance changes to barracks");
 		foreach UnitStates(UnitState)
 		{
+			if (UnitState.ObjectID == ArmoryUnit.ObjectID)
+				continue;
+
 			UnitState = XComGameState_Unit(NewGameState.ModifyStateObject(UnitState.Class, UnitState.ObjectID));
 			ApplyChangesToUnit(UnitState, NewGameState);
 		}

@@ -3,13 +3,13 @@ PresetDefault = "Default"
 PresetUniform = "Uniform"
 PresetEntireUnit = "Entire Unit"
 PresetPatterns = "Patterns"
+PresetNothing = "Nothing"
 
 strApplyTo = "APPLY TO"
 strApplyChangesButton = "Apply Changes"
 
 strApplyToThisUnit = "THIS UNIT"
 strApplyToThisUnitTip = "If enabled, appearance changes will be applied to this specific unit."
-
 strApplyToSquadTip = "If enabled, appearance changes will be applied to all units that are currently in the squad."
 strApplyToBarracksTip = "If enabled, appearance changes will be applied to all units in the barracks, excluding units in the squad and this unit."
 strApplyToCPTip = "If enabled, appearance changes will be applied to all units in the Character Pool, excluding this unit."
