@@ -6,7 +6,6 @@ class UIManageAppearance extends UICustomize;
 
 ## Bugs from video:
 1. Should CP units have uniforms be applied to them?
-8. Uniform still not reliably applied to bradford
 
 Fixed already?
 3. Uniform preset somehow got broken. 

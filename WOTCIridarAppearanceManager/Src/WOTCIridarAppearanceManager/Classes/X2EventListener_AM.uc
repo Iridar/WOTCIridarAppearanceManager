@@ -16,7 +16,7 @@ static function array<X2DataTemplate> CreateTemplates()
 // If a unit equips an armor they don't have stored appearance for, the mod will check if this unit exists in the character pool, and attempt to load CP unit's stored appearance for that armor.
 // If that fails, the mod will look for an appropriate uniform for this soldier.
 
-static function CHEventListenerTemplate Create_ListenerTemplate_Strategy()
+static private function CHEventListenerTemplate Create_ListenerTemplate_Strategy()
 {
 	local CHEventListenerTemplate Template;
 
@@ -26,11 +26,11 @@ static function CHEventListenerTemplate Create_ListenerTemplate_Strategy()
 
 	Template.AddCHEvent('ItemAddedToSlot', OnItemAddedToSlot, ELD_Immediate, 50);
 	Template.AddCHEvent('UnitRankUp', OnUnitRankUp, ELD_Immediate, 50);
-	Template.AddCHEvent('OnCreateCinematicPawn', OnCreateCinematicPawn, ELD_Immediate, 50);
+	Template.AddCHEvent('OnCreateCinematicPawn', OnCreateCinematicPawn, ELD_Immediate, 10);
 
 	return Template;
 }
-static function CHEventListenerTemplate Create_ListenerTemplate_Tactical()
+static private function CHEventListenerTemplate Create_ListenerTemplate_Tactical()
 {
 	local CHEventListenerTemplate Template;
 
@@ -41,12 +41,12 @@ static function CHEventListenerTemplate Create_ListenerTemplate_Tactical()
 	Template.AddCHEvent('ItemAddedToSlot', OnItemAddedToSlot, ELD_Immediate, 50);
 	Template.AddCHEvent('UnitRankUp', OnUnitRankUp, ELD_Immediate, 50);
 	Template.AddCHEvent('PostAliensSpawned', OnPostAliensSpawned, ELD_Immediate, 50);
-	Template.AddCHEvent('OnCreateCinematicPawn', OnCreateCinematicPawn, ELD_Immediate, 50);
+	Template.AddCHEvent('OnCreateCinematicPawn', OnCreateCinematicPawn, ELD_Immediate, 10);
 
 	return Template;
 }
 
-static function CHEventListenerTemplate Create_ListenerTemplate_CampaignStart()
+static private function CHEventListenerTemplate Create_ListenerTemplate_CampaignStart()
 {
 	local CHEventListenerTemplate Template;
 
@@ -62,7 +62,7 @@ static function CHEventListenerTemplate Create_ListenerTemplate_CampaignStart()
 	return Template;
 }
 
-static function EventListenerReturn OnItemAddedToSlot(Object EventData, Object EventSource, XComGameState NewGameState, Name Event, Object CallbackData)
+static private function EventListenerReturn OnItemAddedToSlot(Object EventData, Object EventSource, XComGameState NewGameState, Name Event, Object CallbackData)
 {
 	local XComGameState_Item ItemState;
 	local XComGameState_Unit UnitState;
@@ -93,7 +93,7 @@ static function EventListenerReturn OnItemAddedToSlot(Object EventData, Object E
 }
 
 // Same as previous listener, we just skip the HasStoredAppearance() check.
-static function EventListenerReturn OnItemAddedToSlot_CampaignStart(Object EventData, Object EventSource, XComGameState NewGameState, Name Event, Object CallbackData)
+static private function EventListenerReturn OnItemAddedToSlot_CampaignStart(Object EventData, Object EventSource, XComGameState NewGameState, Name Event, Object CallbackData)
 {
 	local XComGameState_Item ItemState;
 	local XComGameState_Unit UnitState;
@@ -143,7 +143,7 @@ static private function MaybeApplyUniformAppearance(XComGameState_Unit UnitState
 }
 
 
-static function EventListenerReturn OnUnitRankUp(Object EventData, Object EventSource, XComGameState NewGameState, Name Event, Object CallbackData)
+static private function EventListenerReturn OnUnitRankUp(Object EventData, Object EventSource, XComGameState NewGameState, Name Event, Object CallbackData)
 {
 	local XComGameState_Item ItemState;
 	local XComGameState_Unit UnitState;
@@ -167,7 +167,7 @@ static function EventListenerReturn OnUnitRankUp(Object EventData, Object EventS
 	return ELR_NoInterrupt;
 }
 
-static function EventListenerReturn OnPostAliensSpawned(Object EventData, Object EventSource, XComGameState StartState, Name Event, Object CallbackData)
+static private function EventListenerReturn OnPostAliensSpawned(Object EventData, Object EventSource, XComGameState StartState, Name Event, Object CallbackData)
 {
 	local XComGameState_Unit		UnitState;
 	local CharacterPoolManager_AM	CharacterPool;
@@ -195,7 +195,7 @@ static function EventListenerReturn OnPostAliensSpawned(Object EventData, Object
 }
 
 
-static function EventListenerReturn OnCreateCinematicPawn(Object EventData, Object EventSource, XComGameState StartState, Name Event, Object CallbackData)
+static private function EventListenerReturn OnCreateCinematicPawn(Object EventData, Object EventSource, XComGameState StartState, Name Event, Object CallbackData)
 {
 	local XComGameState_Unit		UnitState;
 	local XComHumanPawn				HumanPawn;
@@ -210,14 +210,15 @@ static function EventListenerReturn OnCreateCinematicPawn(Object EventData, Obje
 	HumanPawn = XComHumanPawn(EventData);
 	if (UnitState == none || HumanPawn == none)
 		return ELR_NoInterrupt;
-
-	`AMLOG(UnitState.GetFullName() @ UnitState.GetMyTemplateGroupName());
 			
 	NewAppearance = HumanPawn.m_kAppearance;
+	`AMLOG(UnitState.GetFullName() @ UnitState.GetMyTemplateGroupName() @ "Old torso:" @ NewAppearance.nmTorso);
+
 	if (CharacterPool.GetUniformAppearanceForNonSoldier(NewAppearance, UnitState))
 	{
-		`AMLOG("Aplying uniform appearance");
-		HumanPawn.SetAppearance(NewAppearance);
+		`AMLOG("Aplying uniform appearance. Uniform torso:" @ NewAppearance.nmTorso);
+		UnitState.SetTAppearance(NewAppearance);
+		HumanPawn.SetAppearance(NewAppearance, true);
 	}
 	else `AMLOG("Has no uniform");
 	

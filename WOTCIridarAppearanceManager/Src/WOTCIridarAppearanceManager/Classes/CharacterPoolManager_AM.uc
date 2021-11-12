@@ -635,8 +635,8 @@ final function bool GetUniformAppearanceForNonSoldier(out TAppearance NewAppeara
 		UniformState = UniformStates[`SYNC_RAND(UniformStates.Length)];
 
 		`AMLOG(UnitState.GetFullName() @ "selected random class uniform:" @ UniformState.GetFullName() @ "out of possible:" @ UniformStates.Length);
-
-		CopyUniformAppearance(NewAppearance, UniformState, NonSoldierUniformSettings);
+		
+		CopyUniformAppearance(NewAppearance, UniformState, NonSoldierUniformSettings, UnitState.GetMyTemplate().bForceAppearance);
 		return true;		
 	}
 
@@ -670,14 +670,16 @@ private function array<XComGameState_Unit> GetNonSoldierUniformsForUnit(const in
 	return UniformStates;
 }
 
-private function CopyUniformAppearance(out TAppearance NewAppearance, const XComGameState_Unit UniformState, const name ArmorTemplateName)
+private function CopyUniformAppearance(out TAppearance NewAppearance, const XComGameState_Unit UniformState, const name ArmorTemplateName, const optional bool bForceAppearance)
 {
 	local TAppearance					UniformAppearance;
 	local array<CosmeticOptionStruct>	CosmeticOptions;
 	local bool							bGenderChange;
 	local string						GenderArmorTemplate;
+	local EUniformStatus				UniformStatus;
 
-	if (GetUniformStatus(UniformState) == EUS_NonSoldier)
+	UniformStatus = GetUniformStatus(UniformState);
+	if (UniformStatus == EUS_NonSoldier)
 	{
 		UniformAppearance = UniformState.kAppearance;
 		CosmeticOptions = GetCosmeticOptionsForUnit(UniformState, string(NonSoldierUniformSettings));
@@ -699,7 +701,7 @@ private function CopyUniformAppearance(out TAppearance NewAppearance, const XCom
 																 NewAppearance.nmArms_Underlay = UniformAppearance.nmArms_Underlay;
 																 NewAppearance.nmLegs_Underlay = UniformAppearance.nmLegs_Underlay;
 		}
-		if (bGenderChange || NewAppearance.iGender == UniformAppearance.iGender)
+		if (bGenderChange || NewAppearance.iGender == UniformAppearance.iGender || UniformStatus == EUS_NonSoldier && bForceAppearance)
 		{		
 			if (ShouldCopyUniformPiece('nmHead', CosmeticOptions)) {NewAppearance.nmHead = UniformAppearance.nmHead; 
 																	NewAppearance.nmEye = UniformAppearance.nmEye; 

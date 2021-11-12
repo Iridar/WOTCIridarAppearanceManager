@@ -116,6 +116,7 @@ private function OnListItemSelected(UIList ContainerList, int ItemIndex)
 	// 3. If the timer is already running while the player mouseovers another entry, restart the timer.
 	// That way pawn refresh will be delayed until the player stops running the mouse through the list.
 	// So no pointless pawn flickering.
+	// Some kind of delay needs to exist anyway, because otherwise rapidly refreshing the pawn of some soldiers (Reapers, at least) can cause the game to crash.
 	if (IsTimerActive(nameof(DelayedSetPawnAppearance), self))
 	{	
 		ClearTimer(nameof(DelayedSetPawnAppearance), self);
