@@ -13,9 +13,10 @@ Pawn sometimes hangs on character pool screen.
 
 Optimize performance on this screen? Don't create options all the time, maybe?
 
+# Known issues: 
+- Replacing equipped WAR / EXO suit may leave the soldier with EXO arms on top of the new armor. Refreshing the pawn would fix it, but it also force equips kevlar armor. Catch-22.
+
 # Character Pool
-Fix weapons / Dual Wielding not working in CP?
-Search bar for CP units?
 Sorting buttons for CP units?
 
 Fix wrong unit being opened in CP sometimes. (Has to do with deleting units?)

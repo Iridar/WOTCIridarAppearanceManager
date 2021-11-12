@@ -203,7 +203,7 @@ static final function EquipCharacterPoolLoadout()
 	local TAppearance							NewAppearance;
 	local XComCharacterCustomization			CustomizeManager;
 	local UIArmory_Loadout_CharPool				LoadoutScreen;
-	local name									EquippedArmorName;
+	local name									EquippedArmorName;	
 
 	`AMLOG("Begin init");
 
