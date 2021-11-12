@@ -5,6 +5,7 @@ class UIManageAppearance extends UICustomize;
 # Priority
 
 Validate Appearance caused double pawn
+When soldier is saved to CP from armory, it should mark the soldier as "can appear as soldier", cuz CP is not doing that automatically anmymore.
 
 Fixed already?
 3. Uniform preset somehow got broken. 

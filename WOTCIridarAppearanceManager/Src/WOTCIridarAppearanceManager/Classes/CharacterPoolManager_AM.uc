@@ -230,23 +230,184 @@ function RemoveUnit(XComGameState_Unit Character)
 		ExtraDatas.Remove(Index, 1);
 	}
 }
-
+/*
 function XComGameState_Unit CreateCharacter(XComGameState StartState, optional ECharacterPoolSelectionMode SelectionModeOverride = eCPSM_None, optional name CharacterTemplateName, optional name ForceCountry, optional string UnitName )
 {
 	local XComGameState_Unit UnitState;
 
 	UnitState = super.CreateCharacter(StartState, SelectionModeOverride, CharacterTemplateName, ForceCountry, UnitName);
 
-	// Newly created units' AutoManageUniformForUnit flag should be the same as the eponymous setting in character pool.
+	`AMLOG("Created unit:" @ UnitState.GetFullName());
+
+	
 	if (IsCharacterPoolCharacter(UnitState))
 	{
-		class'Help'.static.SetAutoManageUniformForUnitValue(UnitState, GetAutoManageUniformForUnit(UnitState));
-
-		// Copy over saved appearance store.
-		UnitState.AppearanceStore = ExtraDatas[ GetExtraDataIndexForUnit(UnitState) ].AppearanceStore;
+		
 	}	
 
 	return UnitState;
+}
+*/
+
+// Modified version of the original. If the created unit is taken from Character Pool, load CP unit's extra data for the newly created unit.
+function XComGameState_Unit CreateCharacter(XComGameState StartState, optional ECharacterPoolSelectionMode SelectionModeOverride = eCPSM_None, optional name CharacterTemplateName, optional name ForceCountry, optional string UnitName )
+{
+	local array<int> Indices;
+	local int i;
+
+	local X2CharacterTemplateManager CharTemplateMgr;	
+	local X2CharacterTemplate CharacterTemplate;
+	local XGCharacterGenerator CharacterGenerator;
+	local TSoldier CharacterGeneratorResult;
+
+	local XComGameState_Unit SoldierState;
+	local XComGameState_Unit Unit;
+	local XComGameState_Unit SelectedUnit;
+	local int RemoveValue;
+
+	local int SelectedIndex;
+
+	local ECharacterPoolSelectionMode Mode;
+
+	Mode = GetSelectionMode(SelectionModeOverride);
+
+	if( CharacterPool.Length == 0 )
+		Mode = eCPSM_RandomOnly;
+
+	// by this point, we should have either pool or random as our mode
+	`assert( Mode != eCPSM_None && Mode != eCPSM_Mixed);
+
+	// pool only can still fall through and do random if there's no pool characters unused or available
+	if( Mode == eCPSM_PoolOnly )
+	{
+
+		for( i=0; i<CharacterPool.Length; i++ )
+		{
+			if(UnitName == "" || CharacterPool[i].GetFullName() == UnitName)
+			{
+				Indices.AddItem(i);
+			}
+		}
+
+		if( Indices.Length != 0 )
+		{
+
+			// this may need to be sped up with a map and a hash
+			foreach `XCOMHISTORY.IterateByClassType(class'XComGameState_Unit', Unit )
+			{
+				RemoveValue = -1;
+
+				for( i=0; i<Indices.Length; i++ )
+				{
+					if( CharacterPool[Indices[i]].GetFirstName() == Unit.GetFirstName() &&
+						CharacterPool[Indices[i]].GetLastName() == Unit.GetLastName() &&
+					    UnitName == "")
+					{
+						RemoveValue = Indices[i];
+					}
+
+					if( RemoveValue != -1 )
+					{
+						Indices.RemoveItem( RemoveValue );
+						RemoveValue = -1; //Reset the search.
+						i--;
+					}
+				}
+			}
+
+			// Avoid duplicates by removing character pool units which have already been created and added to the start state
+			foreach StartState.IterateByClassType(class'XComGameState_Unit', Unit)
+			{
+				RemoveValue = -1;
+
+				for (i = 0; i < Indices.Length; i++)
+				{
+					if (CharacterPool[Indices[i]].GetFirstName() == Unit.GetFirstName() &&
+						CharacterPool[Indices[i]].GetLastName() == Unit.GetLastName() &&
+						UnitName == "")
+					{
+						RemoveValue = Indices[i];
+					}
+
+					if (RemoveValue != -1)
+					{
+						Indices.RemoveItem(RemoveValue);
+						RemoveValue = -1; //Reset the search.
+						i--;
+					}
+				}
+			}
+		}
+	}
+
+	CharTemplateMgr = class'X2CharacterTemplateManager'.static.GetCharacterTemplateManager();
+	`assert(CharTemplateMgr != none);
+
+	if(CharacterTemplateName == '')
+	{
+		CharacterTemplateName = 'Soldier';
+	}
+	CharacterTemplate = CharTemplateMgr.FindCharacterTemplate(CharacterTemplateName);
+	SoldierState = CharacterTemplate.CreateInstanceFromTemplate(StartState);
+
+	//Filter the character pool possibilities by their allowed types
+	if (!(CharacterTemplate.bUsePoolVIPs || CharacterTemplate.bUsePoolSoldiers || CharacterTemplate.bUsePoolDarkVIPs))
+		`log("Character template requested from pool, but doesn't want any types:" @ CharacterTemplate.Name);
+
+	for (i = 0; i < Indices.Length; i++)
+	{
+		if (!TypeFilterPassed(CharacterPool[Indices[i]], CharacterTemplate))
+		{
+			Indices.RemoveItem(Indices[i]);
+			i--;
+		}
+	}
+	
+
+	// Indices.Length will be 0 if no characters left in pool or doing a random selection...
+	if( Indices.Length != 0 )
+	{
+		SelectedIndex = `SYNC_RAND( Indices.Length ); 
+		
+		SelectedUnit = CharacterPool[ Indices[ SelectedIndex ] ];
+
+		SoldierState.SetTAppearance( SelectedUnit.kAppearance );
+		SoldierState.SetCharacterName(SelectedUnit.GetFirstName(), SelectedUnit.GetLastName(), SelectedUnit.GetNickName(false));
+		SoldierState.SetCountry(SelectedUnit.GetCountry());
+		SoldierState.SetBackground(SelectedUnit.GetBackground());
+
+		// ADDED
+		// Newly created units' AutoManageUniformForUnit flag should be the same as the eponymous setting in character pool.
+		class'Help'.static.SetAutoManageUniformForUnitValue(SoldierState, GetAutoManageUniformForUnit(SelectedUnit));
+
+		// Copy over saved appearance store. It's written into CP units on CP Init.
+		SoldierState.AppearanceStore = SelectedUnit.AppearanceStore;
+
+		`AMLOG("Loaded Appearance Store for:" @ SoldierState.GetFullName() @ "from:" @ SelectedUnit.GetFullName() @ SoldierState.AppearanceStore.Length);
+		// END OF ADDED
+	}
+	else
+	{
+
+		CharacterGenerator = `XCOMGRI.Spawn(CharacterTemplate.CharacterGeneratorClass);
+		`assert(CharacterGenerator != none);
+
+		// Single Line for Issue #70
+		/// HL-Docs: ref:Bugfixes; issue:70
+		/// `CharacterPoolManager:CreateCharacter` now honors ForceCountry
+		CharacterGeneratorResult = CharacterGenerator.CreateTSoldier(CharacterTemplateName, , ForceCountry);
+
+		SoldierState.SetTAppearance(CharacterGeneratorResult.kAppearance);
+		SoldierState.SetCharacterName(CharacterGeneratorResult.strFirstName, CharacterGeneratorResult.strLastName, CharacterGeneratorResult.strNickName);
+		SoldierState.SetCountry(CharacterGeneratorResult.nmCountry);
+		if(!SoldierState.HasBackground())
+			SoldierState.GenerateBackground( , CharacterGenerator.BioCountryName);
+		class'XComGameState_Unit'.static.NameCheck(CharacterGenerator, SoldierState, eNameType_Full);
+	}
+
+	SoldierState.StoreAppearance(); // Save the soldiers appearance so char pool customizations are correct if you swap armors
+	return SoldierState;
+
 }
 
 // ============================================================================================
