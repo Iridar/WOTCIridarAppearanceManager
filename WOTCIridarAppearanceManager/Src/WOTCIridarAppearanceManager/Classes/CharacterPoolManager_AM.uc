@@ -519,7 +519,7 @@ final function bool IsCharacterPoolCharacter(const XComGameState_Unit UnitState)
 	return false;
 }
 
-private function int GetExtraDataIndexForUnit(XComGameState_Unit UnitState)
+final function int GetExtraDataIndexForUnit(XComGameState_Unit UnitState)
 {
 	local CharacterPoolExtraData ExtraData;
 	local int Index;
