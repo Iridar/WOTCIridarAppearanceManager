@@ -26,9 +26,11 @@ Individual soldiers and Uniforms can be excluded from participating in this auto
 
 This system can be disabled globally in Mod Config Menu. If disabled globally, individual units can still be included in the automated process.
 
-You can also work with Uniforms manually using the Manage Appearance screen.
+You can also work with Uniforms manually on the Manage Appearance screen.
 
 Uniforms can be shared with other people by exporting them into Character Pool Files, just like regular units.
+
+For each Gender+Armor pair of each Uniform unit, you can configure which parts of that appearance are actually a part of the uniform. For example, you can make a generic uniform that applies to all units, and then class-specific uniforms that only change unit's Torso Deco and Helmet slots.
 
 # More info on Appearance Store
 
