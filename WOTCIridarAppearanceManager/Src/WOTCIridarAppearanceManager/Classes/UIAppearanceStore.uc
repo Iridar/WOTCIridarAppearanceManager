@@ -18,15 +18,20 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 	super.InitScreen(InitController, InitMovie, InitName);
 
 	ItemMgr = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
-	UnitState = CustomizeManager.UpdatedUnitState;
-	ArmoryPawn = XComHumanPawn(CustomizeManager.ActorPawn);
-	OriginalAppearance = ArmoryPawn.m_kAppearance;
+	CacheArmoryUnitData();
 	List.OnSelectionChanged = OnListItemSelected;
 
 	if (class'Help'.static.IsUnrestrictedCustomizationLoaded())
 	{
 		SetTimer(0.1f, false, nameof(FixScreenPosition), self);
 	}
+}
+
+private function CacheArmoryUnitData()
+{
+	UnitState = CustomizeManager.UpdatedUnitState;
+	ArmoryPawn = XComHumanPawn(CustomizeManager.ActorPawn);
+	OriginalAppearance = ArmoryPawn.m_kAppearance;
 }
 
 private function FixScreenPosition()
@@ -66,6 +71,8 @@ simulated function UpdateData()
 	super.UpdateData();
 	if (UnitState == none)
 		return;
+
+	HideListItems();
 
 	foreach UnitState.AppearanceStore(StoredAppearance)
 	{
@@ -180,5 +187,21 @@ private function OnDeleteButtonClicked(UIButton ButtonSource)
 	UnitState.AppearanceStore.Remove(Index, 1);
 	CustomizeManager.CommitChanges(); // This will submit a Game State with appearance store changes and save CP.
 	List.ClearItems();
+	UpdateData();
+}
+
+simulated function PrevSoldier()
+{
+	UnitState.SetTAppearance(OriginalAppearance);
+	super.PrevSoldier();
+	CacheArmoryUnitData();
+	UpdateData();
+}
+
+simulated function NextSoldier()
+{
+	UnitState.SetTAppearance(OriginalAppearance);
+	super.NextSoldier();
+	CacheArmoryUnitData();
 	UpdateData();
 }
