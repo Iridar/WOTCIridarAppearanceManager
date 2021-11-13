@@ -190,15 +190,22 @@ private function OnSearchButtonClicked(UIButton ButtonSource)
 
 private function OnSearchInputBoxAccepted(string text)
 {
-	SearchText = text;
+	local string strShowText;
 
-	if (SearchText == "")
+	SearchText = text;
+	strShowText = `CAPS(class'UIManageAppearance'.default.strSearchTitle);
+
+	if (SearchText != "")
 	{
-		SearchButton.SetText(class'UIManageAppearance'.default.strSearchTitle);
+		strShowText $= ":" @ SearchText;
+		// Truncate displayed text if it becomes too long.
+		if (Len(strShowText) > 24)
+		{
+			strShowText = Left(strShowText, 24);
+			strShowText $= "...";
+		}
 	}
-	else
-	{
-		SearchButton.SetText(class'UIManageAppearance'.default.strSearchTitle $ ":" @ SearchText);
-	}
+
+	SearchButton.SetText(strShowText);
 	UpdateData();
 }
