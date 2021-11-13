@@ -6,6 +6,9 @@ class UIManageAppearance extends UICustomize;
 
 Validate Appearance caused double pawn. Need for Validate Appearance occured when deleting appearance stores caused the unit to glitch out.
 
+1. Color bug in #beta_testing
+3. Attempting to switch the gender of a newly generated Reaper somehow switched its gender to None. It cannot be switched off of None
+
 Soldier customization bug repro steps:
 1. Equip plated armor.
 2. Delete stored appearance for kevlar armor.
@@ -44,6 +47,9 @@ Make clicking an item toggle its checkbox?
 Maybe allow Appearance Store button to work as a "reskin armor" button? - redundant, can be done with this mod's customization screen by importing unit's own appearance from another armor.
 
 ## Ideas for later
+
+Compatibility with Allies Unknown classes? Can't select them in the CP or something like that.
+Compatibility with Trainable Faction Soldiers? When switching to their class in character pool, the pawn gets "outdated", still wearing the last equipped armor on the soldier. Exiting and entering soldier customization fixes it.
 
 Save modlist in CP files, and warn if mods are missing.
 

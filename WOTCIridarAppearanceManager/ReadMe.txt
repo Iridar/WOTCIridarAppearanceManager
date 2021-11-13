@@ -36,3 +36,10 @@ Uniforms can be shared with mods with character pool files.
 This mod expands the Character Pool so that Character Pool units can benefit from the game's Appearance Store mechanic.
 Even without any mods, during the campaign soldiers remember their appearance for each armor they have ever equipped. 
 But this information is lost when the unit is saved to the Character Pool.
+
+# Companion Mods
+
+[WOTC] No Tech Gated Helmets
+https://steamcommunity.com/sharedfiles/filedetails/?id=2518586673
+
+Compatible with UC?

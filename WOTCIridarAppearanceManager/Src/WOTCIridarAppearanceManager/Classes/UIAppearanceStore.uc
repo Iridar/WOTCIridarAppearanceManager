@@ -10,6 +10,7 @@ var private TAppearance				OriginalAppearance;
 var private TAppearance				SelectedAppearance;
 var private XComHumanPawn			ArmoryPawn;
 var private bool					bPawnRefreshIsCooldown;
+var private CharacterPoolManager_AM PoolMgr;
 
 const PAWN_REFRESH_COOLDOWN = 0.15f;
 
@@ -18,8 +19,11 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 	super.InitScreen(InitController, InitMovie, InitName);
 
 	ItemMgr = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
+	PoolMgr = `CHARACTERPOOLMGRAM;
+
 	CacheArmoryUnitData();
 	List.OnSelectionChanged = OnListItemSelected;
+	List.OnItemClicked = AppearanceListItemClicked;
 
 	if (class'Help'.static.IsUnrestrictedCustomizationLoaded())
 	{
@@ -33,6 +37,128 @@ private function CacheArmoryUnitData()
 	ArmoryPawn = XComHumanPawn(CustomizeManager.ActorPawn);
 	OriginalAppearance = ArmoryPawn.m_kAppearance;
 }
+
+// Attempt to equip the armor item associated with the stored appearance.
+private function AppearanceListItemClicked(UIList ContainerList, int ItemIndex)
+{
+	local UIMechaListItem_AppearanceStore	ListItem;
+	local array<CharacterPoolLoadoutStruct> CharacterPoolLoadout;
+	local XComGameState_Item				ItemState;
+	local XComGameState_Item				NewItemState;
+	local XComGameState_Item				PreviousItemState;
+	local XComGameState_HeadquartersXCom	XComHQ;
+	local XComGameState						NewGameState;
+	local XComGameState_Unit				NewUnitState;
+
+	if (ItemIndex == INDEX_NONE)
+		return;
+
+	ListItem = UIMechaListItem_AppearanceStore(List.GetItem(ItemIndex));
+	if (ListItem == none || ListItem.ArmorTemplateName == '' || ListItem.bIsCurrentAppearance)
+	{
+		class'Help'.static.PlayStrategySoundEvent("Play_MenuClickNegative", self);
+		return;
+	}
+
+	XComHQ = class'UIUtilities_Strategy'.static.GetXComHQ(true);
+	if (XComHQ == none) // Then we're character pool.
+	{
+		CharacterPoolLoadout = PoolMgr.GetCharacterPoolLoadout(UnitState); // Save previous loadout
+		PoolMgr.UpdateCharacterPoolLoadout(UnitState, eInvSlot_Armor, ListItem.ArmorTemplateName);
+		if (!class'UIArmory_Loadout_CharPool'.static.EquipCharacterPoolLoadout())
+		{
+			`AMLOG("Failed to equip the entire Character Pool loadout, exiting." @ ListItem.ArmorTemplateName);
+			PoolMgr.SetCharacterPoolLoadout(UnitState, CharacterPoolLoadout); // If we failed to equip all of the items, play the fail sound and restore saved loadout.
+			class'UIArmory_Loadout_CharPool'.static.EquipCharacterPoolLoadout();
+			class'Help'.static.PlayStrategySoundEvent("Play_MenuClickNegative", self);
+		}
+		else
+		{
+			SetAppearanceAndMaybeRefreshPawn();
+			PlayArmorEquipSound(ListItem.ArmorTemplateName);
+			super.CloseScreen();
+		}
+	}
+	else // We're in the Armory
+	{
+		NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState("Equip armor for stored appearance on:" @ UnitState.GetFullName() @ ListItem.ArmorTemplateName);
+		XComHQ = XComGameState_HeadquartersXCom(NewGameState.ModifyStateObject(XComHQ.Class, XComHQ.ObjectID));
+		NewUnitState = XComGameState_Unit(NewGameState.ModifyStateObject(UnitState.Class, UnitState.ObjectID));
+
+		ItemState = XComHQ.GetItemByName(ListItem.ArmorTemplateName);
+		if (ItemState == none)
+		{
+			`AMLOG("No such item in HQ inventory:" @ ListItem.ArmorTemplateName);
+			`XCOMHISTORY.CleanupPendingGameState(NewGameState);
+			class'Help'.static.PlayStrategySoundEvent("Play_MenuClickNegative", self);
+			return;
+		}
+
+		XComHQ.GetItemFromInventory(NewGameState, ItemState.GetReference(), NewItemState);
+		if (NewItemState != none)
+		{
+			PreviousItemState = NewUnitState.GetItemInSlot(eInvSlot_Armor);
+			if (PreviousItemState != none)
+			{
+				if (NewUnitState.RemoveItemFromInventory(PreviousItemState, NewGameState))
+				{
+					XComHQ.PutItemInInventory(NewGameState, PreviousItemState);
+				}
+				else
+				{
+					`AMLOG("Failed to free the inventory slot containing item:" @ PreviousItemState.GetMyTemplateName());
+					`XCOMHISTORY.CleanupPendingGameState(NewGameState);
+					class'Help'.static.PlayStrategySoundEvent("Play_MenuClickNegative", self);
+					return;
+				}
+			}
+
+			if (NewUnitState.AddItemToInventory(NewItemState, eInvSlot_Armor, NewGameState))
+			{
+				`GAMERULES.SubmitGameState(NewGameState);
+				PlayArmorEquipSound(ListItem.ArmorTemplateName);
+				SetAppearanceAndMaybeRefreshPawn();
+				super.CloseScreen();
+			}
+			else
+			{
+				// Failed to equip item.
+				`AMLOG("Failed to equip item:" @ NewItemState.GetMyTemplateName());
+				`XCOMHISTORY.CleanupPendingGameState(NewGameState);
+				class'Help'.static.PlayStrategySoundEvent("Play_MenuClickNegative", self);
+			}
+		}
+	}
+}
+
+		
+
+private function PlayArmorEquipSound(const name ArmorTemplateName)
+{
+	local X2EquipmentTemplate ArmorTemplate;
+
+	ArmorTemplate = X2EquipmentTemplate(ItemMgr.FindItemTemplate(ArmorTemplateName));
+	if (ArmorTemplate != none)
+	{
+		class'Help'.static.PlayStrategySoundEvent(ArmorTemplate.EquipSound, self);
+	}
+}
+
+
+/*
+final function array<CharacterPoolLoadoutStruct> GetCharacterPoolLoadout(const XComGameState_Unit UnitState)
+{
+	return ExtraDatas[ GetExtraDataIndexForUnit(UnitState) ].CharacterPoolLoadout;
+}
+final function SetCharacterPoolLoadout(const XComGameState_Unit UnitState, array<CharacterPoolLoadoutStruct> CharacterPoolLoadout)
+{
+	ExtraDatas[ GetExtraDataIndexForUnit(UnitState) ].CharacterPoolLoadout = CharacterPoolLoadout;
+	SaveCharacterPool();
+}
+final function UpdateCharacterPoolLoadout(const XComGameState_Unit UnitState, const EInventorySlot InventorySlot, const name TemplateName)
+{
+*/
+
 
 private function FixScreenPosition()
 {
@@ -61,6 +187,7 @@ private function FixScreenPosition()
 
 simulated function UpdateData()
 {
+	local UIMechaListItem_AppearanceStore ListItem;
 	local AppearanceInfo	StoredAppearance;
 	local X2ItemTemplate	ArmorTemplate;
 	local EGender			Gender;
@@ -101,13 +228,41 @@ simulated function UpdateData()
 		if (class'Help'.static.IsAppearanceCurrent(StoredAppearance.Appearance, OriginalAppearance))
 		{
 			DisplayName @= class'Help'.default.strCurrentAppearance;
-			GetListItem(i++).UpdateDataDescription(DisplayName); // Deleting current appearance may not work as people expect it to.
+			ListItem = GetListItem_AM(i++);
+			ListItem.UpdateDataDescription(DisplayName); // Deleting current appearance may not work as people expect it to.
+			ListItem.ArmorTemplateName = ArmorTemplateName;
+			ListItem.bIsCurrentAppearance = true;
 		}
 		else
 		{
-			GetListItem(i++).UpdateDataButton(DisplayName, class'UISaveLoadGameListItem'.default.m_sDeleteLabel, OnDeleteButtonClicked);
+			ListItem = GetListItem_AM(i++);
+			ListItem.UpdateDataButton(DisplayName, class'UISaveLoadGameListItem'.default.m_sDeleteLabel, OnDeleteButtonClicked);
+			ListItem.ArmorTemplateName = ArmorTemplateName;
 		}
 	}
+}
+
+// Use UIMechaListItem_AppearanceStore instead of regular UIMechaListItem.
+simulated function UIMechaListItem_AppearanceStore GetListItem_AM(int ItemIndex, optional bool bDisableItem, optional string DisabledReason)
+{
+	local UIMechaListItem_AppearanceStore CustomizeItem;
+	local UIPanel Item;
+
+	if(List.ItemCount <= ItemIndex)
+	{
+		CustomizeItem = Spawn(class'UIMechaListItem_AppearanceStore', List.ItemContainer);
+		CustomizeItem.bAnimateOnInit = false;
+		CustomizeItem.InitListItem();
+	}
+	else
+	{
+		Item = List.GetItem(ItemIndex);
+		CustomizeItem = UIMechaListItem_AppearanceStore(Item);
+	}
+
+	CustomizeItem.SetDisabled(bDisableItem, DisabledReason != "" ? DisabledReason : m_strNeedsVeteranStatus);
+
+	return CustomizeItem;
 }
 
 private function OnListItemSelected(UIList ContainerList, int ItemIndex)
@@ -156,6 +311,16 @@ private function SetPawnAppearance(TAppearance NewAppearance)
 
 	// Can't use an Event Listener in Shell, so using a timer (ugh)
 	SetTimer(0.1f, false, nameof(OnRefreshPawn), self);
+}
+
+private function SetAppearanceAndMaybeRefreshPawn()
+{
+	UnitState.SetTAppearance(SelectedAppearance);
+
+	if (ArmoryPawn == none || ArmoryPawn.m_kAppearance != SelectedAppearance)
+	{
+		CustomizeManager.ReCreatePawnVisuals(CustomizeManager.ActorPawn, true);
+	}
 }
 
 final function OnRefreshPawn()

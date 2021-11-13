@@ -183,7 +183,7 @@ private function CreateVisualAttachments(XComGameState_Unit UnitState)
 }*/
 
 
-static final function EquipCharacterPoolLoadout()
+static final function bool EquipCharacterPoolLoadout()
 {
 	local CharacterPoolManager_AM				LocalPoolMgr;
 	local array<CharacterPoolLoadoutStruct>		CharacterPoolLoadout;
@@ -204,14 +204,15 @@ static final function EquipCharacterPoolLoadout()
 	local XComCharacterCustomization			CustomizeManager;
 	local UIArmory_Loadout_CharPool				LoadoutScreen;
 	local name									EquippedArmorName;	
+	local bool									bEquippedAllItems;
 
 	`AMLOG("Begin init");
 
 	PresBase = `PRESBASE;
-	if (PresBase == none) { `AMLOG("No presbase"); return; }
+	if (PresBase == none) { `AMLOG("No presbase"); return false; }
 
 	LocalPoolMgr = `CHARACTERPOOLMGRAM;
-	if (LocalPoolMgr == none) { `AMLOG("No pool mgr"); return; }
+	if (LocalPoolMgr == none) { `AMLOG("No pool mgr"); return false; }
 
 	// This function is either called by UISL_AppearanceManager, which runs on UICustomize_Menu init,
 	// or from this screen. We don't really care which, we just need Customize Manager.
@@ -219,21 +220,21 @@ static final function EquipCharacterPoolLoadout()
 	if (CustomizeScreen == none) 
 	{ 
 		LoadoutScreen = UIArmory_Loadout_CharPool(PresBase.ScreenStack.GetCurrentScreen());
-		if (LoadoutScreen == none)	return;
+		if (LoadoutScreen == none)	return false;
 
 		CustomizeManager = LoadoutScreen.CustomizationManager;
 	}
 	else CustomizeManager = CustomizeScreen.CustomizeManager;
 
-	if (CustomizeManager == none || CustomizeManager.UpdatedUnitState == none) return;
+	if (CustomizeManager == none || CustomizeManager.UpdatedUnitState == none) return false;
 
 	UnitPawn = XComUnitPawn(CustomizeManager.ActorPawn);
-	if (UnitPawn == nonE) { `AMLOG("No unit pawn"); return; }
+	if (UnitPawn == nonE) { `AMLOG("No unit pawn"); return false; }
 
 	UnitState = CustomizeManager.UpdatedUnitState;
 
 	CharacterPoolLoadout = LocalPoolMgr.GetCharacterPoolLoadout(UnitState);
-	if (CharacterPoolLoadout.Length == 0) { `AMLOG("No char pool loadout"); return; }
+	if (CharacterPoolLoadout.Length == 0) { `AMLOG("No char pool loadout"); return false; }
 
 	`AMLOG("Finish init");
 
@@ -243,6 +244,7 @@ static final function EquipCharacterPoolLoadout()
 	TempContainer = class'XComGameStateContext_ChangeContainer'.static.CreateEmptyChangeContainer("Fake Loadout");
 	TempGameState = LocalHistory.CreateNewGameState(true, TempContainer);
 	
+	bEquippedAllItems = true;
 	foreach CharacterPoolLoadout(LoadoutElement)
 	{
 		`AMLOG("LoadoutElement:" @ LoadoutElement.TemplateName @ LoadoutElement.InventorySlot);
@@ -288,6 +290,7 @@ static final function EquipCharacterPoolLoadout()
 				ItemState.WeaponAppearance.iWeaponTint = UnitState.kAppearance.iWeaponTint;
 			ItemState.WeaponAppearance.nmWeaponPattern = UnitState.kAppearance.nmWeaponPattern;
 		}
+		else bEquippedAllItems = false;
 	}
 
 	if (bEquippedAtLeastOneItem)
@@ -309,6 +312,8 @@ static final function EquipCharacterPoolLoadout()
 	{	
 		LocalHistory.CleanupPendingGameState(TempGameState);
 	}
+
+	return bEquippedAllItems;
 }
 
 simulated function bool ShowInLockerList(XComGameState_Item Item, EInventorySlot SelectedSlot)

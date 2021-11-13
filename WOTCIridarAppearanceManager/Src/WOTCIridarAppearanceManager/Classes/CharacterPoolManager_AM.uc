@@ -329,6 +329,9 @@ function XComGameState_Unit CreateCharacter(XComGameState StartState, optional E
 
 		for( i=0; i<CharacterPool.Length; i++ )
 		{
+			if (GetUniformStatus(CharacterPool[i]) > EUS_NotUniform) // ADDED: Skip uniform units. Might not be necessary, but let's be safe.
+				continue;
+
 			if(UnitName == "" || CharacterPool[i].GetFullName() == UnitName)
 			{
 				Indices.AddItem(i);
@@ -501,6 +504,11 @@ final function SetAutoManageUniformForUnit(const XComGameState_Unit UnitState, c
 final function array<CharacterPoolLoadoutStruct> GetCharacterPoolLoadout(const XComGameState_Unit UnitState)
 {
 	return ExtraDatas[ GetExtraDataIndexForUnit(UnitState) ].CharacterPoolLoadout;
+}
+final function SetCharacterPoolLoadout(const XComGameState_Unit UnitState, array<CharacterPoolLoadoutStruct> CharacterPoolLoadout)
+{
+	ExtraDatas[ GetExtraDataIndexForUnit(UnitState) ].CharacterPoolLoadout = CharacterPoolLoadout;
+	SaveCharacterPool();
 }
 final function UpdateCharacterPoolLoadout(const XComGameState_Unit UnitState, const EInventorySlot InventorySlot, const name TemplateName)
 {
