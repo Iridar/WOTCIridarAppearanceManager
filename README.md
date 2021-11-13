@@ -32,6 +32,8 @@ Uniforms can be shared with other people by exporting them into Character Pool F
 
 For each Gender+Armor pair of each Uniform unit, you can configure which parts of that appearance are actually a part of the uniform. For example, you can make a generic uniform that applies to all units, and then class-specific uniforms that only change unit's Torso Deco and Helmet slots.
 
+Uniforms can be set up for non-soldier units, like Resistance Militia, Raider Factions or even cosmetic units on the Avenger, like Bradford. To do so, switch the uniform to non-soldier mode, and select which character templates should be affected by it.
+
 # More info on Appearance Store
 
 This mod expands the Character Pool so that Character Pool units can benefit from the game's Appearance Store mechanic.
