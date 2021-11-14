@@ -20,7 +20,7 @@ static event OnLoadedSavedGame()
 {
 	class'UICustomize_CPExtended'.static.SetInitialSoldierListSettings();
 }*/
-
+/*
 static event InstallNewCampaign(XComGameState StartState)
 {
 	local XComGameState_Unit		UnitState;
@@ -47,4 +47,4 @@ static event InstallNewCampaign(XComGameState StartState)
 		}
 		else `AMLOG("Has no uniform");
 	}
-}
+}*/

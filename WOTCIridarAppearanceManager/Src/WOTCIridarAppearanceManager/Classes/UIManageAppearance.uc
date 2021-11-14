@@ -4,6 +4,16 @@ class UIManageAppearance extends UICustomize;
 /*
 # Priority
 
+Xym:
+- 3d UI instead of 2d
+- custom in-list headers
+- rounded list bg edges
+BG = Spawn(class'UIBGBox');
+BG.LibID = class'UIUtilities_Controls'.const.MC_X2Background; // This line must before InitBG
+BG.InitBG();
+
+MrCloista's bug - importing kevlar appearance in CP on top of predator armor equipped stores appearance for kevlar armor.
+
 Validate Appearance caused double pawn. Need for Validate Appearance occured when deleting appearance stores caused the unit to glitch out.
 
 1. Color bug in #beta_testing
@@ -1301,7 +1311,7 @@ private function ApplyChangesToUnit(XComGameState_Unit UnitState, optional XComG
 
 	UnitState.SetTAppearance(NewAppearance);
 	UnitState.UpdatePersonalityTemplate();
-	UnitState.StoreAppearance();
+	UnitState.StoreAppearance(NewAppearance.iGender, class'Help'.static.GetEquippedArmorTemplateName(UnitState));
 
 	ApplyChangesToUnitWeapons(UnitState, NewAppearance, NewGameState);
 }
@@ -1420,7 +1430,7 @@ private function ApplyChangesToArmoryUnit()
 	if (IsCheckboxChecked('Biography'))
 		ArmoryUnit.SetBackground(SelectedUnit.GetBackground());
 
-	ArmoryUnit.StoreAppearance();
+	ArmoryUnit.StoreAppearance(ArmoryPawn.m_kAppearance.iGender, class'Help'.static.GetEquippedArmorTemplateName(ArmoryUnit));
 	CustomizeManager.SubmitUnitCustomizationChanges();
 
 	if (!InShell())

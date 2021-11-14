@@ -32,6 +32,53 @@ static final function string GetUnitDisplayString(const XComGameState_Unit UnitS
 	return SoldierString;
 }
 
+static final function name GetArmorTemplateNameFromCharacterPoolLoadout(const array<CharacterPoolLoadoutStruct> CharacterPoolLoadout)
+{
+	local CharacterPoolLoadoutStruct LoadoutElement;
+
+	foreach CharacterPoolLoadout(LoadoutElement)
+	{
+		if (LoadoutElement.InventorySlot == eInvSlot_Armor)
+		{
+			return LoadoutElement.TemplateName;
+		}
+	}
+	return '';
+}
+
+static final function name GetEquippedArmorTemplateName(const XComGameState_Unit UnitState, optional CharacterPoolManager_AM CharPoolMgr)
+{
+	local array<CharacterPoolLoadoutStruct>	CharacterPoolLoadout;
+	local XComGameState_Item				ItemState;
+	
+	if (IsInStrategy())
+	{
+		ItemState = UnitState.GetItemInSlot(eInvSlot_Armor);
+		if (ItemState != none)
+		{
+			return ItemState.GetMyTemplateName();
+		}
+	}
+	else
+	{
+		if (CharPoolMgr == none)
+		{
+			CharPoolMgr = `CHARACTERPOOLMGRAM;
+		}
+		if (CharPoolMgr != none)
+		{
+			CharacterPoolLoadout = CharPoolMgr.GetCharacterPoolLoadout(UnitState);
+			return class'Help'.static.GetArmorTemplateNameFromCharacterPoolLoadout(CharacterPoolLoadout);
+		}
+	}
+	return '';
+}
+
+static final function bool IsInStrategy()
+{
+	return `HQGAME  != none && `HQPC != None && `HQPRES != none;
+}
+
 static final function string GetFriendlyGender(int iGender)
 {
 	local EGender EnumGender;
@@ -80,16 +127,21 @@ static final function X2ItemTemplate GetItemTemplateFromCosmeticTorso(const name
 	local X2BodyPartTemplate		ArmorPartTemplate;
 	local X2BodyPartTemplateManager BodyPartMgr;
 	local X2ItemTemplateManager		ItemMgr;
+	local X2ItemTemplate			ItemTemplate;
 
 	BodyPartMgr = class'X2BodyPartTemplateManager'.static.GetBodyPartTemplateManager();
 	ArmorPartTemplate = BodyPartMgr.FindUberTemplate("Torso", nmTorso);
+	`AMLOG("Found ArmorPartTemplate:" @ ArmorPartTemplate.DataName @ ArmorPartTemplate.ArmorTemplate @ "for torso:" @ nmTorso);
 	if (ArmorPartTemplate != none)
 	{
 		ArmorTemplateName = ArmorPartTemplate.ArmorTemplate;
+		`AMLOG(`showvar(ArmorTemplateName));
 		if (ArmorTemplateName != '')
 		{
 			ItemMgr = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
-			return ItemMgr.FindItemTemplate(ArmorTemplateName);
+			ItemTemplate = ItemMgr.FindItemTemplate(ArmorTemplateName);
+			`AMLOG("Found armor template:" @ ItemTemplate.DataName);
+			return ItemTemplate;
 		}
 	}
 	return none;

@@ -58,47 +58,6 @@ event OnInit(UIScreen Screen)
 		}
 	}
 }
-/*
-event OnInit(UIScreen Screen)
-{
-	local UICustomize CustomizeScreenMenu;
-	local UICustomize GenericCustomizeScreen;
-
-	CustomizeScreenMenu = GetUnitCustomizeMenuScreen(Screen);
-	if (CustomizeScreenMenu != none)
-	{	 
-		`AMLOG("Init UICustomize screen:" @ CustomizeScreenMenu.Class.Name);
-
-		// When screen is initialized, list has no items yet, so need to wait for the list to init.
-		if (!CustomizeScreenMenu.List.bIsInited)
-		{
-			`AMLOG("List is not initialized, adding a delegate");
-
-			CustomizeScreenMenu.List.AddOnInitDelegate(OnListInited);
-		}
-		else
-		{
-			`AMLOG("List is initialized, applying changes");
-			ApplyScreenChanges();
-		}
-	}
-
-	// When customize manager creates a character pool pawn, it is automatically equipped with the default loadout,
-	// so we need to wait for pawn to exist before we can equip character pool loadout on it.
-	GenericCustomizeScreen = UICustomize(Screen);
-	if (GenericCustomizeScreen != none && !GenericCustomizeScreen.bInArmory)
-	{
-		if (GenericCustomizeScreen.CustomizeManager.ActorPawn != none)
-		{
-			class'UIArmory_Loadout_CharPool'.static.EquipCharacterPoolLoadout();
-		}
-		else
-		{
-			GenericCustomizeScreen.SetTimer(0.01f, false, nameof(OnPawnCreated), self);
-		}
-	}
-}
-*/
 
 final static function UICustomize GetUnitCustomizeMenuScreen(UIScreen Screen)
 {
@@ -495,7 +454,7 @@ private function OnUniformButtonClicked(UIButton ButtonSource)
 
 private function OnConvertToUniformInputBoxAccepted(string strLastName)
 {
-	local UICustomize			CustomizeScreen;
+	local UICustomize				CustomizeScreen;
 	local XComGameState_Unit		UnitState;
 	local CharacterPoolManager_AM	CharPoolMgr;
 	local TDialogueBoxData			kDialogData;
@@ -532,7 +491,7 @@ private function OnConvertToUniformInputBoxAccepted(string strLastName)
 	UnitState.bAllowedTypeSoldier = false;
 	UnitState.bAllowedTypeVIP = false;
 	UnitState.bAllowedTypeDarkVIP = false;
-	UnitState.StoreAppearance();
+	UnitState.StoreAppearance(UnitState.kAppearance.iGender, class'Help'.static.GetEquippedArmorTemplateName(UnitState, CharPoolMgr));
 	CustomizeScreen.CustomizeManager.CommitChanges(); // This saves the CP.
 	CustomizeScreen.CustomizeManager.ReCreatePawnVisuals(CustomizeScreen.CustomizeManager.ActorPawn, true);
 
@@ -548,7 +507,7 @@ private function OnConvertToUniformInputBoxAccepted(string strLastName)
 private function OnValidateButtonClicked(UIButton ButtonSource)
 {
 	local XComGameState_Unit			UnitState;
-	local UICustomize				CustomizeScreen;
+	local UICustomize					CustomizeScreen;
 	local CharacterPoolManager_AM		CharPool;
 	//local XComGameState_Item			ItemState;
 	local TAppearance					FixAppearance;
@@ -569,7 +528,7 @@ private function OnValidateButtonClicked(UIButton ButtonSource)
 	`AMLOG(UnitState.GetFullName());
 
 	// Validate current appearance
-	CharPool.ValidateUnitAppearance(CustomizeScreen.CustomizeManager.UpdatedUnitState);	
+	CharPool.ValidateUnitAppearance(UnitState);	
 
 	// Validate appearance store, remove entries that could not be validated
 	for (i = UnitState.AppearanceStore.Length - 1; i >= 0; i--)
@@ -587,12 +546,7 @@ private function OnValidateButtonClicked(UIButton ButtonSource)
 		}
 	}
 
-	//ItemState = CustomizeScreen.CustomizeManager.UpdatedUnitState.GetItemInSlot(eInvSlot_Armor);
-	//if (ItemState != none)
-	//{
-	//	CustomizeScreen.CustomizeManager.UpdatedUnitState.StoreAppearance(, ItemState.GetMyTemplateName());
-	//}
-	//else CustomizeScreen.CustomizeManager.UpdatedUnitState.StoreAppearance();
+	UnitState.StoreAppearance(UnitState.kAppearance.iGender, class'Help'.static.GetEquippedArmorTemplateName(UnitState, CharPool));
 
 	CustomizeScreen.CustomizeManager.CommitChanges();
 	CustomizeScreen.CustomizeManager.ReCreatePawnVisuals(CustomizeScreen.CustomizeManager.ActorPawn, true);

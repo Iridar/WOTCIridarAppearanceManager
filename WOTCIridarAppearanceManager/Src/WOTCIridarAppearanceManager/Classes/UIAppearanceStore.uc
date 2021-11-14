@@ -88,7 +88,7 @@ private function bool EquipArmorCharacterPool(const name ArmorTemplateName)
 	NewCharacterPoolLoadout = class'UIArmory_Loadout_CharPool'.static.EquipCharacterPoolLoadout();
 
 	// If the new loadout contains the armor we wanted to equip, then it means it was in fact equipped successfully.
-	if (GetArmorTemplateNameFromCharacterPoolLoadout(NewCharacterPoolLoadout) == ArmorTemplateName)
+	if (class'Help'.static.GetArmorTemplateNameFromCharacterPoolLoadout(NewCharacterPoolLoadout) == ArmorTemplateName)
 	{
 		return true;
 	}
@@ -99,20 +99,6 @@ private function bool EquipArmorCharacterPool(const name ArmorTemplateName)
 		class'UIArmory_Loadout_CharPool'.static.EquipCharacterPoolLoadout();
 		return false;
 	}
-}
-
-static final function name GetArmorTemplateNameFromCharacterPoolLoadout(const array<CharacterPoolLoadoutStruct> CharacterPoolLoadout)
-{
-	local CharacterPoolLoadoutStruct LoadoutElement;
-
-	foreach CharacterPoolLoadout(LoadoutElement)
-	{
-		if (LoadoutElement.InventorySlot == eInvSlot_Armor)
-		{
-			return LoadoutElement.TemplateName;
-		}
-	}
-	return '';
 }
 
 private function bool EquipArmorStrategy(const name ArmorTemplateName)
@@ -255,7 +241,6 @@ private function OnListItemSelected(UIList ContainerList, int ItemIndex)
 
 	// 2. And start a timer to update the pawn to that appearance with a delay.
 	// You can thank Xym for this implementation. My own was more responsive, but also more complicated.
-	// This timer is set on Customize Manager so that it keeps running and refreshes the pawn even after the screen is closed, which presumably kills all running timers.
 	SetTimer(PAWN_REFRESH_COOLDOWN, false, nameof(DelayedSetPawnAppearance), self); 
 }
 
