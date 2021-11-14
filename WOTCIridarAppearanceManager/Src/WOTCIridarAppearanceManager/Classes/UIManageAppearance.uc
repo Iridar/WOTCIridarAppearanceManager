@@ -12,7 +12,7 @@ BG = Spawn(class'UIBGBox');
 BG.LibID = class'UIUtilities_Controls'.const.MC_X2Background; // This line must before InitBG
 BG.InitBG();
 
-MrCloista's bug - importing kevlar appearance in CP on top of predator armor equipped stores appearance for kevlar armor.
+Add pawn to mouse guard in UISL so that pawn can be rotated on any UICustomize screen.
 
 Validate Appearance caused double pawn. Need for Validate Appearance occured when deleting appearance stores caused the unit to glitch out.
 

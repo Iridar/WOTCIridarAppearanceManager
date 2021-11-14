@@ -71,7 +71,7 @@ struct CharacterPoolExtraData
 var array<CharacterPoolExtraData> ExtraDatas;
 
 const NonSoldierUniformSettings = 'NonSoldierUniformSettings';
-const BackupCharacterPoolPath = "CharacterPool\\Importable\\DefaultCharacterPool_AppearanceManagerBackup.bin";
+const BackupCharacterPoolPath = "CharacterPool\\DefaultCharacterPool_AppearanceManagerBackup.bin";
 
 `include(WOTCIridarAppearanceManager\Src\ModConfigMenuAPI\MCM_API_CfgHelpers.uci)
 
