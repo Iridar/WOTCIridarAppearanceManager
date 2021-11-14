@@ -276,24 +276,6 @@ function RemoveUnit(XComGameState_Unit Character)
 		ExtraDatas.Remove(Index, 1);
 	}
 }
-/*
-function XComGameState_Unit CreateCharacter(XComGameState StartState, optional ECharacterPoolSelectionMode SelectionModeOverride = eCPSM_None, optional name CharacterTemplateName, optional name ForceCountry, optional string UnitName )
-{
-	local XComGameState_Unit UnitState;
-
-	UnitState = super.CreateCharacter(StartState, SelectionModeOverride, CharacterTemplateName, ForceCountry, UnitName);
-
-	`AMLOG("Created unit:" @ UnitState.GetFullName());
-
-	
-	if (IsCharacterPoolCharacter(UnitState))
-	{
-		
-	}	
-
-	return UnitState;
-}
-*/
 
 // Modified version of the original. If the created unit is taken from Character Pool, load CP unit's extra data for the newly created unit.
 function XComGameState_Unit CreateCharacter(XComGameState StartState, optional ECharacterPoolSelectionMode SelectionModeOverride = eCPSM_None, optional name CharacterTemplateName, optional name ForceCountry, optional string UnitName )
@@ -507,10 +489,11 @@ final function array<CharacterPoolLoadoutStruct> GetCharacterPoolLoadout(const X
 }
 final function SetCharacterPoolLoadout(const XComGameState_Unit UnitState, array<CharacterPoolLoadoutStruct> CharacterPoolLoadout)
 {
+	CharacterPoolLoadout.Sort(SortCharacterPoolLoadout);
 	ExtraDatas[ GetExtraDataIndexForUnit(UnitState) ].CharacterPoolLoadout = CharacterPoolLoadout;
 	SaveCharacterPool();
 }
-final function UpdateCharacterPoolLoadout(const XComGameState_Unit UnitState, const EInventorySlot InventorySlot, const name TemplateName)
+final function AddItemToCharacterPoolLoadout(const XComGameState_Unit UnitState, const EInventorySlot InventorySlot, const name TemplateName)
 {
 	local array<CharacterPoolLoadoutStruct>	CharacterPoolLoadout;
 	local CharacterPoolLoadoutStruct		LoadoutElement;
@@ -544,12 +527,13 @@ final function UpdateCharacterPoolLoadout(const XComGameState_Unit UnitState, co
 		// If the slot is already at capacity, we tell it to replace the first item it can find in the slot.
 		if (iNumItems >= iMaxNumItems)
 		{
-			`AMLOG("No more room in this multi item slot, should replace other item");
+			`AMLOG("This multi item slot has no more room, will attempt to replace one of the existing items.");
 			bUpdateExistingItem = true;
 		}
 	}
 	else 
 	{
+		// If the slot only holds one item, then we always replace the existing item in the slot, duh.
 		bUpdateExistingItem = true;
 	}
 
@@ -571,16 +555,24 @@ final function UpdateCharacterPoolLoadout(const XComGameState_Unit UnitState, co
 	// If the function was unable to update an existing item because it doesn't exist, we add one.
 	if (!bItemUpdated)
 	{
-		`AMLOG("Adding new item into loadout");
+		`AMLOG("Adding new item into loadout.");
 		LoadoutElement.InventorySlot = InventorySlot;
 		LoadoutElement.TemplateName = TemplateName;
 		CharacterPoolLoadout.AddItem(LoadoutElement);
 	}
 
+	CharacterPoolLoadout.Sort(SortCharacterPoolLoadout);
 	ExtraDatas[ExtraDataIndex].CharacterPoolLoadout = CharacterPoolLoadout;
 	SaveCharacterPool();
 }
 
+// Sort loadout items by inventory slot, so that it goes Armor > Weapons > Rest.
+private function int SortCharacterPoolLoadout(CharacterPoolLoadoutStruct LoadoutElementA, CharacterPoolLoadoutStruct LoadoutElementB)
+{
+	if (LoadoutElementA.InventorySlot > LoadoutElementB.InventorySlot) return 1;
+	if (LoadoutElementA.InventorySlot < LoadoutElementB.InventorySlot) return -1;
+	return 0;
+}
 
 final function array<CosmeticOptionStruct> GetCosmeticOptionsForUnit(const XComGameState_Unit UnitState, const string GenderArmorTemplate)
 {

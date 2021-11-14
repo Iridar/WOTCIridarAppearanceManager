@@ -78,23 +78,41 @@ private function AppearanceListItemClicked(UIList ContainerList, int ItemIndex)
 
 private function bool EquipArmorCharacterPool(const name ArmorTemplateName)
 {
-	local array<CharacterPoolLoadoutStruct> CharacterPoolLoadout;
+	local array<CharacterPoolLoadoutStruct> SavedCharacterPoolLoadout;
+	local array<CharacterPoolLoadoutStruct> NewCharacterPoolLoadout;
 
-	CharacterPoolLoadout = PoolMgr.GetCharacterPoolLoadout(UnitState); // Save previous loadout
+	SavedCharacterPoolLoadout = PoolMgr.GetCharacterPoolLoadout(UnitState); // Save previous loadout
 
-	PoolMgr.UpdateCharacterPoolLoadout(UnitState, eInvSlot_Armor, ArmorTemplateName);
+	PoolMgr.AddItemToCharacterPoolLoadout(UnitState, eInvSlot_Armor, ArmorTemplateName);
 
-	if (class'UIArmory_Loadout_CharPool'.static.EquipCharacterPoolLoadout())
+	NewCharacterPoolLoadout = class'UIArmory_Loadout_CharPool'.static.EquipCharacterPoolLoadout();
+
+	// If the new loadout contains the armor we wanted to equip, then it means it was in fact equipped successfully.
+	if (GetArmorTemplateNameFromCharacterPoolLoadout(NewCharacterPoolLoadout) == ArmorTemplateName)
 	{
 		return true;
 	}
 	else
 	{
-		`AMLOG("Failed to equip the entire Character Pool loadout, exiting." @ ArmorTemplateName);
-		PoolMgr.SetCharacterPoolLoadout(UnitState, CharacterPoolLoadout); // If we failed to equip all of the items, restore saved loadout.
+		`AMLOG("Failed to equip:" @ ArmorTemplateName @ ", restoring saved loadout and exiting.");
+		PoolMgr.SetCharacterPoolLoadout(UnitState, SavedCharacterPoolLoadout); // If we failed to equip all of the items, restore saved loadout.
 		class'UIArmory_Loadout_CharPool'.static.EquipCharacterPoolLoadout();
 		return false;
 	}
+}
+
+static final function name GetArmorTemplateNameFromCharacterPoolLoadout(const array<CharacterPoolLoadoutStruct> CharacterPoolLoadout)
+{
+	local CharacterPoolLoadoutStruct LoadoutElement;
+
+	foreach CharacterPoolLoadout(LoadoutElement)
+	{
+		if (LoadoutElement.InventorySlot == eInvSlot_Armor)
+		{
+			return LoadoutElement.TemplateName;
+		}
+	}
+	return '';
 }
 
 private function bool EquipArmorStrategy(const name ArmorTemplateName)

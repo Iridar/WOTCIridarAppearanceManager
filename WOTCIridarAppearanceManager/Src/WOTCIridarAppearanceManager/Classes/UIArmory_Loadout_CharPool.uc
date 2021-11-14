@@ -120,7 +120,7 @@ simulated function bool EquipItem(UIArmory_LoadoutItem Item)
 
 	`AMLOG(UnitState.GetFullName() @ "adding" @ Item.ItemTemplate.DataName @ GetSelectedSlot() @ "into loadout");
 
-	CharPoolMgr.UpdateCharacterPoolLoadout(UnitState, GetSelectedSlot(), Item.ItemTemplate.DataName);
+	CharPoolMgr.AddItemToCharacterPoolLoadout(UnitState, GetSelectedSlot(), Item.ItemTemplate.DataName);
 	CharPoolMgr.SaveCharacterPool();
 
 	CustomizationManager.ReCreatePawnVisuals(CustomizationManager.ActorPawn, true);
@@ -134,14 +134,14 @@ private function OnRefreshPawn()
 {
 	if (CustomizationManager.ActorPawn != none)
 	{
-		`AMLOG("Equipping loadout");
+		`AMLOG("Equipping character pool loadout.");
 		// UIArmory and children keep a reference to the pawn, and release the reference when screen is removed. 
 		// Update the reference so it can be cleaned up later. Otherwise the pawn may keep existing long after the screen is gone.
 		ActorPawn = CustomizationManager.ActorPawn; 
 		EquipCharacterPoolLoadout();
 		
 		// Assign the actor pawn to the mouse guard so the pawn can be rotated by clicking and dragging
-		//UIMouseGuard_RotatePawn(`SCREENSTACK.GetFirstInstanceOf(class'UIMouseGuard_RotatePawn')).SetActorPawn(CustomizationManager.ActorPawn);
+		UIMouseGuard_RotatePawn(`SCREENSTACK.GetFirstInstanceOf(class'UIMouseGuard_RotatePawn')).SetActorPawn(CustomizationManager.ActorPawn);
 	}
 	else
 	{
@@ -150,40 +150,7 @@ private function OnRefreshPawn()
 	}
 }
 
-/*
-private function CreateVisualAttachments(XComGameState_Unit UnitState)
-{
-	local UIPawnMgr					PawnMgr;
-	local XComPresentationLayerBase	PresBase;
-	local XComUnitPawn				UnitPawn;
-
-	PresBase = XComPresentationLayerBase(CustomizationManager.Outer);
-	if (PresBase == none)
-	{
-		`AMLOG("Error, no PresBase");
-		return;
-	}
-	
-	PawnMgr = PresBase.GetUIPawnMgr();
-	if (PawnMgr == none)
-	{
-		`AMLOG("Error, no PawnMgr");
-		return;
-	} 
-
-	UnitPawn = XComUnitPawn(CustomizationManager.ActorPawn);
-	if (UnitPawn == none)
-	{
-		`AMLOG("Error, no Unit Pawn");
-		return;
-	} 
-
-	`AMLOG(UnitState.GetFullName());	
-	UnitPawn.CreateVisualInventoryAttachments(PawnMgr, UnitState);
-}*/
-
-
-static final function bool EquipCharacterPoolLoadout()
+static final function array<CharacterPoolLoadoutStruct> EquipCharacterPoolLoadout()
 {
 	local CharacterPoolManager_AM				LocalPoolMgr;
 	local array<CharacterPoolLoadoutStruct>		CharacterPoolLoadout;
@@ -204,48 +171,52 @@ static final function bool EquipCharacterPoolLoadout()
 	local XComCharacterCustomization			CustomizeManager;
 	local UIArmory_Loadout_CharPool				LoadoutScreen;
 	local name									EquippedArmorName;	
-	local bool									bEquippedAllItems;
+	local array<int>							FailedToEquipItemIndices;
+	local int									i;
 
-	`AMLOG("Begin init");
+	// -------------------------------------------------------------------------------------------------------
+	// INIT
+	`AMLOG("Beginning init.");
 
 	PresBase = `PRESBASE;
-	if (PresBase == none) { `AMLOG("No presbase"); return false; }
+	if (PresBase == none) { `AMLOG("No PresBase, exiting."); return CharacterPoolLoadout; }
 
 	LocalPoolMgr = `CHARACTERPOOLMGRAM;
-	if (LocalPoolMgr == none) { `AMLOG("No pool mgr"); return false; }
+	if (LocalPoolMgr == none) { `AMLOG("No Pool Manager, exiting."); return CharacterPoolLoadout; }
 
-	// This function is either called by UISL_AppearanceManager, which runs on UICustomize_Menu init,
-	// or from this screen. We don't really care which, we just need Customize Manager.
+	// This function is either called by UISL_AppearanceManager, which runs on UICustomize_Menu init, or from this screen. We don't really care which, we just need Customize Manager.
 	CustomizeScreen = UICustomize(PresBase.ScreenStack.GetCurrentScreen());
 	if (CustomizeScreen == none) 
 	{ 
 		LoadoutScreen = UIArmory_Loadout_CharPool(PresBase.ScreenStack.GetCurrentScreen());
-		if (LoadoutScreen == none)	return false;
+		if (LoadoutScreen == none)	return CharacterPoolLoadout;
 
 		CustomizeManager = LoadoutScreen.CustomizationManager;
 	}
 	else CustomizeManager = CustomizeScreen.CustomizeManager;
 
-	if (CustomizeManager == none || CustomizeManager.UpdatedUnitState == none) return false;
+	if (CustomizeManager == none || CustomizeManager.UpdatedUnitState == none) return CharacterPoolLoadout;
 
 	UnitPawn = XComUnitPawn(CustomizeManager.ActorPawn);
-	if (UnitPawn == nonE) { `AMLOG("No unit pawn"); return false; }
+	if (UnitPawn == nonE) { `AMLOG("No unit pawn"); return CharacterPoolLoadout; }
 
 	UnitState = CustomizeManager.UpdatedUnitState;
 
 	CharacterPoolLoadout = LocalPoolMgr.GetCharacterPoolLoadout(UnitState);
-	if (CharacterPoolLoadout.Length == 0) { `AMLOG("No char pool loadout"); return false; }
+	if (CharacterPoolLoadout.Length == 0) { `AMLOG("No char pool loadout"); return CharacterPoolLoadout; }
 
-	`AMLOG("Finish init");
+	`AMLOG("Finished init.");
 
 	LocalHistory = `XCOMHISTORY;
 	ItemMgr = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
 
+	// -------------------------------------------------------------------------------------------------------
+	// BEGING EQUIPPING THE LOADOUT
+
 	TempContainer = class'XComGameStateContext_ChangeContainer'.static.CreateEmptyChangeContainer("Fake Loadout");
 	TempGameState = LocalHistory.CreateNewGameState(true, TempContainer);
 	
-	bEquippedAllItems = true;
-	foreach CharacterPoolLoadout(LoadoutElement)
+	foreach CharacterPoolLoadout(LoadoutElement, i)
 	{
 		`AMLOG("LoadoutElement:" @ LoadoutElement.TemplateName @ LoadoutElement.InventorySlot);
 
@@ -281,7 +252,7 @@ static final function bool EquipCharacterPoolLoadout()
 					break;
 			}
 
-			`AMLOG("Equipped successfully");
+			`AMLOG("Equipped item successfully.");
 
 			WeaponTemplate = X2WeaponTemplate(ItemTemplate);
 			if (WeaponTemplate != none && WeaponTemplate.bUseArmorAppearance)
@@ -290,8 +261,30 @@ static final function bool EquipCharacterPoolLoadout()
 				ItemState.WeaponAppearance.iWeaponTint = UnitState.kAppearance.iWeaponTint;
 			ItemState.WeaponAppearance.nmWeaponPattern = UnitState.kAppearance.nmWeaponPattern;
 		}
-		else bEquippedAllItems = false;
+		else 
+		{
+			`AMLOG("Failed to equip item.");
+			FailedToEquipItemIndices.AddItem(i);
+		}
 	}
+
+	// -------------------------------------------------------------------------------------------------------
+	// CLEANUP LOADOUT
+	// The loadout has to be equipped in the specific order, since items are sorted by inventory slot.
+	// So we can't delete loadout items as we cycle through the loadout, because we're cycling through it forwards.
+	// So after we're done equipping the loadout, remove all items we failed to equip.
+	// Then the saved loadout can be used as a source-of-truth - if the loadout item is there, then it was equipped successfully.
+	for (i = FailedToEquipItemIndices.Length - 1; i >= 0; i--)
+	{
+		CharacterPoolLoadout.Remove(FailedToEquipItemIndices[i], 1);
+	}
+	if (FailedToEquipItemIndices.Length > 0)
+	{
+		LocalPoolMgr.SetCharacterPoolLoadout(UnitState, CharacterPoolLoadout);
+	}
+
+	// -------------------------------------------------------------------------------------------------------
+	// POST-EQUIP ACTIONS
 
 	if (bEquippedAtLeastOneItem)
 	{
@@ -313,7 +306,8 @@ static final function bool EquipCharacterPoolLoadout()
 		LocalHistory.CleanupPendingGameState(TempGameState);
 	}
 
-	return bEquippedAllItems;
+	// Return the equipped loadout so that function callers can validate if the item they wanted to equip was equipped.
+	return CharacterPoolLoadout;
 }
 
 simulated function bool ShowInLockerList(XComGameState_Item Item, EInventorySlot SelectedSlot)
