@@ -189,6 +189,7 @@ var protected UIList	FiltersList;
 
 var protected UIBGBox	AppearanceListBG;
 var protected UIList	AppearanceList;
+var protected UIButton	ApplyChangesButton;
 
 `include(WOTCIridarAppearanceManager\Src\ModConfigMenuAPI\MCM_API_CfgHelpers.uci)
 
@@ -356,7 +357,8 @@ function CreateFiltersList()
 	SpawnedItem.bAnimateOnInit = false;
 	SpawnedItem.InitListItem();
 	SpawnedItem.UpdateDataButton(strApplyTo, strApplyChangesButton, OnApplyChangesButtonClicked);
-	SpawnedItem.Button.SetGood(true);
+	ApplyChangesButton = SpawnedItem.Button;
+	ApplyChangesButton.SetGood(true);
 
 	SpawnedItem = Spawn(class'UIMechaListItem', FiltersList.itemContainer);
 	SpawnedItem.bAnimateOnInit = false;
@@ -671,6 +673,7 @@ private function AppearanceListItemClicked(UIList ContainerList, int ItemIndex)
 	AppearanceOptionCheckboxChanged(GetListItem(ItemIndex).Checkbox);
 
 	bCanExitWithoutPopup = ArmoryUnit.kAppearance == OriginalAppearance;
+	ApplyChangesButton.SetGood(!bCanExitWithoutPopup);
 }
 
 private function AppearanceOptionCheckboxChanged(UICheckbox CheckBox)
@@ -1019,6 +1022,7 @@ private function UpdateUnitAppearance()
 	CopyAppearance(NewAppearance, SelectedAppearance, ArmoryUnit, SelectedUnit);
 
 	bCanExitWithoutPopup = NewAppearance == OriginalAppearance;
+	ApplyChangesButton.SetGood(!bCanExitWithoutPopup);
 		
 	ArmoryUnit.SetTAppearance(NewAppearance);
 	ArmoryPawn.SetAppearance(NewAppearance);
@@ -1263,6 +1267,7 @@ private function ApplyChanges()
 	}
 
 	bCanExitWithoutPopup = true;
+	ApplyChangesButton.SetGood(false);
 }
 
 private function ApplyChangesToUnit(XComGameState_Unit UnitState, optional XComGameState NewGameState)
