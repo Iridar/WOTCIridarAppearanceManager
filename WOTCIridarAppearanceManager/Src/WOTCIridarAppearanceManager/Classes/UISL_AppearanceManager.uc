@@ -301,6 +301,7 @@ private function OnManageAppearanceItemClicked()
 	}
 
 	CustomizeScreen = Pres.Spawn(class'UIManageAppearance', Pres);
+	//Pres.ScreenStack.Push(CustomizeScreen, Pres.Get3DMovie());
 	Pres.ScreenStack.Push(CustomizeScreen);
 	CustomizeScreen.UpdateData();
 }
@@ -318,7 +319,7 @@ private function OnAppearanceStoreItemClicked()
 	}
 
 	CustomizeScreen = Pres.Spawn(class'UIAppearanceStore', Pres);
-	Pres.ScreenStack.Push(CustomizeScreen);
+	Pres.ScreenStack.Push(CustomizeScreen, Pres.Get3DMovie());
 	CustomizeScreen.UpdateData();
 }
 
@@ -368,7 +369,7 @@ private function OnLoadoutItemClicked()
 		return;
 
 	ArmoryScreen = Pres.Spawn(class'UIArmory_Loadout_CharPool', Pres);
-	Pres.ScreenStack.Push(ArmoryScreen);
+	Pres.ScreenStack.Push(ArmoryScreen, Pres.Get3DMovie());
 	ArmoryScreen.CustomizationManager = Pres.GetCustomizeManager();
 	ArmoryScreen.InitArmory(UnitState.GetReference());
 	ArmoryScreen.UpdateData();

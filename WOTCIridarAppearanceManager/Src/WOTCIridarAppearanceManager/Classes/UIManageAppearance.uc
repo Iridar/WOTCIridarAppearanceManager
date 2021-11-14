@@ -293,7 +293,7 @@ private function CacheArmoryUnitData()
 	OriginalAttitude = ArmoryUnit.GetPersonalityTemplate();
 	OriginalPawnLocation = ArmoryPawn.Location;
 
-	UpdatePawnLocation();
+	//UpdatePawnLocation();
 }
 
 simulated static function CycleToSoldier(StateObjectReference NewRef)
@@ -306,7 +306,7 @@ simulated static function CycleToSoldier(StateObjectReference NewRef)
 	{
 		CustomizeScreen.CacheArmoryUnitData();
 		CustomizeScreen.UpdateOptionsList();
-		CustomizeScreen.UpdatePawnLocation();
+		//CustomizeScreen.UpdatePawnLocation();
 	}
 }
 
@@ -331,15 +331,16 @@ simulated function UpdateData()
 	UpdateUnitAppearance();
 }
 
-function UpdatePawnLocation()
-{
-	local vector PawnLocation;
-
-	PawnLocation = OriginalPawnLocation;
-
-	PawnLocation.X += 20; // Nudge the soldier pawn to the left a little
-	ArmoryPawn.SetLocation(PawnLocation);
-}
+// No longer needed with the change to CameraTag
+//function UpdatePawnLocation()
+//{
+//	local vector PawnLocation;
+//
+//	PawnLocation = OriginalPawnLocation;
+//
+//	PawnLocation.X += 20; // Nudge the soldier pawn to the left a little
+//	ArmoryPawn.SetLocation(PawnLocation);
+//}
 
 // ================================================================================================================================================
 // FILTER LIST MAIN FUNCTIONS - Filter list is located in the upper right corner, it determines which appearances are displayed in the appearance list.
@@ -1072,7 +1073,7 @@ final function OnRefreshPawn()
 	ArmoryPawn = XComHumanPawn(CustomizeManager.ActorPawn);
 	if (ArmoryPawn != none)
 	{
-		UpdatePawnLocation();
+		//UpdatePawnLocation();
 		UpdatePawnAttitudeAnimation();
 		ApplyChangesToUnitWeapons(ArmoryUnit, ArmoryPawn.m_kAppearance, none);
 
@@ -2894,6 +2895,9 @@ final function string GetGenderArmorTemplate()
 
 defaultproperties
 {
+	DisplayTag = "UIBlueprint_Promotion"
+	CameraTag = "UIBlueprint_Promotion"
+
 	CurrentPreset = "PresetDefault"
 	bCanExitWithoutPopup = true
 
