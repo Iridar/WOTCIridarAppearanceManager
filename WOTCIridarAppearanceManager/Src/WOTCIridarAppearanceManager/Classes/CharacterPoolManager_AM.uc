@@ -566,6 +566,31 @@ final function AddItemToCharacterPoolLoadout(const XComGameState_Unit UnitState,
 	SaveCharacterPool();
 }
 
+final function RemoveItemFromCharacterPoolLoadout(const XComGameState_Unit UnitState, const EInventorySlot InventorySlot, const name TemplateName)
+{
+	local array<CharacterPoolLoadoutStruct>	CharacterPoolLoadout;
+	local int ExtraDataIndex;
+	local int i;
+
+	`AMLOG(UnitState.GetFullName() @ InventorySlot @ TemplateName);
+
+	ExtraDataIndex =  GetExtraDataIndexForUnit(UnitState);
+	CharacterPoolLoadout = ExtraDatas[ExtraDataIndex].CharacterPoolLoadout;
+
+	for (i = CharacterPoolLoadout.Length - 1; i >= 0; i--)
+	{
+		if (CharacterPoolLoadout[i].TemplateName == TemplateName &&
+			CharacterPoolLoadout[i].InventorySlot == InventorySlot)
+		{	
+			CharacterPoolLoadout.Remove(i, 1);
+			break;
+		}
+	}
+	
+	ExtraDatas[ExtraDataIndex].CharacterPoolLoadout = CharacterPoolLoadout;
+	SaveCharacterPool();
+}
+
 // Sort loadout items by inventory slot, so that it goes Armor > Weapons > Rest.
 private function int SortCharacterPoolLoadout(CharacterPoolLoadoutStruct LoadoutElementA, CharacterPoolLoadoutStruct LoadoutElementB)
 {

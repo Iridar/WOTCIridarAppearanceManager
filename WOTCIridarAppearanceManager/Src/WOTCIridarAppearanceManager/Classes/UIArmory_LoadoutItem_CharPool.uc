@@ -1,14 +1,18 @@
 class UIArmory_LoadoutItem_CharPool extends UIArmory_LoadoutItem;
 
+var private XComGameState_Item ItemState;
+
 // Disable some stuff to remove calls to XCOMHQ that cause redscreens.
 simulated function UIArmory_LoadoutItem InitLoadoutItem(XComGameState_Item Item, EInventorySlot InitEquipmentSlot, optional bool InitSlot, optional string InitDisabledReason)
 {
 	InitPanel();
 	
-	if (Item != none)
+	// Keep the reference to the Item State.
+	ItemState = Item;
+	if (ItemState != none)
 	{
-		ItemRef = Item.GetReference();
-		ItemTemplate = Item.GetMyTemplate();
+		ItemRef = ItemState.GetReference();
+		ItemTemplate = ItemState.GetMyTemplate();
 	}
 
 	EquipmentSlot = InitEquipmentSlot;
@@ -64,7 +68,18 @@ simulated function UIArmory_LoadoutItem InitLoadoutItem(XComGameState_Item Item,
 		TooltipID = Movie.Pres.m_kTooltipMgr.AddNewTooltipTextBox(m_strDropItem, 0, 0, MCPath $ ".DropItemButton.bg");
 	}
 
-	PopulateData(Item);
+	PopulateData(ItemState);
 
 	return self;
+}
+
+function OnDropItemClicked(UIButton kButton)
+{
+	local UIArmory_Loadout_CharPool LoadoutScreen;
+
+	LoadoutScreen = UIArmory_Loadout_CharPool(Screen);
+	
+	LoadoutScreen.CharPoolMgr.RemoveItemFromCharacterPoolLoadout(LoadoutScreen.CustomizationManager.UpdatedUnitState, ItemState.InventorySlot, ItemState.GetMyTemplateName());
+	ItemState = none;
+	LoadoutScreen.UpdateData(true);
 }

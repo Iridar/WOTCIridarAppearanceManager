@@ -1,7 +1,7 @@
 class UIArmory_Loadout_CharPool extends UIArmory_Loadout;
 
 var XComCharacterCustomization		CustomizationManager;
-var private CharacterPoolManager_AM	CharPoolMgr;
+var CharacterPoolManager_AM			CharPoolMgr;
 var private name					CachedPreviousArmorName;
 
 var private config(ExcludedItems) array<name> EXCLUDED_SKINS;
@@ -349,6 +349,13 @@ simulated function bool ShowInLockerList(XComGameState_Item Item, EInventorySlot
 simulated function UpdateData(optional bool bRefreshPawn)
 {
 	UpdateLockerList();
+
+	if (bRefreshPawn)
+	{
+		CustomizationManager.ReCreatePawnVisuals(CustomizationManager.ActorPawn, true);
+
+		SetTimer(0.01f, false, nameof(OnRefreshPawn), self);
+	}
 }
 
 // Slightly modified original function. Leave it as messy as the original.
