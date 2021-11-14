@@ -103,6 +103,9 @@ DEBUG_LOGGING_Tip = "If enabled, the mod will print debug messages into the log 
 AUTOMATIC_UNIFORM_MANAGEMENT_Label = "Enable automatic uniform management by default"
 AUTOMATIC_UNIFORM_MANAGEMENT_Tip = "If enabled, the mod will automatically apply uniforms to soldiers when they equip armor for the first time or when they are promoted to the squaddie rank. These uniforms have to be created and configured in Character Pool. This setting can also be configured for each soldier individually on the appearance customization screen."
 
+MANAGE_APPEARANCE_2D_Label = "Show the Manage Appearence screen in 2D"
+MANAGE_APPEARANCE_2D_Tip = "Makes the screen render on top of the soldier model, instead of behind it"
+
 MULTIPLE_UNIT_CHANGE_REQUIRES_CONFIRMATION_Label = "Require confirmation to apply changes to multiple units"
 MULTIPLE_UNIT_CHANGE_REQUIRES_CONFIRMATION_Tip = "If enabled, Appearance Manager will show a popup message when you click \"Apply Changes\" if that will result in changing appearance of multiple units."
 

@@ -292,6 +292,7 @@ private function OnManageAppearanceItemClicked()
 {
 	local UIManageAppearance		CustomizeScreen;
 	local XComPresentationLayerBase	Pres;
+	local UIMovie					Movie;
 	
 	Pres = `PRESBASE;
 	if (Pres == none || Pres.ScreenStack == none)
@@ -300,8 +301,10 @@ private function OnManageAppearanceItemClicked()
 		return;
 	}
 
+	Movie = `GETMCMVAR(MANAGE_APPEARANCE_2D) ? Pres.Get2DMovie() : Pres.Get3DMovie();
+
 	CustomizeScreen = Pres.Spawn(class'UIManageAppearance', Pres);
-	Pres.ScreenStack.Push(CustomizeScreen);
+	Pres.ScreenStack.Push(CustomizeScreen, Movie);
 	CustomizeScreen.UpdateData();
 }
 
@@ -318,7 +321,7 @@ private function OnAppearanceStoreItemClicked()
 	}
 
 	CustomizeScreen = Pres.Spawn(class'UIAppearanceStore', Pres);
-	Pres.ScreenStack.Push(CustomizeScreen);
+	Pres.ScreenStack.Push(CustomizeScreen, Pres.Get3DMovie());
 	CustomizeScreen.UpdateData();
 }
 
@@ -368,7 +371,7 @@ private function OnLoadoutItemClicked()
 		return;
 
 	ArmoryScreen = Pres.Spawn(class'UIArmory_Loadout_CharPool', Pres);
-	Pres.ScreenStack.Push(ArmoryScreen);
+	Pres.ScreenStack.Push(ArmoryScreen, Pres.Get3DMovie());
 	ArmoryScreen.CustomizationManager = Pres.GetCustomizeManager();
 	ArmoryScreen.InitArmory(UnitState.GetReference());
 	ArmoryScreen.UpdateData();

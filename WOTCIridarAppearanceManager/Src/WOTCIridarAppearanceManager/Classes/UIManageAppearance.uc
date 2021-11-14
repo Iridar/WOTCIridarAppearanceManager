@@ -197,9 +197,6 @@ var protected UIList	AppearanceList;
 
 simulated function InitScreen(XComPlayerController InitController, UIMovie InitMovie, optional name InitName)
 {
-	local UIScreen	   CycleScreen;
-	local UIMouseGuard MouseGuard;
-
 	super.InitScreen(InitController, InitMovie, InitName);
 
 	// Cache stuff.
@@ -226,17 +223,9 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 	AppearanceListBG.SetPosition(1920 - AppearanceList.Width - 80, 345);
 	AppearanceListBG.SetHeight(730);
 
-	// Mouse guard dims the entire screen when this UIScreen is spawned, not sure why.
-	// Setting it to 3D seems to fix it. cc Xymanek
-	foreach Movie.Pres.ScreenStack.Screens(CycleScreen)
-	{
-		MouseGuard = UIMouseGuard(CycleScreen);
-		if (MouseGuard == none)
-			continue;
-
-		MouseGuard.bIsIn3D = true;
-		MouseGuard.SetAlpha(0);
-	}
+	// Mouse guard dims everything below the screen (most importantly the soldier) if we are a 2D screen.
+	// Make it invisible (but still hit-test-able) - same logic as in UIMouseGuard for 3D
+	if (!bIsIn3D) MouseGuardInst.SetAlpha(0);
 
 	// Move the soldier name header further into the left upper corner.
 	Header.SetPosition(20 + Header.Width, 20);
@@ -293,7 +282,7 @@ private function CacheArmoryUnitData()
 	OriginalAttitude = ArmoryUnit.GetPersonalityTemplate();
 	OriginalPawnLocation = ArmoryPawn.Location;
 
-	UpdatePawnLocation();
+	//UpdatePawnLocation();
 }
 
 simulated static function CycleToSoldier(StateObjectReference NewRef)
@@ -306,7 +295,7 @@ simulated static function CycleToSoldier(StateObjectReference NewRef)
 	{
 		CustomizeScreen.CacheArmoryUnitData();
 		CustomizeScreen.UpdateOptionsList();
-		CustomizeScreen.UpdatePawnLocation();
+		//CustomizeScreen.UpdatePawnLocation();
 	}
 }
 
@@ -331,15 +320,16 @@ simulated function UpdateData()
 	UpdateUnitAppearance();
 }
 
-function UpdatePawnLocation()
-{
-	local vector PawnLocation;
-
-	PawnLocation = OriginalPawnLocation;
-
-	PawnLocation.X += 20; // Nudge the soldier pawn to the left a little
-	ArmoryPawn.SetLocation(PawnLocation);
-}
+// No longer needed with the change to CameraTag
+//function UpdatePawnLocation()
+//{
+//	local vector PawnLocation;
+//
+//	PawnLocation = OriginalPawnLocation;
+//
+//	PawnLocation.X += 20; // Nudge the soldier pawn to the left a little
+//	ArmoryPawn.SetLocation(PawnLocation);
+//}
 
 // ================================================================================================================================================
 // FILTER LIST MAIN FUNCTIONS - Filter list is located in the upper right corner, it determines which appearances are displayed in the appearance list.
@@ -366,6 +356,7 @@ function CreateFiltersList()
 	SpawnedItem.bAnimateOnInit = false;
 	SpawnedItem.InitListItem();
 	SpawnedItem.UpdateDataButton(strApplyTo, strApplyChangesButton, OnApplyChangesButtonClicked);
+	SpawnedItem.Button.SetGood(true);
 
 	SpawnedItem = Spawn(class'UIMechaListItem', FiltersList.itemContainer);
 	SpawnedItem.bAnimateOnInit = false;
@@ -1072,7 +1063,7 @@ final function OnRefreshPawn()
 	ArmoryPawn = XComHumanPawn(CustomizeManager.ActorPawn);
 	if (ArmoryPawn != none)
 	{
-		UpdatePawnLocation();
+		//UpdatePawnLocation();
 		UpdatePawnAttitudeAnimation();
 		ApplyChangesToUnitWeapons(ArmoryUnit, ArmoryPawn.m_kAppearance, none);
 
@@ -2894,6 +2885,9 @@ final function string GetGenderArmorTemplate()
 
 defaultproperties
 {
+	DisplayTag = "UIBlueprint_Promotion"
+	CameraTag = "UIBlueprint_Promotion"
+
 	CurrentPreset = "PresetDefault"
 	bCanExitWithoutPopup = true
 
