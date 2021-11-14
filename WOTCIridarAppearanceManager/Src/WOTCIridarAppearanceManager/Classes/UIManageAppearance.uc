@@ -356,6 +356,7 @@ function CreateFiltersList()
 	SpawnedItem.bAnimateOnInit = false;
 	SpawnedItem.InitListItem();
 	SpawnedItem.UpdateDataButton(strApplyTo, strApplyChangesButton, OnApplyChangesButtonClicked);
+	SpawnedItem.Button.SetGood(true);
 
 	SpawnedItem = Spawn(class'UIMechaListItem', FiltersList.itemContainer);
 	SpawnedItem.bAnimateOnInit = false;
