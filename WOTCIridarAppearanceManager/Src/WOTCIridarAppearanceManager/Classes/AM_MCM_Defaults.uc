@@ -10,6 +10,7 @@ struct CheckboxPresetStruct
 var config int VERSION_CFG;
 
 var config bool AUTOMATIC_UNIFORM_MANAGEMENT;
+var config bool MANAGE_APPEARANCE_2D;
 var config bool MULTIPLE_UNIT_CHANGE_REQUIRES_CONFIRMATION;
 var config bool DISABLE_APPEARANCE_VALIDATION_REVIEW;
 var config bool DISABLE_APPEARANCE_VALIDATION_DEBUG;

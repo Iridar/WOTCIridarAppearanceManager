@@ -292,6 +292,7 @@ private function OnManageAppearanceItemClicked()
 {
 	local UIManageAppearance		CustomizeScreen;
 	local XComPresentationLayerBase	Pres;
+	local UIMovie					Movie;
 	
 	Pres = `PRESBASE;
 	if (Pres == none || Pres.ScreenStack == none)
@@ -300,9 +301,10 @@ private function OnManageAppearanceItemClicked()
 		return;
 	}
 
+	Movie = `GETMCMVAR(MANAGE_APPEARANCE_2D) ? Pres.Get2DMovie() : Pres.Get3DMovie();
+
 	CustomizeScreen = Pres.Spawn(class'UIManageAppearance', Pres);
-	//Pres.ScreenStack.Push(CustomizeScreen, Pres.Get3DMovie());
-	Pres.ScreenStack.Push(CustomizeScreen);
+	Pres.ScreenStack.Push(CustomizeScreen, Movie);
 	CustomizeScreen.UpdateData();
 }
 
