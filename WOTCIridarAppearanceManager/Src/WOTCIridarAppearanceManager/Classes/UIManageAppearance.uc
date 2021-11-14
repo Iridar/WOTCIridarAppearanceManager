@@ -197,9 +197,6 @@ var protected UIList	AppearanceList;
 
 simulated function InitScreen(XComPlayerController InitController, UIMovie InitMovie, optional name InitName)
 {
-	local UIScreen	   CycleScreen;
-	local UIMouseGuard MouseGuard;
-
 	super.InitScreen(InitController, InitMovie, InitName);
 
 	// Cache stuff.
@@ -226,17 +223,9 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 	AppearanceListBG.SetPosition(1920 - AppearanceList.Width - 80, 345);
 	AppearanceListBG.SetHeight(730);
 
-	// Mouse guard dims the entire screen when this UIScreen is spawned, not sure why.
-	// Setting it to 3D seems to fix it. cc Xymanek
-	foreach Movie.Pres.ScreenStack.Screens(CycleScreen)
-	{
-		MouseGuard = UIMouseGuard(CycleScreen);
-		if (MouseGuard == none)
-			continue;
-
-		MouseGuard.bIsIn3D = true;
-		MouseGuard.SetAlpha(0);
-	}
+	// Mouse guard dims everything below the screen (most importantly the soldier) if we are a 2D screen.
+	// Make it invisible (but still hit-test-able) - same logic as in UIMouseGuard for 3D
+	if (!bIsIn3D) MouseGuardInst.SetAlpha(0);
 
 	// Move the soldier name header further into the left upper corner.
 	Header.SetPosition(20 + Header.Width, 20);
