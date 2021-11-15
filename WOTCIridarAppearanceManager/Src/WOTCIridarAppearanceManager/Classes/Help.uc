@@ -233,6 +233,11 @@ static final function bool IsAppearanceValidationDisabled()
 	return !`XENGINE.bReviewFlagged && `GETMCMVAR(DISABLE_APPEARANCE_VALIDATION_DEBUG) || `XENGINE.bReviewFlagged && `GETMCMVAR(DISABLE_APPEARANCE_VALIDATION_REVIEW);
 }
 
+static function string ColourText (string strValue, string strColour)
+{
+	return "<font color='#" $ strColour $ "'>" $ strValue $ "</font>";
+}
+
 defaultproperties
 {
 	AutoManageUniformForUnitValueName = "IRI_AutoManageUniform_Value"

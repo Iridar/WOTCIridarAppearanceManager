@@ -338,6 +338,7 @@ simulated function UpdateData()
 function CreateFiltersList()
 {
 	local UIMechaListItem SpawnedItem;
+	local UIManageAppearance_ListHeaderItem HeaderItem;
 
 	FiltersListBG = Spawn(class'UIBGBox', self).InitBG('UpperRightFiltersListBG', ListBG.X, 10);
 	FiltersListBG.SetAlpha(80);
@@ -386,11 +387,10 @@ function CreateFiltersList()
 		SpawnedItem.UpdateDataCheckbox(`CAPS(class'UICharacterPool'.default.m_strTitle), strApplyToCPTip, false, none, none);
 	}
 
-	SpawnedItem = Spawn(class'UIMechaListItem', FiltersList.itemContainer);
-	SpawnedItem.bAnimateOnInit = false;
-	SpawnedItem.InitListItem();
-	SpawnedItem.SetDisabled(true);
-	SpawnedItem.UpdateDataDescription(strFiltersTitle);
+	HeaderItem = Spawn(class'UIManageAppearance_ListHeaderItem', FiltersList.itemContainer);
+	HeaderItem.bAnimateOnInit = false;
+	HeaderItem.InitHeader();
+	HeaderItem.SetLabel(strFiltersTitle);
 
 	SpawnedItem = Spawn(class'UIMechaListItem', FiltersList.itemContainer);
 	SpawnedItem.bAnimateOnInit = false;

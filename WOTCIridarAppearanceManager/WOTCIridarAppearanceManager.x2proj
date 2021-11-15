@@ -104,7 +104,13 @@
     <Content Include="Src\WOTCIridarAppearanceManager\Classes\UICharacterPool_ListPools_AM.uc">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Src\WOTCIridarAppearanceManager\Classes\UIDags.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\WOTCIridarAppearanceManager\Classes\UIManageAppearance.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\WOTCIridarAppearanceManager\Classes\UIManageAppearance_ListHeaderItem.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\WOTCIridarAppearanceManager\Classes\UIManageAppearance_Uniform.uc">
