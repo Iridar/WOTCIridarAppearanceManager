@@ -245,7 +245,7 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 	OptionsList.Navigator.LoopSelection = true;
 	OptionsList.OnItemClicked = OptionsListItemClicked;
 	
-	OptionsListBG.ProcessMouseEvents(AppearanceList.OnChildMouseEvent);
+	OptionsListBG.ProcessMouseEvents(OptionsList.OnChildMouseEvent);
 
 	// Create upper right list
 	CreateFiltersList();
@@ -2201,24 +2201,28 @@ private function OnDeletePresetButtonClicked(UIButton ButtonSource)
 
 private function bool MaybeCreateOptionCategory(name CategoryName, string strText)
 {
-	local UIMechaListItem SpawnedItem;
+	local UIManageAppearance_ListHeaderItem HeaderItem;
 	local bool bChecked;
 
 	if (bShowAllCosmeticOptions || ShouldShowCategoryOption(CategoryName))
 	{
-		SpawnedItem = Spawn(class'UIMechaListItem', OptionsList.itemContainer);
-		SpawnedItem.bAnimateOnInit = false;
-		SpawnedItem.InitListItem(CategoryName); 
+		bChecked = GetOptionCategoryCheckboxStatus(CategoryName);
 		
-		bChecked = bShowAllCosmeticOptions || GetOptionCategoryCheckboxStatus(CategoryName);
-
-		SpawnedItem.UpdateDataCheckbox(class'UIUtilities_Text'.static.GetColoredText(`CAPS(strText), eUIState_Warning),
-			"", bChecked, OptionCategoryCheckboxChanged, none);
-
-		SpawnedItem.SetDisabled(bShowAllCosmeticOptions);
+		HeaderItem = Spawn(class'UIManageAppearance_ListHeaderItem', OptionsList.itemContainer);
+		HeaderItem.bAnimateOnInit = false;
+		HeaderItem.InitHeader(CategoryName);
+		HeaderItem.SetLabel(`CAPS(strText));
+		
+		if (!bShowAllCosmeticOptions)
+		{
+			HeaderItem.EnableCollapseToggle(bChecked);
+			HeaderItem.OnCollapseToggled = OptionCategoryCollapseChanged;
+			HeaderItem.RealizeLayoutAndNavigation();
+		}
 
 		return bChecked || bShowAllCosmeticOptions;
 	}
+
 	return bShowAllCosmeticOptions;
 }
 
@@ -2337,9 +2341,9 @@ private function SetOptionCategoryCheckboxStatus(name CategoryName, bool bNewVal
 	}
 }
 
-private function OptionCategoryCheckboxChanged(UICheckbox CheckBox)
+private function OptionCategoryCollapseChanged (UIManageAppearance_ListHeaderItem HeaderItem)
 {
-	SetOptionCategoryCheckboxStatus(CheckBox.GetParent(class'UIMechaListItem').MCName, CheckBox.bChecked);
+	SetOptionCategoryCheckboxStatus(HeaderItem.MCName, HeaderItem.bSectionVisible);
 	UpdateOptionsList();
 }
 
