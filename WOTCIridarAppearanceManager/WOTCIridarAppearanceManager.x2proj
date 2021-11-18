@@ -88,6 +88,9 @@
     <Content Include="Src\WOTCIridarAppearanceManager\Classes\Help.uc">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Src\WOTCIridarAppearanceManager\Classes\PawnRefreshHelper.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\WOTCIridarAppearanceManager\Classes\UIAppearanceStore.uc">
       <SubType>Content</SubType>
     </Content>

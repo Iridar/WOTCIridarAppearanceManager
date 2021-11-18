@@ -23,7 +23,8 @@ delegate OnDropdownSelectionChangedCallback(UIDropdown DropdownControl);
 
 event OnInit(UIScreen Screen)
 {
-	local UICustomize CustomizeScreen;
+	local UICustomize		CustomizeScreen;
+	local PawnRefreshHelper Helper;
 
 	CustomizeScreen = GetUnitCustomizeMenuScreen(Screen);
 	if (CustomizeScreen != none)
@@ -47,23 +48,18 @@ event OnInit(UIScreen Screen)
 		// so we need to wait for pawn to exist before we can equip character pool loadout on it.
 		if (!CustomizeScreen.bInArmory)
 		{
-			if (CustomizeScreen.CustomizeManager.ActorPawn != none)
-			{
-				class'UIArmory_Loadout_CharPool'.static.EquipCharacterPoolLoadout();
-			}
-			else
-			{
-				CustomizeScreen.SetTimer(0.01f, false, nameof(OnPawnCreated), self);
-			}
+			Helper = new class'PawnRefreshHelper';
+			Helper.InitHelper();
+			Helper.RefreshPawn(CustomizeScreen.CustomizeManager.ActorPawn != none);
 		}
 	}
 }
 
 final static function UICustomize GetUnitCustomizeMenuScreen(UIScreen Screen)
 {
-	local UICustomize CustomizeScreen;
-	local XComGameState_Unit UnitState;
-
+	local UICustomize			CustomizeScreen;
+	local XComGameState_Unit	UnitState;
+	
 	CustomizeScreen = UICustomize(Screen);
 	if (CustomizeScreen != none)
 	{
@@ -73,25 +69,6 @@ final static function UICustomize GetUnitCustomizeMenuScreen(UIScreen Screen)
 		return CustomizeScreen;
 	}
 	return none;
-}
-
-
-private function OnPawnCreated()
-{
-	local UICustomize CustomizeScreen;
-
-	CustomizeScreen = GetUnitCustomizeMenuScreen(`SCREENSTACK.GetCurrentScreen());
-	if (CustomizeScreen == none)
-		return;
-
-	if (CustomizeScreen.CustomizeManager.ActorPawn != none)
-	{
-		class'UIArmory_Loadout_CharPool'.static.EquipCharacterPoolLoadout();
-	}
-	else
-	{
-		CustomizeScreen.SetTimer(0.01f, false, nameof(OnPawnCreated), self);
-	}
 }
 
 private function OnListInited(UIPanel Panel)

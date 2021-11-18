@@ -111,7 +111,7 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 		SelectAllButton.OnSizeRealized = OnSelectAllButtonSizeRealized;
 
 		SearchButton = Spawn(class'UIButton', Container);
-		SearchButton.InitButton('', class'UIManageAppearance'.default.strSearchTitle, OnSearchButtonClicked, eUIButtonStyle_NONE);
+		SearchButton.InitButton('', `CAPS(class'UIManageAppearance'.default.strSearchTitle), OnSearchButtonClicked, eUIButtonStyle_NONE);
 		SearchButton.SetPosition(350, RunningYBottom - SearchButton.Height);
 		// END OF ADDED
 
@@ -174,12 +174,12 @@ private function OnSearchButtonClicked(UIButton ButtonSource)
 	if (SearchText != "")
 	{
 		SearchText = "";
-		ButtonSource.SetText(class'UIManageAppearance'.default.strSearchTitle);
+		ButtonSource.SetText(`CAPS(class'UIManageAppearance'.default.strSearchTitle));
 		UpdateData();
 	}
 	else
 	{
-		kData.strTitle = class'UIManageAppearance'.default.strSearchTitle;
+		kData.strTitle = `CAPS(class'UIManageAppearance'.default.strSearchTitle);
 		kData.iMaxChars = 99;
 		kData.strInputBoxText = SearchText;
 		kData.fnCallback = OnSearchInputBoxAccepted;

@@ -83,3 +83,11 @@ function OnDropItemClicked(UIButton kButton)
 	ItemState = none;
 	LoadoutScreen.UpdateData(true);
 }
+
+// Allow unequipping any item while in CP, cuz proper checks would require accessing history and working with the owner unit.
+simulated function UpdateDropItemButton(optional XComGameState_Item Item)
+{
+	bCanBeCleared = true;
+	MC.SetBool("showClearButton", true);
+	MC.FunctionVoid("realize");
+}

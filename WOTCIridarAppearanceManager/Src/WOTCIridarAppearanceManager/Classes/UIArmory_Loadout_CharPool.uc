@@ -2,7 +2,7 @@ class UIArmory_Loadout_CharPool extends UIArmory_Loadout;
 
 var XComCharacterCustomization		CustomizationManager;
 var CharacterPoolManager_AM			CharPoolMgr;
-var private name					CachedPreviousArmorName;
+var private	PawnRefreshHelper		Helper;
 
 var private config(ExcludedItems) array<name> EXCLUDED_SKINS;
 
@@ -14,7 +14,17 @@ simulated function InitArmory(StateObjectReference UnitRef, optional name DispEv
 	super.InitArmory(UnitRef, DispEvent, SoldSpawnEvent, NavBackEvent, HideEvent, RemoveEvent, bInstant, InitCheckGameState);
 
 	CharPoolMgr = `CHARACTERPOOLMGRAM;
-	Header.Hide();
+
+	// Replace soldier header with the one that doesn't cry in the log all the time.
+	//Header = Spawn(class'UISoldierHeader_AM', self).InitSoldierHeader(UnitRef, CheckGameState);
+	//if( bShowExtendedHeaderData )
+	//	Header.ShowExtendedData();
+	//else
+	//	Header.HideExtendedData();
+
+	Helper = new class'PawnRefreshHelper';
+	Helper.LoadoutScreen = self;
+	Helper.InitHelper(CustomizationManager, CharPoolMgr);
 }
 
 simulated function XComGameState_Unit GetUnit()
@@ -108,11 +118,11 @@ private function bool ShouldShowTemplate(const X2ItemTemplate ItemTemplate)
 			EXCLUDED_SKINS.Find(ItemTemplate.DataName) == INDEX_NONE;
 }
 
-// Cosmetically equip new item. Mostly intended for Armor, but works with other items too.
+// Completely replaced the original functionality. Since in Character Pool units don't have any items equipped, we remember the unit's entire character pool loadout,
+// end equip it entirely every time. When we need to "equip" a new item, we put the item into the CP loadout, and make the unit equip the entire loadout.
 simulated function bool EquipItem(UIArmory_LoadoutItem Item)
 {
-	local XComGameState_Unit	UnitState;
-	local X2ItemTemplate		ItemTemplate;
+	local XComGameState_Unit UnitState;
 
 	UnitState = GetUnit();
 	if (UnitState == none)
@@ -120,50 +130,12 @@ simulated function bool EquipItem(UIArmory_LoadoutItem Item)
 
 	`AMLOG(UnitState.GetFullName() @ "adding" @ Item.ItemTemplate.DataName @ GetSelectedSlot() @ "into loadout");
 
-	// Sort of a hack, cache previously equipped armor template name so that we can store appearance for it in EquipCharacterPoolLoadout() called by OnRefreshPawn().
-	// Normally EquipCharacterPoolLoadout() can figure out which armor was previously equipped on its own, by reading the saved CP loadout,
-	// but since we're changing that loadout right before calling EquipCharacterPoolLoadout(), we have to remember previously equipped armor ourselves,
-	// and pass it to EquipCharacterPoolLoadout() later.
-	CachedPreviousArmorName = class'Help'.static.GetEquippedArmorTemplateName(UnitState, CharPoolMgr);
-	`AMLOG("CachedPreviousArmorName from CP loadout:" @ CachedPreviousArmorName);
-	if (CachedPreviousArmorName == '')
-	{
-		ItemTemplate = class'Help'.static.GetItemTemplateFromCosmeticTorso(UnitState.kAppearance.nmTorso);
-		if (ItemTemplate != none)
-		{	
-			CachedPreviousArmorName = ItemTemplate.DataName;
-			`AMLOG("CachedPreviousArmorName from cosmetic torso:" @ CachedPreviousArmorName @ UnitState.kAppearance.nmTorso);
-		}
-	}
-
 	CharPoolMgr.AddItemToCharacterPoolLoadout(UnitState, GetSelectedSlot(), Item.ItemTemplate.DataName);
 	CharPoolMgr.SaveCharacterPool();
 
-	CustomizationManager.ReCreatePawnVisuals(CustomizationManager.ActorPawn, true);
-
-	SetTimer(0.01f, false, nameof(OnRefreshPawn), self);
+	Helper.RefreshPawn(true);
 	
 	return true;
-}
-
-private function OnRefreshPawn()
-{
-	if (CustomizationManager.ActorPawn != none)
-	{
-		`AMLOG("Equipping character pool loadout.");
-		// UIArmory and children keep a reference to the pawn, and release the reference when screen is removed. 
-		// Update the reference so it can be cleaned up later. Otherwise the pawn may keep existing long after the screen is gone.
-		ActorPawn = CustomizationManager.ActorPawn; 
-		EquipCharacterPoolLoadout(CachedPreviousArmorName);
-		
-		// Assign the actor pawn to the mouse guard so the pawn can be rotated by clicking and dragging
-		UIMouseGuard_RotatePawn(`SCREENSTACK.GetFirstInstanceOf(class'UIMouseGuard_RotatePawn')).SetActorPawn(CustomizationManager.ActorPawn);
-	}
-	else
-	{
-		`AMLOG("Restarting timer");
-		SetTimer(0.01f, false, nameof(OnRefreshPawn), self);
-	}
 }
 
 static final function array<CharacterPoolLoadoutStruct> EquipCharacterPoolLoadout(optional name PreviousArmorName)
@@ -188,6 +160,7 @@ static final function array<CharacterPoolLoadoutStruct> EquipCharacterPoolLoadou
 	local UIArmory_Loadout_CharPool				LoadoutScreen;
 	local name									EquippedArmorName;	
 	local array<int>							FailedToEquipItemIndices;
+	local TAppearance							StoredAppearance;
 	local int									i;
 
 	// -------------------------------------------------------------------------------------------------------
@@ -255,6 +228,20 @@ static final function array<CharacterPoolLoadoutStruct> EquipCharacterPoolLoadou
 			UnitState.StoreAppearance(UnitState.kAppearance.iGender, PreviousArmorName);
 		}
 
+		if (LoadoutElement.InventorySlot == eInvSlot_Armor)
+		{
+			if (UnitState.HasStoredAppearance(UnitState.kAppearance.iGender, LoadoutElement.TemplateName))
+			{
+				UnitState.GetStoredAppearance(StoredAppearance, UnitState.kAppearance.iGender, LoadoutElement.TemplateName);
+				`AMLOG("Attempting to equip new armor. It has stored appeareance with torso:" @ StoredAppearance.nmTorso);
+			}
+			else
+			{
+				`AMLOG("Attempting to equip new armor. It does not have stored appeareance" );
+			}
+		}
+		
+
 		ItemState = ItemTemplate.CreateInstanceFromTemplate(TempGameState);
 		if (UnitState.AddItemToInventory(ItemState, LoadoutElement.InventorySlot, TempGameState))
 		{
@@ -316,16 +303,19 @@ static final function array<CharacterPoolLoadoutStruct> EquipCharacterPoolLoadou
 	{
 		NewAppearance = UnitState.kAppearance;
 		UnitPawn.SetAppearance(NewAppearance);
-		`AMLOG("Storing appearance for new armor. New torso:" @ NewAppearance.nmTorso);
-		UnitState.StoreAppearance(UnitState.kAppearance.iGender, EquippedArmorName);
-		CustomizeManager.CommitChanges();
-
+		`AMLOG("Storing appearance for new armor:" @ EquippedArmorName @ "New torso:" @ NewAppearance.nmTorso);
+		UnitState.StoreAppearance(UnitState.kAppearance.iGender, EquippedArmorName); // TODO: Fix problem: RequestFullPawnContent() requests are done async-ly, and the pawn may not be updated in time, and we might end up storing old pawn appearance as the appearance for the new armor, "breaking" the armor in the process.
+		
 		LocalHistory.AddGameStateToHistory(TempGameState);
+
 		UnitPawn.CreateVisualInventoryAttachments(PresBase.GetUIPawnMgr(), UnitState);
 
 		if (LoadoutScreen != none) LoadoutScreen.UpdateEquippedList();
 
 		LocalHistory.ObliterateGameStatesFromHistory(1);	
+
+		//CustomizeManager.CommitChanges();
+
 		UnitState.EmptyInventoryItems();
 	}
 	else
@@ -349,17 +339,11 @@ simulated function bool ShowInLockerList(XComGameState_Item Item, EInventorySlot
 simulated function UpdateData(optional bool bRefreshPawn)
 {
 	UpdateLockerList();
-
-	if (bRefreshPawn)
-	{
-		CustomizationManager.ReCreatePawnVisuals(CustomizationManager.ActorPawn, true);
-
-		SetTimer(0.01f, false, nameof(OnRefreshPawn), self);
-	}
 }
 
 // Slightly modified original function. Leave it as messy as the original.
 // Purpose: show equipped cosmetic armor's icon in the "equipped" list.
+
 simulated function UpdateEquippedList()
 {
 	//local int i, numUtilityItems; // Issue #118, unneeded
