@@ -23,8 +23,8 @@ delegate OnDropdownSelectionChangedCallback(UIDropdown DropdownControl);
 
 event OnInit(UIScreen Screen)
 {
-	local UICustomize		CustomizeScreen;
-	local PawnRefreshHelper Helper;
+	local UICustomize			CustomizeScreen;
+	local X2PawnRefreshHelper	PawnRefreshHelper;
 
 	CustomizeScreen = GetUnitCustomizeMenuScreen(Screen);
 	if (CustomizeScreen != none)
@@ -48,9 +48,9 @@ event OnInit(UIScreen Screen)
 		// so we need to wait for pawn to exist before we can equip character pool loadout on it.
 		if (!CustomizeScreen.bInArmory)
 		{
-			Helper = new class'PawnRefreshHelper';
-			Helper.InitHelper();
-			Helper.RefreshPawn(CustomizeScreen.CustomizeManager.ActorPawn != none);
+			PawnRefreshHelper = new class'X2PawnRefreshHelper';
+			PawnRefreshHelper.InitHelper();
+			PawnRefreshHelper.RefreshPawn(true);
 		}
 	}
 }
@@ -299,7 +299,8 @@ private function OnAppearanceStoreItemClicked()
 
 	CustomizeScreen = Pres.Spawn(class'UIAppearanceStore', Pres);
 	Pres.ScreenStack.Push(CustomizeScreen, Pres.Get3DMovie());
-	CustomizeScreen.UpdateData();
+	//CustomizeScreen.UpdateData();
+	CustomizeScreen.UpdateAppearanceList();
 }
 
 private function OnConfigureUniformItemClicked()

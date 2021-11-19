@@ -2,14 +2,16 @@ class UIAppearanceStore extends UICustomize;
 
 // This screen lists unit's AppearanceStore elements, allows to preview and delete them.
 
+var XComHumanPawn					ArmoryPawn;
+
 var private X2ItemTemplateManager	ItemMgr;
 var private XComGameState_Unit		UnitState;
 var private TAppearance				OriginalAppearance;
 var private TAppearance				SelectedAppearance;
-var private XComHumanPawn			ArmoryPawn;
 var private bool					bPawnRefreshIsCooldown;
 var private CharacterPoolManager_AM PoolMgr;
 var private bool					bPawnRefreshed;
+var private X2PawnRefreshHelper		PawnRefreshHelper;
 
 const PAWN_REFRESH_COOLDOWN = 0.15f;
 
@@ -24,6 +26,12 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 	List.OnSelectionChanged = OnListItemSelected;
 	List.OnItemClicked = AppearanceListItemClicked;
 
+	if (!bInArmory)
+	{
+		PawnRefreshHelper = new class'X2PawnRefreshHelper';
+		PawnRefreshHelper.AppearanceStoreScreen = self;
+		PawnRefreshHelper.InitHelper(CustomizeManager, PoolMgr);
+	}
 	if (class'Help'.static.IsUnrestrictedCustomizationLoaded())
 	{
 		SetTimer(0.1f, false, nameof(FixScreenPosition), self);
@@ -55,7 +63,7 @@ private function AppearanceListItemClicked(UIList ContainerList, int ItemIndex)
 		return;
 	}
 
-	if (IsInStrategy())
+	if (bInArmory)
 	{
 		bSuccess = EquipArmorStrategy(ListItem.ArmorTemplateName);
 	}
@@ -83,7 +91,7 @@ private function bool EquipArmorCharacterPool(const name ArmorTemplateName)
 
 	PoolMgr.AddItemToCharacterPoolLoadout(UnitState, eInvSlot_Armor, ArmorTemplateName);
 
-	NewCharacterPoolLoadout = class'UIArmory_Loadout_CharPool'.static.EquipCharacterPoolLoadout();
+	NewCharacterPoolLoadout = PawnRefreshHelper.RefreshPawn(true);
 
 	// If the new loadout contains the armor we wanted to equip, then it means it was in fact equipped successfully.
 	if (class'Help'.static.GetArmorTemplateNameFromCharacterPoolLoadout(NewCharacterPoolLoadout) == ArmorTemplateName)
@@ -94,7 +102,7 @@ private function bool EquipArmorCharacterPool(const name ArmorTemplateName)
 	{
 		`AMLOG("Failed to equip:" @ ArmorTemplateName @ ", restoring saved loadout and exiting.");
 		PoolMgr.SetCharacterPoolLoadout(UnitState, SavedCharacterPoolLoadout); // If we failed to equip all of the items, restore saved loadout.
-		class'UIArmory_Loadout_CharPool'.static.EquipCharacterPoolLoadout();
+		PawnRefreshHelper.RefreshPawn(true);
 		return false;
 	}
 }
@@ -161,7 +169,7 @@ private function bool EquipArmorStrategy(const name ArmorTemplateName)
 	}	
 }
 
-simulated function UpdateData()
+simulated function UpdateAppearanceList()
 {
 	local UIMechaListItem_AppearanceStore ListItem;
 	local AppearanceInfo	StoredAppearance;
@@ -255,30 +263,7 @@ private function DelayedSetPawnAppearance()
 
 private function SetPawnAppearance(TAppearance NewAppearance)
 {
-	// Have to update appearance in the unit state, since it will be used to recreate the pawn.
-	UnitState.SetTAppearance(NewAppearance);
-	
-	// Normally we'd refresh the pawn only in case of gender change, 
-	// but here we need to refresh pawn every time to get rid of WAR Suit's exo attachments.
-	//ArmoryPawn.SetAppearance(NewAppearance);
-	CustomizeManager.ReCreatePawnVisuals(CustomizeManager.ActorPawn, true);
-
-	// Can't use an Event Listener in Shell, so using a timer (ugh)
-	SetTimer(0.1f, false, nameof(OnRefreshPawn), self);
-}
-
-final function OnRefreshPawn()
-{
-	ArmoryPawn = XComHumanPawn(CustomizeManager.ActorPawn);
-	if (ArmoryPawn != none)
-	{
-		// Assign the actor pawn to the mouse guard so the pawn can be rotated by clicking and dragging
-		UIMouseGuard_RotatePawn(`SCREENSTACK.GetFirstInstanceOf(class'UIMouseGuard_RotatePawn')).SetActorPawn(CustomizeManager.ActorPawn);
-	}
-	else
-	{
-		SetTimer(0.1f, false, nameof(OnRefreshPawn), self);
-	}
+	PawnRefreshHelper.RefreshPawn_UseAppearance(NewAppearance, true);
 }
 
 private function OnDeleteButtonClicked(UIButton ButtonSource)
@@ -291,12 +276,9 @@ private function OnDeleteButtonClicked(UIButton ButtonSource)
 	CustomizeManager.CommitChanges(); // This will submit a Game State with appearance store changes and save CP.
 	List.ClearItems();
 	UpdateData();
+	UpdateAppearanceList();
 }
 
-private function bool IsInStrategy()
-{
-	return `HQGAME  != none && `HQPC != None && `HQPRES != none;
-}
 
 simulated function UIMechaListItem GetListItem(int ItemIndex, optional bool bDisableItem, optional string DisabledReason)
 {
@@ -375,6 +357,7 @@ simulated function PrevSoldier()
 	super.PrevSoldier();
 	CacheArmoryUnitData();
 	UpdateData();
+	UpdateAppearanceList();
 }
 
 simulated function NextSoldier()
@@ -383,4 +366,5 @@ simulated function NextSoldier()
 	super.NextSoldier();
 	CacheArmoryUnitData();
 	UpdateData();
+	UpdateAppearanceList();
 }
