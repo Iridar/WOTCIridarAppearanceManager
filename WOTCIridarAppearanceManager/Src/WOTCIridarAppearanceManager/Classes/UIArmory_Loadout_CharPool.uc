@@ -175,6 +175,7 @@ simulated function bool ShowInLockerList(XComGameState_Item Item, EInventorySlot
 simulated function UpdateData(optional bool bRefreshPawn)
 {
 	Header.PopulateData(GetUnit());
+	//UpdateEquippedList(); // Needs to be done only while refreshing the pawn.
 	UpdateLockerList();
 }
 

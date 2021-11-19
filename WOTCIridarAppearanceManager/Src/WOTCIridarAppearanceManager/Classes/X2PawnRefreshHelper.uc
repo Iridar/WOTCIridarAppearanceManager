@@ -2,6 +2,7 @@ class X2PawnRefreshHelper extends Object;
 
 var UIArmory_Loadout_CharPool	LoadoutScreen;
 var UIAppearanceStore			AppearanceStoreScreen;
+var UIManageAppearance			ManageAppearanceScreen;
 
 var private XComCharacterCustomization	CustomizationManager;
 var private CharacterPoolManager_AM		PoolMgr;
@@ -11,7 +12,15 @@ var private XComGameStateHistory		History;
 var private X2ItemTemplateManager		ItemMgr;
 var private XComGameState				TempGameState;
 
-function InitHelper(optional XComCharacterCustomization	_CustomizationManager, optional CharacterPoolManager_AM _PoolMgr)
+static final function RefreshPawn_Static(optional bool bForce, optional XComCharacterCustomization _CustomizationManager, optional CharacterPoolManager_AM _PoolMgr)
+{
+	local X2PawnRefreshHelper PawnRefreshHelper;
+	PawnRefreshHelper = new class'X2PawnRefreshHelper';
+	PawnRefreshHelper.InitHelper(_CustomizationManager, _PoolMgr);
+	PawnRefreshHelper.RefreshPawn(bForce);
+}
+
+final function InitHelper(optional XComCharacterCustomization _CustomizationManager, optional CharacterPoolManager_AM _PoolMgr)
 {
 	if (_CustomizationManager != none)
 	{
@@ -85,6 +94,7 @@ function array<CharacterPoolLoadoutStruct> RefreshPawn(optional bool bForce)
 
 	if (LoadoutScreen != none) 
 	{
+		LoadoutScreen.UpdateEquippedList();
 		LoadoutScreen.UpdateData();
 	}
 
@@ -113,6 +123,11 @@ private function OnPawnVisualsCreated(XComUnitPawn inPawn)
 	if (LoadoutScreen != none) 
 	{
 		LoadoutScreen.ActorPawn = inPawn;
+	}
+	else if (ManageAppearanceScreen != none)
+	{
+		ManageAppearanceScreen.ArmoryPawn = XComHumanPawn(inPawn);
+		ManageAppearanceScreen.UpdatePawnAttitudeAnimation(); // Play HQ Idle Anim
 	}
 	else if (AppearanceStoreScreen != none)
 	{
@@ -281,6 +296,7 @@ function array<CharacterPoolLoadoutStruct> RefreshPawn_UseAppearance(const out T
 
 	if (LoadoutScreen != none) 
 	{
+		LoadoutScreen.UpdateEquippedList();
 		LoadoutScreen.UpdateData();
 	}
 

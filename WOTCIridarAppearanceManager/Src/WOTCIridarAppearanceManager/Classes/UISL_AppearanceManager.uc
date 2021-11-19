@@ -474,7 +474,8 @@ private function OnConvertToUniformInputBoxAccepted(string strLastName)
 	UnitState.bAllowedTypeDarkVIP = false;
 	UnitState.StoreAppearance(UnitState.kAppearance.iGender, class'Help'.static.GetEquippedArmorTemplateName(UnitState, CharPoolMgr));
 	CustomizeScreen.CustomizeManager.CommitChanges(); // This saves the CP.
-	CustomizeScreen.CustomizeManager.ReCreatePawnVisuals(CustomizeScreen.CustomizeManager.ActorPawn, true);
+
+	class'X2PawnRefreshHelper'.static.RefreshPawn_Static(true, CustomizeScreen.CustomizeManager, CharPoolMgr);
 
 	CharPoolMgr.SetUniformStatus(UnitState, EUS_Manual); // This also saves CP. Much redundancy, such wow.
 	
@@ -530,7 +531,14 @@ private function OnValidateButtonClicked(UIButton ButtonSource)
 	UnitState.StoreAppearance(UnitState.kAppearance.iGender, class'Help'.static.GetEquippedArmorTemplateName(UnitState, CharPool));
 
 	CustomizeScreen.CustomizeManager.CommitChanges();
-	CustomizeScreen.CustomizeManager.ReCreatePawnVisuals(CustomizeScreen.CustomizeManager.ActorPawn, true);
+	if (CustomizeScreen.bInArmory)
+	{
+		CustomizeScreen.CustomizeManager.ReCreatePawnVisuals(CustomizeScreen.CustomizeManager.ActorPawn, true);
+	}
+	else
+	{
+		class'X2PawnRefreshHelper'.static.RefreshPawn_Static(true, CustomizeScreen.CustomizeManager, CharPool);
+	}
 	CustomizeScreen.UpdateData();
 
 	CustomizeScreen.ClearTimer(nameof(ApplyScreenChanges), self);

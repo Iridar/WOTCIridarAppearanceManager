@@ -159,6 +159,7 @@ var protected X2StrategyElementTemplateManager	StratMgr;
 var protected X2ItemTemplateManager				ItemMgr;
 var protected UIPawnMgr							PawnMgr;
 var protected XComGameStateHistory				History;
+var protected X2PawnRefreshHelper				PawnRefreshHelper;
 
 // ==============================================================================
 // Cached Data - Selected Unit (Appearance)
@@ -169,7 +170,7 @@ var protected bool							bOriginalAppearanceSelected;
 
 // ==============================================================================
 // Cached Data - Armory Unit
-var protected XComHumanPawn					ArmoryPawn;
+var XComHumanPawn							ArmoryPawn;
 var protected XComGameState_Unit			ArmoryUnit;
 var protected vector						OriginalPawnLocation;
 var protected TAppearance					OriginalAppearance; // Appearance to restore if the player exits the screen without selecting anything
@@ -205,6 +206,10 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 	if (PoolMgr == none)
 		super.CloseScreen();
 
+	PawnRefreshHelper = new class'X2PawnRefreshHelper';
+	PawnRefreshHelper.ManageAppearanceScreen = self;
+	PawnRefreshHelper.InitHelper(CustomizeManager, PoolMgr);
+	
 	BodyPartMgr = class'X2BodyPartTemplateManager'.static.GetBodyPartTemplateManager();
 	StratMgr = class'X2StrategyElementTemplateManager'.static.GetStrategyElementTemplateManager();
 	ItemMgr = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
@@ -308,7 +313,7 @@ simulated function UpdateData()
 	}
 
 	// Override in child classes for custom behavior
-	Header.PopulateData(Unit);
+	//Header.PopulateData(Unit);
 
 	if (CustomizeManager.ActorPawn != none)
 	{
@@ -1031,7 +1036,14 @@ private function UpdateUnitAppearance()
 
 	if (ShouldRefreshPawn(NewAppearance))
 	{
-		CustomizeManager.ReCreatePawnVisuals(CustomizeManager.ActorPawn, true);
+		if (bInArmory)
+		{
+			CustomizeManager.ReCreatePawnVisuals(CustomizeManager.ActorPawn, true);
+		}
+		else
+		{
+			PawnRefreshHelper.RefreshPawn_UseAppearance(NewAppearance, true);
+		}
 
 		// After ReCreatePawnVisuals, the CustomizeManager.ActorPawn, ArmoryPawn and become 'none'
 		// Apparently there's some sort of threading issue at play, so we use a timer to get a reference to the new pawn with a slight delay.
@@ -1080,7 +1092,7 @@ final function OnRefreshPawn()
 	}
 }
 
-private function UpdatePawnAttitudeAnimation()
+final function UpdatePawnAttitudeAnimation()
 {
 	if (ArmoryPawn == none)
 		return;
@@ -1455,7 +1467,14 @@ function CancelChanges()
 
 	if (ShouldRefreshPawn(OriginalAppearance))
 	{
-		CustomizeManager.ReCreatePawnVisuals(CustomizeManager.ActorPawn, true);
+		if (bInArmory)
+		{
+			CustomizeManager.ReCreatePawnVisuals(CustomizeManager.ActorPawn, true);
+		}
+		else
+		{
+			PawnRefreshHelper.RefreshPawn_UseAppearance(OriginalAppearance, true);
+		}
 	}	
 	else
 	{

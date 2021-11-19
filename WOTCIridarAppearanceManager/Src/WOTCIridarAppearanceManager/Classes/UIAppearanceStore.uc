@@ -179,10 +179,6 @@ simulated function UpdateAppearanceList()
 	local string			DisplayName;
 	local int i;
 
-	super.UpdateData();
-	if (UnitState == none)
-		return;
-
 	HideListItems();
 
 	foreach UnitState.AppearanceStore(StoredAppearance)
