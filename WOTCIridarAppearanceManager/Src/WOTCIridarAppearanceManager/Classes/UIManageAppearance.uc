@@ -206,6 +206,9 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 	if (PoolMgr == none)
 		super.CloseScreen();
 
+	List.Hide();
+	ListBG.Hide();
+
 	PawnRefreshHelper = new class'X2PawnRefreshHelper';
 	PawnRefreshHelper.ManageAppearanceScreen = self;
 	PawnRefreshHelper.InitHelper(CustomizeManager, PoolMgr);
@@ -217,17 +220,23 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 	History = `XCOMHISTORY;
 	CacheArmoryUnitData();
 
-	// In UICustomize, 'List' is of menu items under the soldier header.
-	// We repurpose it as a list of appearances you can copy and move it to the right.
-	AppearanceList = List;
-	AppearanceListBG = ListBG;
+	// Create upper right list
+	CreateFiltersList();
 
+	AppearanceListBG = Spawn(class'UIBGBox', self).InitBG('armoryMenuBG_AM');
+	AppearanceListBG.SetPosition(FiltersListBG.X, FiltersListBG.Y + FiltersListBG.Height + 10);
+	AppearanceListBG.SetWidth(582);
+	AppearanceListBG.SetHeight(1080 - AppearanceListBG.Y - 70);
+
+	AppearanceList = Spawn(class'UIList', self).InitList('armoryMenuList_AM');
+	AppearanceList.ItemPadding = 5;
+	AppearanceList.bStickyHighlight = false;
+	AppearanceList.SetWidth(542);
 	AppearanceList.OnItemClicked = AppearanceListItemClicked;
-	AppearanceList.SetPosition(1920 - AppearanceList.Width - 70, 360);
-	AppearanceList.SetHeight(300);
+	AppearanceList.SetPosition(FiltersList.X, FiltersListBG.Y + FiltersListBG.Height + 20);
+	AppearanceList.SetHeight(1080 - AppearanceList.Y - 80);
 
-	AppearanceListBG.SetPosition(1920 - AppearanceList.Width - 80, 345);
-	AppearanceListBG.SetHeight(730);
+	AppearanceListBG.ProcessMouseEvents(AppearanceList.OnChildMouseEvent);
 
 	// Mouse guard dims everything below the screen (most importantly the soldier) if we are a 2D screen.
 	// Make it invisible (but still hit-test-able) - same logic as in UIMouseGuard for 3D
@@ -250,10 +259,7 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 	OptionsList.Navigator.LoopSelection = true;
 	OptionsList.OnItemClicked = OptionsListItemClicked;
 	
-	OptionsListBG.ProcessMouseEvents(AppearanceList.OnChildMouseEvent);
-
-	// Create upper right list
-	CreateFiltersList();
+	OptionsListBG.ProcessMouseEvents(OptionsList.OnChildMouseEvent);
 
 	if (class'Help'.static.IsUnrestrictedCustomizationLoaded())
 	{
@@ -313,7 +319,7 @@ simulated function UpdateData()
 	}
 
 	// Override in child classes for custom behavior
-	//Header.PopulateData(Unit);
+	Header.PopulateData(Unit);
 
 	if (CustomizeManager.ActorPawn != none)
 	{
@@ -344,16 +350,18 @@ function CreateFiltersList()
 {
 	local UIMechaListItem SpawnedItem;
 
-	FiltersListBG = Spawn(class'UIBGBox', self).InitBG('UpperRightFiltersListBG', ListBG.X, 10);
+	FiltersListBG = Spawn(class'UIBGBox', self).InitBG('UpperRightFiltersListBG');
 	FiltersListBG.SetAlpha(80);
 	FiltersListBG.SetWidth(582);
 	FiltersListBG.SetHeight(330);
+	FiltersListBG.SetPosition(1920 - FiltersListBG.Width - 20, 10);
 
 	FiltersList = Spawn(class'UIList', self);
 	FiltersList.bAnimateOnInit = false;
-	FiltersList.InitList('UpperRightFiltersList', List.X, 20);
+	FiltersList.InitList('UpperRightFiltersList');
 	FiltersList.SetWidth(542);
 	FiltersList.SetHeight(310);
+	FiltersList.SetPosition(FiltersListBG.X + 10, 20);
 	FiltersList.Navigator.LoopSelection = true;
 	
 	FiltersListBG.ProcessMouseEvents(FiltersList.OnChildMouseEvent);
@@ -553,12 +561,14 @@ function UpdateAppearanceList()
 	local XComGameState_HeadquartersXCom	XComHQ;
 	local array<XComGameState_Unit>			Soldiers;
 
-	List.ClearItems();
+	AppearanceList.ClearItems();
 
 	SpawnedItem = Spawn(class'UIMechaListItem_Soldier', AppearanceList.ItemContainer);
 	SpawnedItem.bAnimateOnInit = false;
 	SpawnedItem.InitListItem();
-	SpawnedItem.UpdateDataButton(`YELLOW(strSelectAppearanceTitle), 
+	SpawnedItem.UpdateDataCheckbox(`YELLOW(`CAPS(strSelectAppearanceTitle)), "", false); // Dumb hack to get around incorrect font size for this element.
+	SpawnedItem.Checkbox.Hide();
+	SpawnedItem.UpdateDataButton(`YELLOW(`CAPS(strSelectAppearanceTitle)), 
 		strSearchTitle $ SearchText == "" ? "" : ":" @ SearchText, OnSearchButtonClicked);
 	
 	// First entry is always "No change"
