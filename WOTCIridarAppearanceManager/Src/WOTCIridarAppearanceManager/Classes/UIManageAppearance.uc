@@ -685,7 +685,8 @@ private function AppearanceListItemClicked(UIList ContainerList, int ItemIndex)
 			break;
 	}
 
-	AppearanceOptionCheckboxChanged(GetListItem(ItemIndex).Checkbox);
+	`AMLOG("Clicked on appearance list member:" @ ItemIndex @ ListItem.MCName);
+	AppearanceOptionCheckboxChanged(ListItem.Checkbox);
 
 	bCanExitWithoutPopup = ArmoryUnit.kAppearance == OriginalAppearance;
 	ApplyChangesButton.SetGood(!bCanExitWithoutPopup);
@@ -704,12 +705,9 @@ private function AppearanceOptionCheckboxChanged(UICheckbox CheckBox)
 		return;
 
 	// Uncheck other members of the appearance list
+	// Except for the checkbox that was clicked on (The "i == Index" one)
 	for (i = 0; i < AppearanceList.ItemCount; i++)
 	{
-		// Except for the checkbox that was clicked on
-		if (i == Index)
-			continue;
-
 		ListItem = UIMechaListItem(AppearanceList.GetItem(i));
 		if (ListItem == none || ListItem.Checkbox == none)
 			continue;
@@ -731,10 +729,10 @@ private function AppearanceOptionCheckboxChanged(UICheckbox CheckBox)
 			continue;
 		
 		`AMLOG("Unchecking:" @ ListItem.MCName);
-		ListItem.Checkbox.SetChecked(false, false);
+		ListItem.Checkbox.SetChecked(i == Index, false);
 	}
 	// And force check whiever checkbox was clicked on.
-	CheckBox.SetChecked(true, false);
+	//CheckBox.SetChecked(true, false);
 
 	SoldierListItem = UIMechaListItem_Soldier(CheckBox.ParentPanel);
 	
@@ -747,6 +745,8 @@ private function AppearanceOptionCheckboxChanged(UICheckbox CheckBox)
 	UpdateOptionsList();
 	ApplyCheckboxPresetPositions();
 	UpdateUnitAppearance();	
+
+	class'Help'.static.PlayStrategySoundEvent("SoundGlobalUI.Play_MenuSelect", self);
 }
 
 private function OnSearchButtonClicked(UIButton ButtonSource)
@@ -2150,6 +2150,8 @@ function OptionPresetCheckboxChanged(UICheckbox CheckBox)
 		ApplyCheckboxPresetPositions();
 		UpdateUnitAppearance();
 		UpdatePresetListItemsButtons();
+
+		class'Help'.static.PlayStrategySoundEvent("SoundGlobalUI.Play_MenuSelect", self);
 	}
 }
 
