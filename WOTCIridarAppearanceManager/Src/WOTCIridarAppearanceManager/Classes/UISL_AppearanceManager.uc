@@ -284,7 +284,7 @@ private function OnChooseNonSoldierUniformTypesClicked()
 	}
 
 	CustomizeScreen = Pres.Spawn(class'UINonSoldierUniform', Pres);
-	Pres.ScreenStack.Push(CustomizeScreen);
+	Pres.ScreenStack.Push(CustomizeScreen, Pres.Get3DMovie());
 	CustomizeScreen.UpdateData();
 }
 
@@ -329,6 +329,7 @@ private function OnConfigureUniformItemClicked()
 {
 	local UIManageAppearance_Uniform	CustomizeScreen;
 	local XComPresentationLayerBase		Pres;
+	local UIMovie						Movie;
 	
 	Pres = `PRESBASE;
 	if (Pres == none || Pres.ScreenStack == none)
@@ -337,8 +338,10 @@ private function OnConfigureUniformItemClicked()
 		return;
 	}
 
+	Movie = `GETMCMVAR(MANAGE_APPEARANCE_2D) ? Pres.Get2DMovie() : Pres.Get3DMovie();
+
 	CustomizeScreen = Pres.Spawn(class'UIManageAppearance_Uniform', Pres);
-	Pres.ScreenStack.Push(CustomizeScreen);
+	Pres.ScreenStack.Push(CustomizeScreen, Movie);
 	CustomizeScreen.UpdateData();
 }
 
