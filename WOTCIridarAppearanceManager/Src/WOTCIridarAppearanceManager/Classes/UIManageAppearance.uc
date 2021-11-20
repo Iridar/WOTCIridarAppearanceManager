@@ -354,11 +354,15 @@ function CreateFiltersList()
 	
 	FiltersListBG.ProcessMouseEvents(FiltersList.OnChildMouseEvent);
 
-	SpawnedItem = Spawn(class'UIMechaListItem', FiltersList.itemContainer);
-	SpawnedItem.bAnimateOnInit = false;
-	SpawnedItem.InitListItem();
-	SpawnedItem.UpdateDataButton(strApplyTo, strApplyChangesButton, OnApplyChangesButtonClicked);
-	ApplyChangesButton = SpawnedItem.Button;
+	HeaderItem = Spawn(class'UIManageAppearance_ListHeaderItem', FiltersList.itemContainer);
+	HeaderItem.bAnimateOnInit = false;
+	HeaderItem.InitHeader();
+	HeaderItem.SetLabel(strApplyTo);
+	HeaderItem.bActionButtonEnabled = true;
+	HeaderItem.OnActionInteracted = OnApplyChangesClicked;
+	HeaderItem.RealizeLayoutAndNavigation();
+	ApplyChangesButton = HeaderItem.ActionButton;
+	ApplyChangesButton.SetText(strApplyChangesButton);
 	ApplyChangesButton.SetGood(true);
 
 	SpawnedItem = Spawn(class'UIMechaListItem', FiltersList.itemContainer);
@@ -423,7 +427,7 @@ function bool GetFilterListCheckboxStatus(name FilterName)
 	return ListItem != none && ListItem.Checkbox.bChecked;
 }
 
-private function OnApplyChangesButtonClicked(UIButton ButtonSource)
+private function OnApplyChangesClicked (UIManageAppearance_ListHeaderItem HeaderItem)
 {
 	local TDialogueBoxData kDialogData;
 	local int iNumUnitsToChange;
