@@ -80,14 +80,16 @@ simulated function InitHeader (optional name InitName)
 /// Manipulation ///
 ////////////////////
 
-simulated function SetLabel (string strValue)
+simulated function SetLabel (string strValue, optional string strColour)
 {
+	if (strColour == "")
+	{
+		strColour = class'UIUtilities_Colors'.const.PERK_HTML_COLOR;
+	}
+
 	Label.SetHTMLText(
 		class'UIUtilities_Text'.static.AddFontInfo(
-			class'Help'.static.ColourText(
-				strValue,
-				class'UIUtilities_Colors'.const.PERK_HTML_COLOR
-			),
+			class'Help'.static.ColourText(strValue, strColour),
 			Screen.bIsIn3D, true,, 24
 		)
 	);
