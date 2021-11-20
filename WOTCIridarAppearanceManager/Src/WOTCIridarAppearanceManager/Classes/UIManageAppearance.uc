@@ -4,9 +4,9 @@ class UIManageAppearance extends UICustomize;
 /*
 # Priority
 
-New headers for the appearance list.
-Make Create Preset button taller. 
 Make chevron animation on Apply Changes button go away when there's no changes to apply, and add a disabled reason for it. Alternatively, hide the button.
+CP search doesn't update OnClick methods
+Pawn plays wrong armory animation "created a new rookie in the charpool, left, came back and they were posed like this"
 
 Pawn sometimes doesn't refresh automatically.
 Add pawn to mouse guard in UISL so that pawn can be rotated on any UICustomize screen.
@@ -226,7 +226,7 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 	AppearanceListBG.InitBG('armoryMenuBG_AM');
 	AppearanceListBG.SetPosition(FiltersListBG.X, FiltersListBG.Y + FiltersListBG.Height + 10);
 	AppearanceListBG.SetWidth(582);
-	AppearanceListBG.SetHeight(1080 - AppearanceListBG.Y - 75);
+	AppearanceListBG.SetHeight(1080 - AppearanceListBG.Y - 80);
 
 	AppearanceList = Spawn(class'UIList', self).InitList('armoryMenuList_AM');
 	AppearanceList.ItemPadding = 5;
@@ -234,7 +234,7 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 	AppearanceList.SetWidth(542);
 	AppearanceList.OnItemClicked = AppearanceListItemClicked;
 	AppearanceList.SetPosition(ApplyToList.X, FiltersListBG.Y + FiltersListBG.Height + 20 + 5);
-	AppearanceList.SetHeight(1080 - AppearanceList.Y - 80 - 15);
+	AppearanceList.SetHeight(1080 - AppearanceList.Y - 80 - 20);
 
 	AppearanceListBG.ProcessMouseEvents(AppearanceList.OnChildMouseEvent);
 
@@ -243,21 +243,21 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 	if (!bIsIn3D) MouseGuardInst.SetAlpha(0);
 
 	// Move the soldier name header further into the left upper corner.
-	Header.SetPosition(20 + Header.Width, 20);
+	Header.SetPosition(20 + Header.Width, 10);
 	
 	// Create left list	of soldier customization options.
 	OptionsListBG = Spawn(class'UIBGBox', self);
 	OptionsListBG.LibID = class'UIUtilities_Controls'.const.MC_X2Background;
-	OptionsListBG.InitBG('LeftOptionsListBG', 20, 180);
+	OptionsListBG.InitBG('LeftOptionsListBG', 20, 170);
 	OptionsListBG.SetAlpha(80);
 	OptionsListBG.SetWidth(582);
-	OptionsListBG.SetHeight(1080 - 70 - OptionsListBG.Y - 5);
+	OptionsListBG.SetHeight(1080 - 60 - OptionsListBG.Y - 20);
 
 	OptionsList = Spawn(class'UIList', self);
 	OptionsList.bAnimateOnInit = false;
-	OptionsList.InitList('LeftOptionsList', 30, 195);
+	OptionsList.InitList('LeftOptionsList', 30, 185);
 	OptionsList.SetWidth(542);
-	OptionsList.SetHeight(1080 - 85 - OptionsList.Y - 5);
+	OptionsList.SetHeight(1080 - 75 - OptionsList.Y - 20);
 	OptionsList.Navigator.LoopSelection = false;
 	OptionsList.OnItemClicked = OptionsListItemClicked;
 	
@@ -590,20 +590,39 @@ private function OnApplyChangesCloseScreenDialogCallback(Name eAction)
 function UpdateAppearanceList()
 {
 	local UIMechaListItem_Soldier			SpawnedItem;
+	local UIManageAppearance_ListHeaderItem HeaderItem;
 	local XComGameState_Unit				CheckUnit;
 	local XComGameState_HeadquartersXCom	XComHQ;
 	local array<XComGameState_Unit>			Soldiers;
+	local string							strDisplaySearchText;
 
 	AppearanceList.ClearItems();
 
-	SpawnedItem = Spawn(class'UIMechaListItem_Soldier', AppearanceList.ItemContainer);
-	SpawnedItem.bAnimateOnInit = false;
-	SpawnedItem.InitListItem();
-	SpawnedItem.UpdateDataCheckbox(`YELLOW(`CAPS(strSelectAppearanceTitle)), "", false); // Dumb hack to get around incorrect font size for this element.
-	SpawnedItem.Checkbox.Hide();
-	SpawnedItem.UpdateDataButton(`YELLOW(`CAPS(strSelectAppearanceTitle)), 
-		strSearchTitle $ SearchText == "" ? "" : ":" @ SearchText, OnSearchButtonClicked);
-	
+	HeaderItem = Spawn(class'UIManageAppearance_ListHeaderItem', AppearanceList.itemContainer);
+	HeaderItem.bAnimateOnInit = false;
+	HeaderItem.InitHeader();
+	HeaderItem.SetLabel(`CAPS(strSelectAppearanceTitle));
+	HeaderItem.DisableCollapseToggle();
+	HeaderItem.bActionButtonEnabled = true;
+
+	strDisplaySearchText = strSearchTitle;
+	if (SearchText != "")
+	{
+		if (Len(SearchText) > 13)
+		{
+			strDisplaySearchText $= ":" @ Left(SearchText, 12) $ "...";
+		}
+		else
+		{
+			strDisplaySearchText $= ":" @ SearchText;
+		}
+	}
+
+	HeaderItem.ActionButton.SetText(strDisplaySearchText);
+	HeaderItem.OnActionInteracted = OnSearchButtonClicked;
+	HeaderItem.RealizeLayoutAndNavigation();
+	HeaderItem.ActionButton.SetX(HeaderItem.ActionButton.X - 45); // Nudge the action button to the left since there's no eye icon on this header.
+		
 	// First entry is always "No change"
 	SpawnedItem = Spawn(class'UIMechaListItem_Soldier', AppearanceList.ItemContainer);
 	SpawnedItem.bAnimateOnInit = false;
@@ -614,10 +633,13 @@ function UpdateAppearanceList()
 	SpawnedItem.UpdateDataButton(strOriginalAppearance, strSaveAsUniform, OnSaveAsUniformButtonClicked);
 
 	// Uniforms
-	SpawnedItem = Spawn(class'UIMechaListItem_Soldier', AppearanceList.ItemContainer);
-	SpawnedItem.bAnimateOnInit = false;
-	SpawnedItem.InitListItem('bShowUniformSoldiers');
-	SpawnedItem.UpdateDataCheckbox(`YELLOW(`CAPS(strUniformsTitle)), "", bShowUniformSoldiers, AppearanceOptionCheckboxChanged, none);
+	HeaderItem = Spawn(class'UIManageAppearance_ListHeaderItem', AppearanceList.itemContainer);
+	HeaderItem.bAnimateOnInit = false;
+	HeaderItem.InitHeader('bShowUniformSoldiers');
+	HeaderItem.SetLabel(`CAPS(strUniformsTitle));
+	HeaderItem.EnableCollapseToggle(bShowUniformSoldiers);
+	HeaderItem.OnCollapseToggled = AppearanceListCategoryCollapseChanged;
+	HeaderItem.RealizeLayoutAndNavigation();
 
 	if (bShowUniformSoldiers)
 	{
@@ -631,10 +653,13 @@ function UpdateAppearanceList()
 	}
 
 	// Character pool
-	SpawnedItem = Spawn(class'UIMechaListItem_Soldier', AppearanceList.ItemContainer);
-	SpawnedItem.bAnimateOnInit = false;
-	SpawnedItem.InitListItem('bShowCharPoolSoldiers');
-	SpawnedItem.UpdateDataCheckbox(`YELLOW(`CAPS(class'UICharacterPool'.default.m_strTitle)), "", bShowCharPoolSoldiers, AppearanceOptionCheckboxChanged, none);
+	HeaderItem = Spawn(class'UIManageAppearance_ListHeaderItem', AppearanceList.itemContainer);
+	HeaderItem.bAnimateOnInit = false;
+	HeaderItem.InitHeader('bShowCharPoolSoldiers');
+	HeaderItem.SetLabel(`CAPS(class'UICharacterPool'.default.m_strTitle));
+	HeaderItem.EnableCollapseToggle(bShowCharPoolSoldiers);
+	HeaderItem.OnCollapseToggled = AppearanceListCategoryCollapseChanged;
+	HeaderItem.RealizeLayoutAndNavigation();
 
 	if (bShowCharPoolSoldiers)
 	{
@@ -649,10 +674,13 @@ function UpdateAppearanceList()
 	if (bInArmory)
 	{
 		// Soldiers in barracks
-		SpawnedItem = Spawn(class'UIMechaListItem_Soldier', AppearanceList.ItemContainer);
-		SpawnedItem.bAnimateOnInit = false;
-		SpawnedItem.InitListItem('bShowBarracksSoldiers');
-		SpawnedItem.UpdateDataCheckbox(`YELLOW(`CAPS(class'XComKeybindingData'.default.m_arrAvengerBindableLabels[eABC_Barracks])), "", bShowBarracksSoldiers, AppearanceOptionCheckboxChanged, none);
+		HeaderItem = Spawn(class'UIManageAppearance_ListHeaderItem', AppearanceList.itemContainer);
+		HeaderItem.bAnimateOnInit = false;
+		HeaderItem.InitHeader('bShowBarracksSoldiers');
+		HeaderItem.SetLabel(`CAPS(class'XComKeybindingData'.default.m_arrAvengerBindableLabels[eABC_Barracks]));
+		HeaderItem.EnableCollapseToggle(bShowBarracksSoldiers);
+		HeaderItem.OnCollapseToggled = AppearanceListCategoryCollapseChanged;
+		HeaderItem.RealizeLayoutAndNavigation();
 
 		XComHQ = `XCOMHQ;
 		if (bShowBarracksSoldiers)
@@ -663,11 +691,15 @@ function UpdateAppearanceList()
 				CreateAppearanceStoreEntriesForUnit(CheckUnit);
 			}
 		}
+
 		// Soldiers in morgue
-		SpawnedItem = Spawn(class'UIMechaListItem_Soldier', AppearanceList.ItemContainer);
-		SpawnedItem.bAnimateOnInit = false;
-		SpawnedItem.InitListItem('bShowDeadSoldiers');
-		SpawnedItem.UpdateDataCheckbox(`YELLOW(`CAPS(class'UIPersonnel_BarMemorial'.default.m_strTitle)), "", bShowDeadSoldiers, AppearanceOptionCheckboxChanged, none);
+		HeaderItem = Spawn(class'UIManageAppearance_ListHeaderItem', AppearanceList.itemContainer);
+		HeaderItem.bAnimateOnInit = false;
+		HeaderItem.InitHeader('bShowDeadSoldiers');
+		HeaderItem.SetLabel(`CAPS(class'UIPersonnel_BarMemorial'.default.m_strTitle));
+		HeaderItem.EnableCollapseToggle(bShowDeadSoldiers);
+		HeaderItem.OnCollapseToggled = AppearanceListCategoryCollapseChanged;
+		HeaderItem.RealizeLayoutAndNavigation();
 
 		if (bShowDeadSoldiers)
 		{
@@ -686,38 +718,8 @@ private function AppearanceListItemClicked(UIList ContainerList, int ItemIndex)
 	local UIMechaListItem ListItem;
 
 	ListItem = UIMechaListItem(AppearanceList.GetItem(ItemIndex));
-	if (ListItem.bDisabled)
+	if (ListItem == none || ListItem.bDisabled)
 		return;
-
-	switch (ListItem.MCName)
-	{
-		case 'bShowCharPoolSoldiers':
-			bShowCharPoolSoldiers = !bShowCharPoolSoldiers;
-			default.bShowCharPoolSoldiers = bShowCharPoolSoldiers;
-			SaveConfig();
-			UpdateAppearanceList();
-			return;
-		case 'bShowUniformSoldiers':
-			bShowUniformSoldiers = !bShowUniformSoldiers;
-			default.bShowUniformSoldiers = bShowUniformSoldiers;
-			SaveConfig();
-			UpdateAppearanceList();
-			return;
-		case 'bShowBarracksSoldiers':
-			bShowBarracksSoldiers = !bShowBarracksSoldiers;
-			default.bShowBarracksSoldiers = bShowBarracksSoldiers;
-			SaveConfig();
-			UpdateAppearanceList();
-			return;
-		case 'bShowDeadSoldiers':
-			bShowDeadSoldiers = !bShowDeadSoldiers;
-			default.bShowDeadSoldiers = bShowDeadSoldiers;
-			SaveConfig();
-			UpdateAppearanceList();
-			return;
-		default:
-			break;
-	}
 
 	`AMLOG("Clicked on appearance list member:" @ ItemIndex @ ListItem.MCName);
 	AppearanceOptionCheckboxChanged(ListItem.Checkbox);
@@ -730,7 +732,6 @@ private function AppearanceOptionCheckboxChanged(UICheckbox CheckBox)
 {
 	local UIMechaListItem			ListItem;
 	local UIMechaListItem_Soldier	SoldierListItem;
-	local bool						bSkip;
 	local int						Index;
 	local int						i;
 
@@ -744,22 +745,6 @@ private function AppearanceOptionCheckboxChanged(UICheckbox CheckBox)
 	{
 		ListItem = UIMechaListItem(AppearanceList.GetItem(i));
 		if (ListItem == none || ListItem.Checkbox == none)
-			continue;
-
-		// And categories' checkboxes
-		bSkip = false;
-		switch(ListItem.MCName)
-		{
-			case 'bShowCharPoolSoldiers':
-			case 'bShowBarracksSoldiers':
-			case 'bShowDeadSoldiers':
-			case 'bShowUniformSoldiers':
-				bSkip = true;
-				break;
-			default:
-				break;
-		}
-		if (bSkip) 
 			continue;
 		
 		`AMLOG("Unchecking:" @ ListItem.MCName);
@@ -783,7 +768,7 @@ private function AppearanceOptionCheckboxChanged(UICheckbox CheckBox)
 	class'Help'.static.PlayStrategySoundEvent("SoundGlobalUI.Play_MenuSelect", self);
 }
 
-private function OnSearchButtonClicked(UIButton ButtonSource)
+private function OnSearchButtonClicked(UIManageAppearance_ListHeaderItem HeaderItem)
 {
 	local TInputDialogData kData;
 
@@ -2411,6 +2396,11 @@ private function SetOptionCategoryCheckboxStatus(name CategoryName, bool bNewVal
 		case 'bShowCategoryArmorPattern': bShowCategoryArmorPattern = bNewValue; break;
 		case 'bShowCategoryWeaponPattern': bShowCategoryWeaponPattern = bNewValue; break;
 		case 'bShowCategoryPersonality': bShowCategoryPersonality = bNewValue; break;
+
+		case 'bShowCharPoolSoldiers': bShowCharPoolSoldiers = bNewValue; default.bShowCharPoolSoldiers = bShowCharPoolSoldiers; break;
+		case 'bShowUniformSoldiers': bShowUniformSoldiers = bNewValue; default.bShowUniformSoldiers = bShowUniformSoldiers; break;
+		case 'bShowBarracksSoldiers': bShowBarracksSoldiers = bNewValue; default.bShowBarracksSoldiers = bShowBarracksSoldiers; break;
+		case 'bShowDeadSoldiers': bShowDeadSoldiers = bNewValue; default.bShowDeadSoldiers = bShowDeadSoldiers; break;
 		default:
 			return;
 	}
@@ -2420,6 +2410,13 @@ private function OptionCategoryCollapseChanged (UIManageAppearance_ListHeaderIte
 {
 	SetOptionCategoryCheckboxStatus(HeaderItem.MCName, HeaderItem.bSectionVisible);
 	UpdateOptionsList();
+}
+
+private function AppearanceListCategoryCollapseChanged (UIManageAppearance_ListHeaderItem HeaderItem)
+{
+	SetOptionCategoryCheckboxStatus(HeaderItem.MCName, HeaderItem.bSectionVisible);
+	SaveConfig();
+	UpdateAppearanceList();
 }
 
 // ================================================================================================================================================

@@ -52,7 +52,7 @@ simulated function InitHeader (optional name InitName)
 	ActionButton.bIsNavigable = false;
 	ActionButton.InitButton('ActionButton');
 	ActionButton.OnClickedDelegate = OnActionButtonClicked;
-	ActionButton.SetHeight(26);
+	ActionButton.SetHeight(32);
 	ActionButton.SetY(2);
 	//ActionButton.OnSizeRealized = UpdateButtonX; TODO
 	ActionButton.SetWidth(150); // TODO: it's gonna look like 150 regardless of what is set here
