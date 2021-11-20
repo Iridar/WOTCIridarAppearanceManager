@@ -395,7 +395,7 @@ function CreateFiltersList()
 	SpawnedItem.bAnimateOnInit = false;
 	SpawnedItem.InitListItem('ApplyToSquad');
 	SpawnedItem.UpdateDataCheckbox(`CAPS(class'UITLE_ChallengeModeMenu'.default.m_Header_Squad), strApplyToSquadTip, false, none, none);
-	SpawnedItem.SetDisabled(InShell(), strNotAvailableInCharacterPool);
+	SpawnedItem.SetDisabled(!bInArmory, strNotAvailableInCharacterPool);
 
 	if (bInArmory)
 	{
@@ -646,7 +646,7 @@ function UpdateAppearanceList()
 			}
 		}
 	}
-	if (!InShell())
+	if (bInArmory)
 	{
 		// Soldiers in barracks
 		SpawnedItem = Spawn(class'UIMechaListItem_Soldier', AppearanceList.ItemContainer);
@@ -679,6 +679,7 @@ function UpdateAppearanceList()
 		}
 	}
 }
+
 
 private function AppearanceListItemClicked(UIList ContainerList, int ItemIndex)
 {
@@ -1381,7 +1382,7 @@ private function ApplyChangesToUnitWeapons(XComGameState_Unit UnitState, TAppear
 	// There are two separate tasks: updating weapon appearance in Shell (in CP) and in Armory.
 	// In CP this happens automatically, because when we refresh the pawn, the unit's weapons automatically draw their customization from the unit state.
 	// So we exit early out of this function.
-	if (InShell())
+	if (!bInArmory)
 		return;
 
 	// While in Armory, we have to actually update the weapon appearance on Item States, which always requires submitting a Game State.
@@ -1485,7 +1486,7 @@ private function ApplyChangesToArmoryUnit()
 	ArmoryUnit.StoreAppearance(ArmoryPawn.m_kAppearance.iGender, class'Help'.static.GetEquippedArmorTemplateName(ArmoryUnit));
 	CustomizeManager.SubmitUnitCustomizationChanges();
 
-	if (!InShell())
+	if (bInArmory)
 	{
 		NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState("Apply appearance changes");
 		ArmoryUnit = XComGameState_Unit(NewGameState.ModifyStateObject(ArmoryUnit.Class, ArmoryUnit.ObjectID));
@@ -2025,7 +2026,6 @@ private function CreateOptionPresets()
 	HeaderItem.bAnimateOnInit = false;
 	HeaderItem.InitHeader();
 	HeaderItem.SetLabel(`CAPS(class'UIOptionsPCScreen'.default.m_strGraphicsLabel_Preset));
-	//HeaderItem.SetLabelAlpha(70);
 		
 	HeaderItem.EnableCollapseToggle(bShowPresets);
 	HeaderItem.OnCollapseToggled = OnPresetsCollapseToggled;
