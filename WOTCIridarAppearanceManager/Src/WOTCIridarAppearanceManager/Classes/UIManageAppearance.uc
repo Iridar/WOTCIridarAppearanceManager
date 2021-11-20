@@ -232,16 +232,18 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 	Header.SetPosition(20 + Header.Width, 20);
 	
 	// Create left list	of soldier customization options.
-	OptionsListBG = Spawn(class'UIBGBox', self).InitBG('LeftOptionsListBG', 20, 180);
+	OptionsListBG = Spawn(class'UIBGBox', self);
+	OptionsListBG.LibID = class'UIUtilities_Controls'.const.MC_X2Background;
+	OptionsListBG.InitBG('LeftOptionsListBG', 20, 180);
 	OptionsListBG.SetAlpha(80);
 	OptionsListBG.SetWidth(582);
 	OptionsListBG.SetHeight(1080 - 70 - OptionsListBG.Y);
 
 	OptionsList = Spawn(class'UIList', self);
 	OptionsList.bAnimateOnInit = false;
-	OptionsList.InitList('LeftOptionsList', 30, 190);
+	OptionsList.InitList('LeftOptionsList', 30, 195);
 	OptionsList.SetWidth(542);
-	OptionsList.SetHeight(1080 - 80 - OptionsList.Y);
+	OptionsList.SetHeight(1080 - 85 - OptionsList.Y);
 	OptionsList.Navigator.LoopSelection = true;
 	OptionsList.OnItemClicked = OptionsListItemClicked;
 	
@@ -340,16 +342,18 @@ function CreateFiltersList()
 	local UIMechaListItem SpawnedItem;
 	local UIManageAppearance_ListHeaderItem HeaderItem;
 
-	FiltersListBG = Spawn(class'UIBGBox', self).InitBG('UpperRightFiltersListBG', ListBG.X, 10);
+	FiltersListBG = Spawn(class'UIBGBox', self);
+	FiltersListBG.LibID = class'UIUtilities_Controls'.const.MC_X2Background;
+	FiltersListBG.InitBG('UpperRightFiltersListBG', ListBG.X, 10);
 	FiltersListBG.SetAlpha(80);
 	FiltersListBG.SetWidth(582);
 	FiltersListBG.SetHeight(330);
 
 	FiltersList = Spawn(class'UIList', self);
 	FiltersList.bAnimateOnInit = false;
-	FiltersList.InitList('UpperRightFiltersList', List.X, 20);
+	FiltersList.InitList('UpperRightFiltersList', List.X, 25);
 	FiltersList.SetWidth(542);
-	FiltersList.SetHeight(310);
+	FiltersList.SetHeight(305);
 	FiltersList.Navigator.LoopSelection = true;
 	
 	FiltersListBG.ProcessMouseEvents(FiltersList.OnChildMouseEvent);
