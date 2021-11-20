@@ -240,16 +240,18 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 	Header.SetPosition(20 + Header.Width, 20);
 	
 	// Create left list	of soldier customization options.
-	OptionsListBG = Spawn(class'UIBGBox', self).InitBG('LeftOptionsListBG', 20, 180);
+	OptionsListBG = Spawn(class'UIBGBox', self);
+	OptionsListBG.LibID = class'UIUtilities_Controls'.const.MC_X2Background;
+	OptionsListBG.InitBG('LeftOptionsListBG', 20, 180);
 	OptionsListBG.SetAlpha(80);
 	OptionsListBG.SetWidth(582);
 	OptionsListBG.SetHeight(1080 - 70 - OptionsListBG.Y);
 
 	OptionsList = Spawn(class'UIList', self);
 	OptionsList.bAnimateOnInit = false;
-	OptionsList.InitList('LeftOptionsList', 30, 190);
+	OptionsList.InitList('LeftOptionsList', 30, 195);
 	OptionsList.SetWidth(542);
-	OptionsList.SetHeight(1080 - 80 - OptionsList.Y);
+	OptionsList.SetHeight(1080 - 85 - OptionsList.Y);
 	OptionsList.Navigator.LoopSelection = true;
 	OptionsList.OnItemClicked = OptionsListItemClicked;
 	
@@ -344,8 +346,11 @@ simulated function UpdateData()
 function CreateFiltersList()
 {
 	local UIMechaListItem SpawnedItem;
+	local UIManageAppearance_ListHeaderItem HeaderItem;
 
-	FiltersListBG = Spawn(class'UIBGBox', self).InitBG('UpperRightFiltersListBG');
+	FiltersListBG = Spawn(class'UIBGBox', self);
+	FiltersListBG.LibID = class'UIUtilities_Controls'.const.MC_X2Background;
+	FiltersListBG.InitBG('UpperRightFiltersListBG', ListBG.X, 10);
 	FiltersListBG.SetAlpha(80);
 	FiltersListBG.SetWidth(582);
 	FiltersListBG.SetHeight(330);
@@ -353,19 +358,22 @@ function CreateFiltersList()
 
 	FiltersList = Spawn(class'UIList', self);
 	FiltersList.bAnimateOnInit = false;
-	FiltersList.InitList('UpperRightFiltersList');
+	FiltersList.InitList('UpperRightFiltersList', List.X, 25);
 	FiltersList.SetWidth(542);
-	FiltersList.SetHeight(310);
-	FiltersList.SetPosition(FiltersListBG.X + 10, 20);
+	FiltersList.SetHeight(305);
 	FiltersList.Navigator.LoopSelection = true;
 	
 	FiltersListBG.ProcessMouseEvents(FiltersList.OnChildMouseEvent);
 
-	SpawnedItem = Spawn(class'UIMechaListItem', FiltersList.itemContainer);
-	SpawnedItem.bAnimateOnInit = false;
-	SpawnedItem.InitListItem();
-	SpawnedItem.UpdateDataButton(strApplyTo, strApplyChangesButton, OnApplyChangesButtonClicked);
-	ApplyChangesButton = SpawnedItem.Button;
+	HeaderItem = Spawn(class'UIManageAppearance_ListHeaderItem', FiltersList.itemContainer);
+	HeaderItem.bAnimateOnInit = false;
+	HeaderItem.InitHeader();
+	HeaderItem.SetLabel(strApplyTo);
+	HeaderItem.bActionButtonEnabled = true;
+	HeaderItem.OnActionInteracted = OnApplyChangesClicked;
+	HeaderItem.RealizeLayoutAndNavigation();
+	ApplyChangesButton = HeaderItem.ActionButton;
+	ApplyChangesButton.SetText(strApplyChangesButton);
 	ApplyChangesButton.SetGood(true);
 
 	SpawnedItem = Spawn(class'UIMechaListItem', FiltersList.itemContainer);
@@ -394,11 +402,10 @@ function CreateFiltersList()
 		SpawnedItem.UpdateDataCheckbox(`CAPS(class'UICharacterPool'.default.m_strTitle), strApplyToCPTip, false, none, none);
 	}
 
-	SpawnedItem = Spawn(class'UIMechaListItem', FiltersList.itemContainer);
-	SpawnedItem.bAnimateOnInit = false;
-	SpawnedItem.InitListItem();
-	SpawnedItem.SetDisabled(true);
-	SpawnedItem.UpdateDataDescription(strFiltersTitle);
+	HeaderItem = Spawn(class'UIManageAppearance_ListHeaderItem', FiltersList.itemContainer);
+	HeaderItem.bAnimateOnInit = false;
+	HeaderItem.InitHeader();
+	HeaderItem.SetLabel(strFiltersTitle);
 
 	SpawnedItem = Spawn(class'UIMechaListItem', FiltersList.itemContainer);
 	SpawnedItem.bAnimateOnInit = false;
@@ -431,7 +438,7 @@ function bool GetFilterListCheckboxStatus(name FilterName)
 	return ListItem != none && ListItem.Checkbox.bChecked;
 }
 
-private function OnApplyChangesButtonClicked(UIButton ButtonSource)
+private function OnApplyChangesClicked (UIManageAppearance_ListHeaderItem HeaderItem)
 {
 	local TDialogueBoxData kDialogData;
 	local int iNumUnitsToChange;
@@ -1977,17 +1984,26 @@ private function bool GetOptionCheckboxPosition(const name OptionName)
 
 private function CreateOptionPresets()
 {
-	local UIMechaListItem_Button SpawnedItem;
+	local UIManageAppearance_ListHeaderItem HeaderItem;
 	local name PresetName;
 
 	if (Presets.Length == 0)
 		return;
 
-	SpawnedItem = Spawn(class'UIMechaListItem_Button', OptionsList.itemContainer);
-	SpawnedItem.bAnimateOnInit = false;
-	SpawnedItem.InitListItem(); 
-	SpawnedItem.UpdateDataCheckbox("", "", bShowPresets, OptionShowPresetsChanged);
-	SpawnedItem.UpdateDataButton(`GREEN(`CAPS(class'UIOptionsPCScreen'.default.m_strGraphicsLabel_Preset)), strCreatePreset, OnCreatePresetButtonClicked);
+	HeaderItem = Spawn(class'UIManageAppearance_ListHeaderItem', OptionsList.itemContainer);
+	HeaderItem.bAnimateOnInit = false;
+	HeaderItem.InitHeader();
+	HeaderItem.SetLabel(`CAPS(class'UIOptionsPCScreen'.default.m_strGraphicsLabel_Preset), class'UIUtilities_Colors'.const.GOOD_HTML_COLOR);
+	HeaderItem.SetLabelAlpha(70);
+		
+	HeaderItem.EnableCollapseToggle(bShowPresets);
+	HeaderItem.OnCollapseToggled = OnPresetsCollapseToggled;
+
+	HeaderItem.bActionButtonEnabled = true;
+	HeaderItem.ActionButton.SetText(strCreatePreset);
+	HeaderItem.OnActionInteracted = OnCreatePresetClicked;
+
+	HeaderItem.RealizeLayoutAndNavigation();
 
 	`AMLOG(GetFuncName() @ `showvar(CurrentPreset) @ `showvar(bShowPresets));
 
@@ -2050,7 +2066,7 @@ private function OnCopyPresetButtonClicked(UIButton ButtonSource)
 	UpdateUnitAppearance();
 }
 
-private function OnCreatePresetButtonClicked(UIButton ButtonSource)
+private function OnCreatePresetClicked (UIManageAppearance_ListHeaderItem HeaderItem)
 {
 	local TInputDialogData kData;
 
@@ -2118,9 +2134,9 @@ function OptionsListItemClicked(UIList ContainerList, int ItemIndex)
 	}
 }
 
-function OptionShowPresetsChanged(UICheckbox CheckBox)
+function OnPresetsCollapseToggled (UIManageAppearance_ListHeaderItem HeaderItem)
 {
-	bShowPresets = CheckBox.bChecked;
+	bShowPresets = HeaderItem.bSectionVisible;
 	default.bShowPresets = bShowPresets;
 	self.SaveConfig();
 	UpdateOptionsList();
@@ -2229,24 +2245,28 @@ private function OnDeletePresetButtonClicked(UIButton ButtonSource)
 
 private function bool MaybeCreateOptionCategory(name CategoryName, string strText)
 {
-	local UIMechaListItem SpawnedItem;
+	local UIManageAppearance_ListHeaderItem HeaderItem;
 	local bool bChecked;
 
 	if (bShowAllCosmeticOptions || ShouldShowCategoryOption(CategoryName))
 	{
-		SpawnedItem = Spawn(class'UIMechaListItem', OptionsList.itemContainer);
-		SpawnedItem.bAnimateOnInit = false;
-		SpawnedItem.InitListItem(CategoryName); 
+		bChecked = GetOptionCategoryCheckboxStatus(CategoryName);
 		
-		bChecked = bShowAllCosmeticOptions || GetOptionCategoryCheckboxStatus(CategoryName);
-
-		SpawnedItem.UpdateDataCheckbox(class'UIUtilities_Text'.static.GetColoredText(`CAPS(strText), eUIState_Warning),
-			"", bChecked, OptionCategoryCheckboxChanged, none);
-
-		SpawnedItem.SetDisabled(bShowAllCosmeticOptions);
+		HeaderItem = Spawn(class'UIManageAppearance_ListHeaderItem', OptionsList.itemContainer);
+		HeaderItem.bAnimateOnInit = false;
+		HeaderItem.InitHeader(CategoryName);
+		HeaderItem.SetLabel(`CAPS(strText));
+		
+		if (!bShowAllCosmeticOptions)
+		{
+			HeaderItem.EnableCollapseToggle(bChecked);
+			HeaderItem.OnCollapseToggled = OptionCategoryCollapseChanged;
+			HeaderItem.RealizeLayoutAndNavigation();
+		}
 
 		return bChecked || bShowAllCosmeticOptions;
 	}
+
 	return bShowAllCosmeticOptions;
 }
 
@@ -2365,9 +2385,9 @@ private function SetOptionCategoryCheckboxStatus(name CategoryName, bool bNewVal
 	}
 }
 
-private function OptionCategoryCheckboxChanged(UICheckbox CheckBox)
+private function OptionCategoryCollapseChanged (UIManageAppearance_ListHeaderItem HeaderItem)
 {
-	SetOptionCategoryCheckboxStatus(CheckBox.GetParent(class'UIMechaListItem').MCName, CheckBox.bChecked);
+	SetOptionCategoryCheckboxStatus(HeaderItem.MCName, HeaderItem.bSectionVisible);
 	UpdateOptionsList();
 }
 
