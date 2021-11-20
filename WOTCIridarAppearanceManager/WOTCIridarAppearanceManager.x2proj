@@ -133,9 +133,6 @@
     <Content Include="Src\WOTCIridarAppearanceManager\Classes\UISL_AppearanceManager.uc">
       <SubType>Content</SubType>
     </Content>
-    <Content Include="Src\WOTCIridarAppearanceManager\Classes\UISoldierHeader_AM.uc">
-      <SubType>Content</SubType>
-    </Content>
     <Content Include="Src\WOTCIridarAppearanceManager\Classes\X2DownloadableContentInfo_AM.uc">
       <SubType>Content</SubType>
     </Content>

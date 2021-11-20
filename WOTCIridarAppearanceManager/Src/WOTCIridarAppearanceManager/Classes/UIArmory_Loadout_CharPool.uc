@@ -15,13 +15,6 @@ simulated function InitArmory(StateObjectReference UnitRef, optional name DispEv
 
 	CharPoolMgr = `CHARACTERPOOLMGRAM;
 
-	// Replace soldier header with the one that doesn't cry in the log all the time.
-	//Header = Spawn(class'UISoldierHeader_AM', self).InitSoldierHeader(UnitRef, CheckGameState);
-	//if( bShowExtendedHeaderData )
-	//	Header.ShowExtendedData();
-	//else
-	//	Header.HideExtendedData();
-
 	PawnRefreshHelper = new class'X2PawnRefreshHelper';
 	PawnRefreshHelper.LoadoutScreen = self;
 	PawnRefreshHelper.InitHelper(CustomizationManager, CharPoolMgr);
@@ -32,8 +25,6 @@ simulated function XComGameState_Unit GetUnit()
 {
 	return CustomizationManager.UpdatedUnitState;
 }
-
-simulated function ResetAvailableEquipment() { }
 
 // Build a list of all items that can be potentially equipped into the selected slot on the current unit.
 // Item States are then immediately nuked, but loadout list items will retain their templates.
@@ -105,7 +96,10 @@ simulated function UpdateLockerList()
 	{
 		LockerList.Navigator.SetSelected(LockerList.GetSelectedItem());
 	}
-	OnSelectionChanged(ActiveList, ActiveList.SelectedIndex);
+	if (ActiveList != none)
+	{
+		OnSelectionChanged(ActiveList, ActiveList.SelectedIndex);
+	}
 
 	// Nuke the Game State once we no longer need it.
 	History.ObliterateGameStatesFromHistory(1);
@@ -174,8 +168,8 @@ simulated function bool ShowInLockerList(XComGameState_Item Item, EInventorySlot
 
 simulated function UpdateData(optional bool bRefreshPawn)
 {
-	Header.PopulateData(GetUnit());
-	//UpdateEquippedList(); // Needs to be done only while refreshing the pawn.
+	//Header.PopulateData(GetUnit()); // Needs to be done only while refreshing the pawn.
+	//UpdateEquippedList(); 
 	UpdateLockerList();
 }
 
@@ -298,6 +292,89 @@ simulated private function SetItemImage(UIArmory_LoadoutItem LoadoutItem, X2Item
 			LoadoutItem.MC.QueueString(LoadoutItem.Images[i]); 
 
 		LoadoutItem.MC.EndOp();
+	}
+}
+
+simulated function ResetAvailableEquipment() { }
+
+// -----------------------------------------------
+// Populate Header only when refreshing the pawn.
+simulated function OnSelectionChanged(UIList ContainerList, int ItemIndex)
+{
+	//local UIArmory_LoadoutItem ContainerSelection, EquippedSelection;
+	//local StateObjectReference EmptyRef, ContainerRef, EquippedRef;
+
+	//ContainerSelection = UIArmory_LoadoutItem(ContainerList.GetSelectedItem());
+	//EquippedSelection = UIArmory_LoadoutItem(EquippedList.GetSelectedItem());
+
+	//ContainerRef = ContainerSelection != none ? ContainerSelection.ItemRef : EmptyRef;
+	//EquippedRef = EquippedSelection != none ? EquippedSelection.ItemRef : EmptyRef;
+
+	//if((ContainerSelection == none) || !ContainerSelection.IsDisabled)
+	//	Header.PopulateData(GetUnit(), ContainerRef, EquippedRef);
+
+	InfoTooltip.HideTooltip();
+	if(`ISCONTROLLERACTIVE)
+	{
+		ClearTimer(nameof(DelayedShowTooltip));
+		SetTimer(0.21f, false, nameof(DelayedShowTooltip));
+	}
+	UpdateNavHelp();
+}
+simulated function ChangeActiveList(UIList kActiveList, optional bool bSkipAnimation)
+{
+	local UIArmory_LoadoutItem LoadoutItem;
+
+	ActiveList = kActiveList;
+
+	LoadoutItem = UIArmory_LoadoutItem(EquippedList.GetSelectedItem());
+	
+	if(kActiveList == EquippedList)
+	{
+		if(!bSkipAnimation)
+			MC.FunctionVoid("closeList");
+
+		// unlock selected item
+		if (LoadoutItem != none)
+			LoadoutItem.SetLocked(false);
+		// disable list item selection on LockerList, enable it on EquippedList
+		LockerListContainer.DisableMouseHit();
+		EquippedListContainer.EnableMouseHit();
+
+		//Header.PopulateData(GetUnit());
+		Navigator.RemoveControl(LockerListContainer);
+		Navigator.AddControl(EquippedListContainer);
+		EquippedList.EnableNavigation();
+		LockerList.DisableNavigation();
+		Navigator.SetSelected(EquippedListContainer);
+		if (EquippedList.SelectedIndex < 0)
+		{
+			EquippedList.SetSelectedIndex(0);
+		}
+		else
+		{
+			EquippedList.GetSelectedItem().OnReceiveFocus();
+		}
+	}
+	else
+	{
+		if(!bSkipAnimation)
+			MC.FunctionVoid("openList");
+		
+		// lock selected item
+		if (LoadoutItem != none)
+			LoadoutItem.SetLocked(true);
+		// disable list item selection on LockerList, enable it on EquippedList
+		LockerListContainer.EnableMouseHit();
+		EquippedListContainer.DisableMouseHit();
+
+		LockerList.SetSelectedIndex(0, true);
+		Navigator.RemoveControl(EquippedListContainer);
+		Navigator.AddControl(LockerListContainer);
+		EquippedList.DisableNavigation();
+		LockerList.EnableNavigation();
+		Navigator.SetSelected(LockerListContainer);
+		LockerList.Navigator.SelectFirstAvailable();
 	}
 }
 

@@ -95,7 +95,8 @@ function array<CharacterPoolLoadoutStruct> RefreshPawn(optional bool bForce)
 	if (LoadoutScreen != none) 
 	{
 		LoadoutScreen.UpdateEquippedList();
-		LoadoutScreen.UpdateData();
+		//LoadoutScreen.UpdateData();
+		LoadoutScreen.Header.PopulateData(UnitState);
 	}
 
 	CustomizationManager.PrimaryWeapon = UnitState.GetItemInSlot(eInvSlot_PrimaryWeapon, TempGameState);
@@ -297,7 +298,8 @@ function array<CharacterPoolLoadoutStruct> RefreshPawn_UseAppearance(const out T
 	if (LoadoutScreen != none) 
 	{
 		LoadoutScreen.UpdateEquippedList();
-		LoadoutScreen.UpdateData();
+		//LoadoutScreen.UpdateData();
+		LoadoutScreen.Header.PopulateData(UnitState);
 	}
 
 	CustomizationManager.PrimaryWeapon = UnitState.GetItemInSlot(eInvSlot_PrimaryWeapon, TempGameState);

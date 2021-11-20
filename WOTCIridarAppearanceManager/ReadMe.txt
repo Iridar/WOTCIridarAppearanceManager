@@ -42,4 +42,9 @@ But this information is lost when the unit is saved to the Character Pool.
 [WOTC] No Tech Gated Helmets
 https://steamcommunity.com/sharedfiles/filedetails/?id=2518586673
 
+# Incompatible with
+
+WOTC Extended Character Pool
+https://steamcommunity.com/sharedfiles/filedetails/?id=1136878667
+
 Compatible with UC?
