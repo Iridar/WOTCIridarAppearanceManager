@@ -4,14 +4,11 @@ class UIManageAppearance extends UICustomize;
 /*
 # Priority
 
-Second UIList for FiltersList.
-Make new headers less tall. "the headers should be pretty easy to manipulate, just don't touch inside UIDags"
 New headers for the appearance list.
-Make Apply Changes and Create Preset buttons taller. 
-Remove Green Color from "Presets" header.
+Make Create Preset button taller. 
+Make chevron animation on Apply Changes button go away when there's no changes to apply, and add a disabled reason for it. Alternatively, hide the button.
 
 Pawn sometimes doesn't refresh automatically.
-
 Add pawn to mouse guard in UISL so that pawn can be rotated on any UICustomize screen.
 
 Validate Appearance caused double pawn. Need for Validate Appearance occured when deleting appearance stores caused the unit to glitch out.
@@ -187,10 +184,11 @@ var protected UIList	OptionsList;
 // UI Elements - Filters List in the upper right corner.
 var protected UIBGBox	FiltersListBG;
 var protected UIList	FiltersList;
+var protected UIList	ApplyToList;
 
 var protected UIBGBox	AppearanceListBG;
 var protected UIList	AppearanceList;
-var protected UIButton	ApplyChangesButton;
+var protected UILargeButton	ApplyChangesButton;
 
 `include(WOTCIridarAppearanceManager\Src\ModConfigMenuAPI\MCM_API_CfgHelpers.uci)
 
@@ -223,18 +221,20 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 	// Create upper right list
 	CreateFiltersList();
 
-	AppearanceListBG = Spawn(class'UIBGBox', self).InitBG('armoryMenuBG_AM');
+	AppearanceListBG = Spawn(class'UIBGBox', self);
+	AppearanceListBG.LibID = class'UIUtilities_Controls'.const.MC_X2Background;
+	AppearanceListBG.InitBG('armoryMenuBG_AM');
 	AppearanceListBG.SetPosition(FiltersListBG.X, FiltersListBG.Y + FiltersListBG.Height + 10);
 	AppearanceListBG.SetWidth(582);
-	AppearanceListBG.SetHeight(1080 - AppearanceListBG.Y - 70);
+	AppearanceListBG.SetHeight(1080 - AppearanceListBG.Y - 75);
 
 	AppearanceList = Spawn(class'UIList', self).InitList('armoryMenuList_AM');
 	AppearanceList.ItemPadding = 5;
 	AppearanceList.bStickyHighlight = false;
 	AppearanceList.SetWidth(542);
 	AppearanceList.OnItemClicked = AppearanceListItemClicked;
-	AppearanceList.SetPosition(FiltersList.X, FiltersListBG.Y + FiltersListBG.Height + 20);
-	AppearanceList.SetHeight(1080 - AppearanceList.Y - 80);
+	AppearanceList.SetPosition(ApplyToList.X, FiltersListBG.Y + FiltersListBG.Height + 20 + 5);
+	AppearanceList.SetHeight(1080 - AppearanceList.Y - 80 - 15);
 
 	AppearanceListBG.ProcessMouseEvents(AppearanceList.OnChildMouseEvent);
 
@@ -251,14 +251,14 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 	OptionsListBG.InitBG('LeftOptionsListBG', 20, 180);
 	OptionsListBG.SetAlpha(80);
 	OptionsListBG.SetWidth(582);
-	OptionsListBG.SetHeight(1080 - 70 - OptionsListBG.Y);
+	OptionsListBG.SetHeight(1080 - 70 - OptionsListBG.Y - 5);
 
 	OptionsList = Spawn(class'UIList', self);
 	OptionsList.bAnimateOnInit = false;
 	OptionsList.InitList('LeftOptionsList', 30, 195);
 	OptionsList.SetWidth(542);
-	OptionsList.SetHeight(1080 - 85 - OptionsList.Y);
-	OptionsList.Navigator.LoopSelection = true;
+	OptionsList.SetHeight(1080 - 85 - OptionsList.Y - 5);
+	OptionsList.Navigator.LoopSelection = false;
 	OptionsList.OnItemClicked = OptionsListItemClicked;
 	
 	OptionsListBG.ProcessMouseEvents(OptionsList.OnChildMouseEvent);
@@ -359,35 +359,39 @@ function CreateFiltersList()
 	FiltersListBG.InitBG('UpperRightFiltersListBG');
 	FiltersListBG.SetAlpha(80);
 	FiltersListBG.SetWidth(582);
-	FiltersListBG.SetHeight(330);
+	FiltersListBG.SetHeight(200);
 	FiltersListBG.SetPosition(1920 - FiltersListBG.Width - 20, 10);
 
-	FiltersList = Spawn(class'UIList', self);
-	FiltersList.bAnimateOnInit = false;
-	FiltersList.InitList('UpperRightFiltersList', FiltersListBG.X + 10, 25);
-	FiltersList.SetWidth(542);
-	FiltersList.SetHeight(305);
-	FiltersList.Navigator.LoopSelection = true;
+	ApplyToList = Spawn(class'UIList', self);
+	ApplyToList.bAnimateOnInit = false;
+	ApplyToList.InitList('UpperRightFiltersList');
+	ApplyToList.SetPosition(FiltersListBG.X + 10, 25);
+	ApplyToList.SetWidth(FiltersListBG.Width / 2 - 15);
+	ApplyToList.SetHeight(FiltersListBG.Height - 20);
+	ApplyToList.Navigator.LoopSelection = true;
 	
 	FiltersListBG.ProcessMouseEvents(FiltersList.OnChildMouseEvent);
 
-	HeaderItem = Spawn(class'UIManageAppearance_ListHeaderItem', FiltersList.itemContainer);
+	FiltersList = Spawn(class'UIList', self);
+	FiltersList.bAnimateOnInit = false;
+	FiltersList.InitList('UpperRightApplyToList');
+	FiltersList.SetPosition(FiltersListBG.X + 10 + ApplyToList.Width + 10, 25);
+	FiltersList.SetWidth(ApplyToList.Width);
+	FiltersList.SetHeight(ApplyToList.Height);
+	FiltersList.Navigator.LoopSelection = false;
+	
+
+	HeaderItem = Spawn(class'UIManageAppearance_ListHeaderItem', ApplyToList.itemContainer);
 	HeaderItem.bAnimateOnInit = false;
 	HeaderItem.InitHeader();
 	HeaderItem.SetLabel(strApplyTo);
-	HeaderItem.bActionButtonEnabled = true;
-	HeaderItem.OnActionInteracted = OnApplyChangesClicked;
-	HeaderItem.RealizeLayoutAndNavigation();
-	ApplyChangesButton = HeaderItem.ActionButton;
-	ApplyChangesButton.SetText(strApplyChangesButton);
-	ApplyChangesButton.SetGood(true);
 
-	SpawnedItem = Spawn(class'UIMechaListItem', FiltersList.itemContainer);
+	SpawnedItem = Spawn(class'UIMechaListItem', ApplyToList.itemContainer);
 	SpawnedItem.bAnimateOnInit = false;
 	SpawnedItem.InitListItem('ApplyToThisUnit');
 	SpawnedItem.UpdateDataCheckbox(`CAPS(strApplyToThisUnit), strApplyToThisUnitTip, true, none, none);
 
-	SpawnedItem = Spawn(class'UIMechaListItem', FiltersList.itemContainer);
+	SpawnedItem = Spawn(class'UIMechaListItem', ApplyToList.itemContainer);
 	SpawnedItem.bAnimateOnInit = false;
 	SpawnedItem.InitListItem('ApplyToSquad');
 	SpawnedItem.UpdateDataCheckbox(`CAPS(class'UITLE_ChallengeModeMenu'.default.m_Header_Squad), strApplyToSquadTip, false, none, none);
@@ -395,14 +399,14 @@ function CreateFiltersList()
 
 	if (bInArmory)
 	{
-		SpawnedItem = Spawn(class'UIMechaListItem', FiltersList.itemContainer);
+		SpawnedItem = Spawn(class'UIMechaListItem', ApplyToList.itemContainer);
 		SpawnedItem.bAnimateOnInit = false;
 		SpawnedItem.InitListItem('ApplyToBarracks');
 		SpawnedItem.UpdateDataCheckbox(`CAPS(class'XComKeybindingData'.default.m_arrAvengerBindableLabels[eABC_Barracks]), strApplyToBarracksTip, false, none, none);
 	}
 	else
 	{
-		SpawnedItem = Spawn(class'UIMechaListItem', FiltersList.itemContainer);
+		SpawnedItem = Spawn(class'UIMechaListItem', ApplyToList.itemContainer);
 		SpawnedItem.bAnimateOnInit = false;
 		SpawnedItem.InitListItem('ApplyToCharPool');
 		SpawnedItem.UpdateDataCheckbox(`CAPS(class'UICharacterPool'.default.m_strTitle), strApplyToCPTip, false, none, none);
@@ -430,6 +434,18 @@ function CreateFiltersList()
 	SpawnedItem.UpdateDataCheckbox(`CAPS(class'UIArmory_Loadout'.default.m_strInventoryLabels[eInvSlot_Armor]), "", true, OnFilterCheckboxChanged, none); 
 }
 
+simulated function UpdateNavHelp()
+{
+	super.UpdateNavHelp();
+
+	NavHelp.AddContinueButton(OnApplyChangesClicked);
+	ApplyChangesButton = NavHelp.ContinueButton;
+	
+	//ApplyChangesButton.SetTitle(strApplyChangesButton);
+	ApplyChangesButton.SetDisabled(true);
+	ApplyChangesButton.SetText(`CAPS(strApplyChangesButton));
+}
+
 private function OnFilterCheckboxChanged(UICheckbox CheckBox)
 {
 	UpdateAppearanceList();
@@ -444,7 +460,16 @@ function bool GetFilterListCheckboxStatus(name FilterName)
 	return ListItem != none && ListItem.Checkbox.bChecked;
 }
 
-private function OnApplyChangesClicked (UIManageAppearance_ListHeaderItem HeaderItem)
+function bool GetApplyToListCheckboxStatus(name FilterName)
+{
+	local UIMechaListItem ListItem;
+
+	ListItem = UIMechaListItem(ApplyToList.ItemContainer.GetChildByName(FilterName, false));
+
+	return ListItem != none && ListItem.Checkbox.bChecked;
+}
+
+private function OnApplyChangesClicked()
 {
 	local TDialogueBoxData kDialogData;
 	local int iNumUnitsToChange;
@@ -454,9 +479,9 @@ private function OnApplyChangesClicked (UIManageAppearance_ListHeaderItem Header
 		// Show confirmation popup if we're changing more than one unit, counting the armory unit,
 		// or if we're changing units other than armory unit.
 		iNumUnitsToChange = GetApplyChangesNumUnits();
-		if (iNumUnitsToChange > 1 || iNumUnitsToChange != 0 && bOriginalAppearanceSelected && (	GetFilterListCheckboxStatus('ApplyToCharPool') || 
-																								GetFilterListCheckboxStatus('ApplyToSquad') || 
-																								GetFilterListCheckboxStatus('ApplyToBarracks')))
+		if (iNumUnitsToChange > 1 || iNumUnitsToChange != 0 && bOriginalAppearanceSelected && (	GetApplyToListCheckboxStatus('ApplyToCharPool') || 
+																								GetApplyToListCheckboxStatus('ApplyToSquad') || 
+																								GetApplyToListCheckboxStatus('ApplyToBarracks')))
 		{
 			kDialogData.eType = eDialog_Normal;
 			kDialogData.strTitle = strConfirmApplyChangesTitle;
@@ -481,7 +506,7 @@ private function int GetApplyChangesNumUnits()
 	local XComGameState_HeadquartersXCom	XComHQ;
 	local TAppearance						TestAppearance;
 
-	if (GetFilterListCheckboxStatus('ApplyToThisUnit'))
+	if (GetApplyToListCheckboxStatus('ApplyToThisUnit'))
 	{
 		if (OriginalAppearance != SelectedAppearance)
 		{
@@ -489,7 +514,7 @@ private function int GetApplyChangesNumUnits()
 		}
 	}
 
-	if (GetFilterListCheckboxStatus('ApplyToCharPool'))
+	if (GetApplyToListCheckboxStatus('ApplyToCharPool'))
 	{
 		foreach PoolMgr.CharacterPool(UnitState)
 		{
@@ -510,7 +535,7 @@ private function int GetApplyChangesNumUnits()
 	if (XComHQ == none)
 		return iNumUnits;
 
-	if (GetFilterListCheckboxStatus('ApplyToSquad'))
+	if (GetApplyToListCheckboxStatus('ApplyToSquad'))
 	{
 		foreach XComHQ.Squad(SquadUnitRef)
 		{
@@ -529,7 +554,7 @@ private function int GetApplyChangesNumUnits()
 			}
 		}
 	}
-	if (GetFilterListCheckboxStatus('ApplyToBarracks'))
+	if (GetApplyToListCheckboxStatus('ApplyToBarracks'))
 	{
 		UnitStates = XComHQ.GetSoldiers(true, true);
 		foreach UnitStates(UnitState)
@@ -697,7 +722,7 @@ private function AppearanceListItemClicked(UIList ContainerList, int ItemIndex)
 	AppearanceOptionCheckboxChanged(ListItem.Checkbox);
 
 	bCanExitWithoutPopup = ArmoryUnit.kAppearance == OriginalAppearance;
-	ApplyChangesButton.SetGood(!bCanExitWithoutPopup);
+	ApplyChangesButton.SetDisabled(bCanExitWithoutPopup);
 }
 
 private function AppearanceOptionCheckboxChanged(UICheckbox CheckBox)
@@ -1045,7 +1070,7 @@ private function UpdateUnitAppearance()
 	CopyAppearance(NewAppearance, SelectedAppearance, ArmoryUnit, SelectedUnit);
 
 	bCanExitWithoutPopup = NewAppearance == OriginalAppearance;
-	ApplyChangesButton.SetGood(!bCanExitWithoutPopup);
+	ApplyChangesButton.SetDisabled(bCanExitWithoutPopup);
 		
 	ArmoryUnit.SetTAppearance(NewAppearance);
 	ArmoryPawn.SetAppearance(NewAppearance);
@@ -1190,10 +1215,10 @@ simulated function CloseScreen()
 
 	if (bCanExitWithoutPopup ||
 		bOriginalAppearanceSelected || 
-		!GetFilterListCheckboxStatus('ApplyToThisUnit') &&
-		!GetFilterListCheckboxStatus('ApplyToCharPool') &&
-		!GetFilterListCheckboxStatus('ApplyToSquad') &&
-		!GetFilterListCheckboxStatus('ApplyToBarracks'))
+		!GetApplyToListCheckboxStatus('ApplyToThisUnit') &&
+		!GetApplyToListCheckboxStatus('ApplyToCharPool') &&
+		!GetApplyToListCheckboxStatus('ApplyToSquad') &&
+		!GetApplyToListCheckboxStatus('ApplyToBarracks'))
 	{
 		CancelChanges();
 		ArmoryPawn.SetLocation(OriginalPawnLocation);
@@ -1232,7 +1257,7 @@ private function ApplyChanges()
 	local XComGameState						NewGameState;
 
 	// Current Unit
-	if (GetFilterListCheckboxStatus('ApplyToThisUnit') && !bOriginalAppearanceSelected)
+	if (GetApplyToListCheckboxStatus('ApplyToThisUnit') && !bOriginalAppearanceSelected)
 	{
 		ApplyChangesToArmoryUnit();
 	}
@@ -1242,7 +1267,7 @@ private function ApplyChanges()
 	}
 
 	// Character Pool
-	if (GetFilterListCheckboxStatus('ApplyToCharPool'))
+	if (GetApplyToListCheckboxStatus('ApplyToCharPool'))
 	{
 		foreach PoolMgr.CharacterPool(UnitState)
 		{
@@ -1259,7 +1284,7 @@ private function ApplyChanges()
 		return;
 
 	// Squad
-	if (GetFilterListCheckboxStatus('ApplyToSquad'))
+	if (GetApplyToListCheckboxStatus('ApplyToSquad'))
 	{
 		NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState("Apply appearance changes to squad");
 		foreach XComHQ.Squad(SquadUnitRef)
@@ -1274,7 +1299,7 @@ private function ApplyChanges()
 		`GAMERULES.SubmitGameState(NewGameState);
 	}
 	// Barracks except for squad and soldiers away on Covert Action
-	if (GetFilterListCheckboxStatus('ApplyToBarracks'))
+	if (GetApplyToListCheckboxStatus('ApplyToBarracks'))
 	{
 		UnitStates = XComHQ.GetSoldiers(true, true);
 
@@ -1298,7 +1323,7 @@ private function ApplyChanges()
 	}
 
 	bCanExitWithoutPopup = true;
-	ApplyChangesButton.SetGood(false);
+	ApplyChangesButton.SetDisabled(true);
 }
 
 private function ApplyChangesToUnit(XComGameState_Unit UnitState, optional XComGameState NewGameState)
@@ -1999,8 +2024,8 @@ private function CreateOptionPresets()
 	HeaderItem = Spawn(class'UIManageAppearance_ListHeaderItem', OptionsList.itemContainer);
 	HeaderItem.bAnimateOnInit = false;
 	HeaderItem.InitHeader();
-	HeaderItem.SetLabel(`CAPS(class'UIOptionsPCScreen'.default.m_strGraphicsLabel_Preset), class'UIUtilities_Colors'.const.GOOD_HTML_COLOR);
-	HeaderItem.SetLabelAlpha(70);
+	HeaderItem.SetLabel(`CAPS(class'UIOptionsPCScreen'.default.m_strGraphicsLabel_Preset));
+	//HeaderItem.SetLabelAlpha(70);
 		
 	HeaderItem.EnableCollapseToggle(bShowPresets);
 	HeaderItem.OnCollapseToggled = OnPresetsCollapseToggled;
