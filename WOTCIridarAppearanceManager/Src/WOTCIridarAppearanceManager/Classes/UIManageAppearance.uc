@@ -4,13 +4,7 @@ class UIManageAppearance extends UICustomize;
 /*
 # Priority
 
-Xym:
-- 3d UI instead of 2d
-- custom in-list headers
-- rounded list bg edges
-BG = Spawn(class'UIBGBox');
-BG.LibID = class'UIUtilities_Controls'.const.MC_X2Background; // This line must before InitBG
-BG.InitBG();
+Pawn sometimes doesn't refresh automatically.
 
 Add pawn to mouse guard in UISL so that pawn can be rotated on any UICustomize screen.
 
@@ -290,6 +284,7 @@ private function CacheArmoryUnitData()
 
 	SelectedUnit = ArmoryUnit;
 	OriginalAppearance = ArmoryPawn.m_kAppearance;
+	PreviousAppearance = OriginalAppearance;
 	SelectedAppearance = OriginalAppearance;
 	OriginalAttitude = ArmoryUnit.GetPersonalityTemplate();
 	OriginalPawnLocation = ArmoryPawn.Location;
@@ -1032,7 +1027,7 @@ private function UpdateUnitAppearance()
 {
 	local TAppearance NewAppearance;
 
-	PreviousAppearance = ArmoryPawn.m_kAppearance;
+	PreviousAppearance = ArmoryUnit.kAppearance;
 	NewAppearance = OriginalAppearance;
 	CopyAppearance(NewAppearance, SelectedAppearance, ArmoryUnit, SelectedUnit);
 
@@ -1068,6 +1063,7 @@ private function UpdateUnitAppearance()
 
 private function bool ShouldRefreshPawn(const TAppearance NewAppearance)
 {
+	`AMLOG("Previous gender:" @ GetEnum(enum'EGender', PreviousAppearance.iGender) @ "New gender:" @ GetEnum(enum'EGender', NewAppearance.iGender));
 	if (PreviousAppearance.iGender != NewAppearance.iGender)
 	{
 		return true;
@@ -1700,11 +1696,6 @@ private function MaybeCreateAppearanceOption(name OptionName, coerce string Curr
 
 	`AMLOG(`showvar(OptionName) @ `showvar(CurrentCosmetic) @ `showvar(NewCosmetic));
 
-	//if (OptionName == 'nmBeard' && ArmoryUnit.kAppearance.iGender == eGender_Female)
-	//{
-	//	return;
-	//}
-
 	// Don't create the cosmetic option if both the current appearance and selected appearance are the same or empty.
 	switch (CosmeticType)
 	{
@@ -1729,8 +1720,6 @@ private function MaybeCreateAppearanceOption(name OptionName, coerce string Curr
 	if (bNewIsSameAsCurrent && !bShowAllCosmeticOptions)
 		return;
 
-	`AMLOG("Creating option");
-
 	SpawnedItem = Spawn(class'UIMechaListItem_Button', OptionsList.itemContainer);
 	SpawnedItem.bAnimateOnInit = false;
 	SpawnedItem.InitListItem(OptionName);
@@ -1748,6 +1737,14 @@ private function MaybeCreateAppearanceOption(name OptionName, coerce string Curr
 		// If this option doesn't care about gender, or gender change is not needed for this appearance import, then we load the saved preset for it.
 		bChecked = GetOptionCheckboxPosition(OptionName);
 	}
+
+	if (OptionName == 'nmBeard' && OriginalAppearance.iGender == eGender_Female && !IsCheckboxChecked('iGender'))
+	{
+		bDisabled = true; // Beards should be disabled when copying appearance to females.
+		bChecked = false;
+	}
+
+	`AMLOG("Created option. Is disabled:" @ bDisabled @ "Is checked:" @ bChecked @ "Is gender-agnostic:" @ IsOptionGenderAgnostic(OptionName));
 
 	switch (CosmeticType)
 	{
