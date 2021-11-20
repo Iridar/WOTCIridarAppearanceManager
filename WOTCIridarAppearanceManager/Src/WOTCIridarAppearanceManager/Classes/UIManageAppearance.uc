@@ -1965,6 +1965,7 @@ private function CreateOptionPresets()
 	HeaderItem.bAnimateOnInit = false;
 	HeaderItem.InitHeader();
 	HeaderItem.SetLabel(`CAPS(class'UIOptionsPCScreen'.default.m_strGraphicsLabel_Preset), class'UIUtilities_Colors'.const.GOOD_HTML_COLOR);
+	HeaderItem.SetLabelAlpha(70);
 		
 	HeaderItem.EnableCollapseToggle(bShowPresets);
 	HeaderItem.OnCollapseToggled = OnPresetsCollapseToggled;

@@ -95,6 +95,11 @@ simulated function SetLabel (string strValue, optional string strColour)
 	);
 }
 
+simulated function SetLabelAlpha (float NewAlpha)
+{
+	Label.SetAlpha(NewAlpha);
+}
+
 simulated function EnableCollapseToggle (bool bInSectionVisible)
 {
 	bCollapseToggleEnabled = true;
