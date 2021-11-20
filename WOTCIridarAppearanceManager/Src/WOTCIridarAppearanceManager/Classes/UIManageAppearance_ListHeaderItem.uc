@@ -4,15 +4,26 @@ var private UIBGBox BG;
 var private UIDags Dags;
 
 var private UIScrollingText Label;
-var private UIButton AdditionalButton;
 var private UIImage VisibilityImage;
+
+// Allow access to outside world so that it can manipulate the visuals
+var privatewrite UIButton ActionButton;
 
 var privatewrite bool bCollapseToggleEnabled;
 var privatewrite bool bSectionVisible;
+
+var bool bActionButtonEnabled;
+var string ActionButtonLabel;
+
+// Are we waiting on realize from flash?
+var privatewrite bool bFlashRealizePending;
+
 delegate OnCollapseToggled (UIManageAppearance_ListHeaderItem HeaderItem);
+delegate OnActionInteracted (UIManageAppearance_ListHeaderItem HeaderItem);
 
 const CONTENT_MARGIN = 5;
-const LABEL_MARGIN = 3;
+const BUTTON_MARGIN = 10;
+const LABEL_MARGIN = 10;
 
 ////////////
 /// Init ///
@@ -35,6 +46,16 @@ simulated function InitHeader (optional name InitName)
 	Label.InitScrollingText('Label');
 	Label.SetPosition(CONTENT_MARGIN, 0);
 	Label.SetAlpha(50);
+
+	ActionButton = Spawn(class'UIButton', self);
+	ActionButton.bAnimateOnInit = false;
+	ActionButton.bIsNavigable = false;
+	ActionButton.InitButton('ActionButton');
+	ActionButton.OnClickedDelegate = OnActionButtonClicked;
+	ActionButton.SetHeight(26);
+	ActionButton.SetY(2);
+	//ActionButton.OnSizeRealized = UpdateButtonX; TODO
+	ActionButton.SetWidth(150); // TODO: it's gonna look like 150 regardless of what is set here
 
 	VisibilityImage = Spawn(class'UIImage', self);
 	VisibilityImage.bAnimateOnInit = false;
@@ -88,43 +109,80 @@ simulated function DisableCollapseToggle ()
 // Must be called after manipulating the collapse toggle and/or action button
 simulated function RealizeLayoutAndNavigation ()
 {
-	local float WidthLeft;
-	
-	/////////////////////
-	// Show/hide stuff //
-	/////////////////////
-
-	VisibilityImage.SetVisible(bCollapseToggleEnabled);
-
-	//////////////////////////
-	// Calculate the layout //
-	//////////////////////////
-
-	WidthLeft = Width - CONTENT_MARGIN * 2;
-
-	// The visibility icon is the most right
-	WidthLeft -= VisibilityImage.Width;
-	VisibilityImage.SetX(WidthLeft);
-
-	// The label takes the rest
-	if (bCollapseToggleEnabled /*|| TODO*/) WidthLeft -= LABEL_MARGIN;
-	Label.SetWidth(WidthLeft);
-	
-	///////////////////////////
-	// navigation/controller //
-	///////////////////////////
-	// TODO
+	FinalizeProperties();
+	UpdateNavigation();
+	DoRealizeLayout();
 }
 
 /////////////////////////
 /// Internal workings ///
 /////////////////////////
 
+simulated private function FinalizeProperties ()
+{
+	VisibilityImage.SetVisible(bCollapseToggleEnabled);
+	ActionButton.SetVisible(bActionButtonEnabled);
+}
+
+simulated private function UpdateNavigation ()
+{
+	// TODO (controller)
+}
+
+//simulated private function UpdatebFlashRealizePending ()
+//{
+//	bFlashRealizePending = ActionButton.bIsVisible && !ActionButton.SizeRealized;
+//}
+//
+//simulated private function TryRealizeLayout ()
+//{
+//	UpdatebFlashRealizePending();
+//	
+//	if (!bFlashRealizePending)
+//	{
+//		DoRealizeLayout();
+//	}
+//}
+
+simulated private function DoRealizeLayout ()
+{
+	local float WidthLeft;
+
+	WidthLeft = Width - CONTENT_MARGIN * 2;
+
+	// The visibility icon is the most right
+	if (bCollapseToggleEnabled)
+	{
+		WidthLeft -= VisibilityImage.Width;
+		VisibilityImage.SetX(WidthLeft);
+	}
+
+	// Then the action button
+	if (bActionButtonEnabled)
+	{
+		if (bCollapseToggleEnabled) WidthLeft -= BUTTON_MARGIN;
+		WidthLeft -= ActionButton.Width;
+		ActionButton.SetX(WidthLeft);
+	}
+
+	// The label takes the rest
+	if (bCollapseToggleEnabled || bActionButtonEnabled) WidthLeft -= LABEL_MARGIN;
+	Label.SetWidth(WidthLeft);
+}
+
 simulated private function SetVisibilityImage ()
 {
 	VisibilityImage.LoadImage(
 		bSectionVisible ? "img:///AM_UIManageAppearance.Visibility_Open" : "img:///AM_UIManageAppearance.Visibility_Closed"
 	);
+}
+
+simulated private function OnActionButtonClicked (UIButton Button)
+{
+	if (OnActionInteracted != none)
+	{
+		OnActionInteracted(self);
+	}
 }
 
 simulated private function OnVisibilityImageMouseEvent (UIPanel Panel, int Cmd)
@@ -158,5 +216,6 @@ simulated private function OnVisibilityImageMouseEvent (UIPanel Panel, int Cmd)
 defaultproperties
 {
 	bIsNavigable = false // TODO: Make this dynamic based on the buttons that we have enabled
+	bCascadeFocus = false
 	Height = 55
 }

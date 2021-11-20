@@ -1951,17 +1951,25 @@ private function bool GetOptionCheckboxPosition(const name OptionName)
 
 private function CreateOptionPresets()
 {
-	local UIMechaListItem_Button SpawnedItem;
+	local UIManageAppearance_ListHeaderItem HeaderItem;
 	local name PresetName;
 
 	if (Presets.Length == 0)
 		return;
 
-	SpawnedItem = Spawn(class'UIMechaListItem_Button', OptionsList.itemContainer);
-	SpawnedItem.bAnimateOnInit = false;
-	SpawnedItem.InitListItem(); 
-	SpawnedItem.UpdateDataCheckbox("", "", bShowPresets, OptionShowPresetsChanged);
-	SpawnedItem.UpdateDataButton(`GREEN(`CAPS(class'UIOptionsPCScreen'.default.m_strGraphicsLabel_Preset)), strCreatePreset, OnCreatePresetButtonClicked);
+	HeaderItem = Spawn(class'UIManageAppearance_ListHeaderItem', OptionsList.itemContainer);
+	HeaderItem.bAnimateOnInit = false;
+	HeaderItem.InitHeader();
+	HeaderItem.SetLabel(`CAPS(class'UIOptionsPCScreen'.default.m_strGraphicsLabel_Preset));
+		
+	HeaderItem.EnableCollapseToggle(bShowPresets);
+	HeaderItem.OnCollapseToggled = OnPresetsCollapseToggled;
+
+	HeaderItem.bActionButtonEnabled = true;
+	HeaderItem.ActionButton.SetText(strCreatePreset);
+	HeaderItem.OnActionInteracted = OnCreatePresetClicked;
+
+	HeaderItem.RealizeLayoutAndNavigation();
 
 	`AMLOG(GetFuncName() @ `showvar(CurrentPreset) @ `showvar(bShowPresets));
 
@@ -2024,7 +2032,7 @@ private function OnCopyPresetButtonClicked(UIButton ButtonSource)
 	UpdateUnitAppearance();
 }
 
-private function OnCreatePresetButtonClicked(UIButton ButtonSource)
+private function OnCreatePresetClicked (UIManageAppearance_ListHeaderItem HeaderItem)
 {
 	local TInputDialogData kData;
 
@@ -2092,9 +2100,9 @@ function OptionsListItemClicked(UIList ContainerList, int ItemIndex)
 	}
 }
 
-function OptionShowPresetsChanged(UICheckbox CheckBox)
+function OnPresetsCollapseToggled (UIManageAppearance_ListHeaderItem HeaderItem)
 {
-	bShowPresets = CheckBox.bChecked;
+	bShowPresets = HeaderItem.bSectionVisible;
 	default.bShowPresets = bShowPresets;
 	self.SaveConfig();
 	UpdateOptionsList();
