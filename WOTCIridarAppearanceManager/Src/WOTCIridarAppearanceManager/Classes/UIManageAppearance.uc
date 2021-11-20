@@ -4,6 +4,12 @@ class UIManageAppearance extends UICustomize;
 /*
 # Priority
 
+Second UIList for FiltersList.
+Make new headers less tall. "the headers should be pretty easy to manipulate, just don't touch inside UIDags"
+New headers for the appearance list.
+Make Apply Changes and Create Preset buttons taller. 
+Remove Green Color from "Presets" header.
+
 Pawn sometimes doesn't refresh automatically.
 
 Add pawn to mouse guard in UISL so that pawn can be rotated on any UICustomize screen.
@@ -350,7 +356,7 @@ function CreateFiltersList()
 
 	FiltersListBG = Spawn(class'UIBGBox', self);
 	FiltersListBG.LibID = class'UIUtilities_Controls'.const.MC_X2Background;
-	FiltersListBG.InitBG('UpperRightFiltersListBG', ListBG.X, 10);
+	FiltersListBG.InitBG('UpperRightFiltersListBG');
 	FiltersListBG.SetAlpha(80);
 	FiltersListBG.SetWidth(582);
 	FiltersListBG.SetHeight(330);
@@ -358,7 +364,7 @@ function CreateFiltersList()
 
 	FiltersList = Spawn(class'UIList', self);
 	FiltersList.bAnimateOnInit = false;
-	FiltersList.InitList('UpperRightFiltersList', List.X, 25);
+	FiltersList.InitList('UpperRightFiltersList', FiltersListBG.X + 10, 25);
 	FiltersList.SetWidth(542);
 	FiltersList.SetHeight(305);
 	FiltersList.Navigator.LoopSelection = true;

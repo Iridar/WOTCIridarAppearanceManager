@@ -7,7 +7,7 @@
     <SteamPublishID>0</SteamPublishID>
     <AssemblyName>WOTCIridarAppearanceManager</AssemblyName>
     <RootNamespace>WOTCIridarAppearanceManager</RootNamespace>
-    <ProjectGuid>{86B516DB-2D58-48E0-B199-03D024670544}</ProjectGuid>
+    <ProjectGuid>{8d136551-0479-461a-b880-95c8d81fa4e9}</ProjectGuid>
   </PropertyGroup>
   <ItemGroup>
     <Content Include="Config\Base\XComEditor.ini">
