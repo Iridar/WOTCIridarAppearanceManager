@@ -4,18 +4,9 @@ class UIManageAppearance extends UICustomize;
 /*
 # Priority
 
-NavHelp.ContinueButton
-make your button, yes, but on the navhelp
-override Show()/Hide() in your screen to propagate the changes to that button
-Destroy the button when screen is closed
-
-Apply Changes button is disabled while "Show All Options" is enabled and I want to copy parts of the currently selected appearance onto CP or something.
-
 Show Race near Face change. Race is now changed along with the face automatically, but you can't tell cuz of stuff like Face C -> Face C
 
 Should APply Changes button select Original Apperance?
-
-Handle UIMouseGuard_RotatePawn(CustomizeScreen.MouseGuardInst).SetActorPawn(CustomizeScreen.CustomizeManager.ActorPawn);
 
 Make chevron animation on Apply Changes button go away when there's no changes to apply, and add a disabled reason for it. Alternatively, hide the button.
 Genders sometimes doesn't refresh automatically, deforming the pawn.
@@ -37,9 +28,6 @@ Pawn sometimes hangs on character pool screen.
 4. Apply to squad, apply to barracks doesn't work. 6:30
 
 Optimize performance on this screen? Don't create options all the time, maybe?
-
-# Known issues: 
-- Replacing equipped WAR / EXO suit may leave the soldier with EXO arms on top of the new armor. Refreshing the pawn would fix it, but it also force equips kevlar armor. Catch-22.
 
 # Character Pool
 Sorting buttons for CP units?
@@ -277,6 +265,61 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 		`AMLOG("Unrestricted Customization compatibility: setting timer.");
 		SetTimer(0.1f, false, nameof(FixScreenPosition), self);
 	}
+
+	CreateApplyChangesButton();
+}
+
+private function CreateApplyChangesButton()
+{
+	local int iconYOffset;
+
+	ApplyChangesButton = Spawn(class'UILargeButton', NavHelp.Screen);
+	ApplyChangesButton.LibID = 'X2ContinueButton';
+	ApplyChangesButton.bHideUntilRealized = true;
+
+	switch (GetLanguage()) 
+	{
+	case "JPN":
+		iconYOffset = -10;
+		break;
+	case "KOR":
+		iconYOffset = -20;
+		break;
+	default:
+		iconYOffset = -15;
+		break;
+	}
+	if(`IsControllerActive)
+	{
+		ApplyChangesButton.InitLargeButton('AM_ApplyChangesButton', 
+		class'UIUtilities_Text'.static.InjectImage(class'UIUtilities_Input'.static.GetAdvanceButtonIcon(), 
+		28, 28, iconYOffset) @ `CAPS(strApplyChangesButton));
+	}
+	else
+	{
+		ApplyChangesButton.InitLargeButton('AM_ApplyChangesButton', `CAPS(strApplyChangesButton));
+	}
+	ApplyChangesButton.DisableNavigation();
+	ApplyChangesButton.AnchorBottomCenter();
+	ApplyChangesButton.OffsetY = -10;
+	ApplyChangesButton.OnClickedDelegate = OnApplyChangesClicked;
+	ApplyChangesButton.Show();
+	ApplyChangesButton.ShowBG(true);
+	ApplyChangesButton.SetDisabled(true);
+}
+
+// Button should be disabled if there are no changes to apply to this unit,
+// unless we want to copy parts of the soldier's original appearance to other units.
+private function UpdateApplyChangesButtonVisibility()
+{
+	if (bShowAllCosmeticOptions && bOriginalAppearanceSelected)
+	{
+		ApplyChangesButton.SetDisabled(!GetApplyToListCheckboxStatus('ApplyToCharPool') && !GetApplyToListCheckboxStatus('ApplyToSquad') && !GetApplyToListCheckboxStatus('ApplyToBarracks'));
+	}
+	else
+	{
+		ApplyChangesButton.SetDisabled(bCanExitWithoutPopup);
+	}
 }
 
 private function CacheArmoryUnitData()
@@ -287,12 +330,16 @@ private function CacheArmoryUnitData()
 
 	ArmoryUnit = CustomizeManager.UpdatedUnitState;
 	if (ArmoryUnit == none)
+	{
+		ApplyChangesButton.Destroy();
 		super.CloseScreen();
-
+	}
 	ArmoryPawn = XComHumanPawn(CustomizeManager.ActorPawn);
 	if (ArmoryPawn == none)
+	{
+		ApplyChangesButton.Destroy();
 		super.CloseScreen();
-
+	}
 	ArmorTemplate = class'Help'.static.GetItemTemplateFromCosmeticTorso(ArmoryPawn.m_kAppearance.nmTorso);
 	if (ArmorTemplate != none)
 	{
@@ -305,8 +352,6 @@ private function CacheArmoryUnitData()
 	SelectedAppearance = OriginalAppearance;
 	OriginalAttitude = ArmoryUnit.GetPersonalityTemplate();
 	OriginalPawnLocation = ArmoryPawn.Location;
-
-	//UpdatePawnLocation();
 }
 
 simulated static function CycleToSoldier(StateObjectReference NewRef)
@@ -319,7 +364,6 @@ simulated static function CycleToSoldier(StateObjectReference NewRef)
 	{
 		CustomizeScreen.CacheArmoryUnitData();
 		CustomizeScreen.UpdateOptionsList();
-		//CustomizeScreen.UpdatePawnLocation();
 	}
 }
 
@@ -344,16 +388,17 @@ simulated function UpdateData()
 	UpdateUnitAppearance();
 }
 
-// No longer needed with the change to CameraTag
-//function UpdatePawnLocation()
-//{
-//	local vector PawnLocation;
-//
-//	PawnLocation = OriginalPawnLocation;
-//
-//	PawnLocation.X += 20; // Nudge the soldier pawn to the left a little
-//	ArmoryPawn.SetLocation(PawnLocation);
-//}
+simulated function Show()
+{
+	super.Show();
+	ApplyChangesButton.Show();
+}
+
+simulated function Hide()
+{
+	super.Hide();
+	ApplyChangesButton.Hide();
+}
 
 // ================================================================================================================================================
 // FILTER LIST MAIN FUNCTIONS - Filter list is located in the upper right corner, it determines which appearances are displayed in the appearance list.
@@ -398,12 +443,12 @@ function CreateFiltersList()
 	SpawnedItem = Spawn(class'UIMechaListItem', ApplyToList.itemContainer);
 	SpawnedItem.bAnimateOnInit = false;
 	SpawnedItem.InitListItem('ApplyToThisUnit');
-	SpawnedItem.UpdateDataCheckbox(`CAPS(strApplyToThisUnit), strApplyToThisUnitTip, true, none, none);
+	SpawnedItem.UpdateDataCheckbox(`CAPS(strApplyToThisUnit), strApplyToThisUnitTip, true, OnApplyToCheckboxChanged, none);
 
 	SpawnedItem = Spawn(class'UIMechaListItem', ApplyToList.itemContainer);
 	SpawnedItem.bAnimateOnInit = false;
 	SpawnedItem.InitListItem('ApplyToSquad');
-	SpawnedItem.UpdateDataCheckbox(`CAPS(class'UITLE_ChallengeModeMenu'.default.m_Header_Squad), strApplyToSquadTip, false, none, none);
+	SpawnedItem.UpdateDataCheckbox(`CAPS(class'UITLE_ChallengeModeMenu'.default.m_Header_Squad), strApplyToSquadTip, false, OnApplyToCheckboxChanged, none);
 	SpawnedItem.SetDisabled(!bInArmory, strNotAvailableInCharacterPool);
 
 	if (bInArmory)
@@ -411,14 +456,14 @@ function CreateFiltersList()
 		SpawnedItem = Spawn(class'UIMechaListItem', ApplyToList.itemContainer);
 		SpawnedItem.bAnimateOnInit = false;
 		SpawnedItem.InitListItem('ApplyToBarracks');
-		SpawnedItem.UpdateDataCheckbox(`CAPS(class'XComKeybindingData'.default.m_arrAvengerBindableLabels[eABC_Barracks]), strApplyToBarracksTip, false, none, none);
+		SpawnedItem.UpdateDataCheckbox(`CAPS(class'XComKeybindingData'.default.m_arrAvengerBindableLabels[eABC_Barracks]), strApplyToBarracksTip, false, OnApplyToCheckboxChanged, none);
 	}
 	else
 	{
 		SpawnedItem = Spawn(class'UIMechaListItem', ApplyToList.itemContainer);
 		SpawnedItem.bAnimateOnInit = false;
 		SpawnedItem.InitListItem('ApplyToCharPool');
-		SpawnedItem.UpdateDataCheckbox(`CAPS(class'UICharacterPool'.default.m_strTitle), strApplyToCPTip, false, none, none);
+		SpawnedItem.UpdateDataCheckbox(`CAPS(class'UICharacterPool'.default.m_strTitle), strApplyToCPTip, false, OnApplyToCheckboxChanged, none);
 	}
 
 	HeaderItem = Spawn(class'UIManageAppearance_ListHeaderItem', FiltersList.itemContainer);
@@ -443,16 +488,9 @@ function CreateFiltersList()
 	SpawnedItem.UpdateDataCheckbox(`CAPS(class'UIArmory_Loadout'.default.m_strInventoryLabels[eInvSlot_Armor]), "", true, OnFilterCheckboxChanged, none); 
 }
 
-simulated function UpdateNavHelp()
+private function OnApplyToCheckboxChanged(UICheckbox CheckBox)
 {
-	super.UpdateNavHelp();
-
-	NavHelp.AddContinueButton(OnApplyChangesClicked);
-	ApplyChangesButton = NavHelp.ContinueButton;
-	
-	//ApplyChangesButton.SetTitle(strApplyChangesButton);
-	ApplyChangesButton.SetDisabled(true);
-	ApplyChangesButton.SetText(`CAPS(strApplyChangesButton));
+	UpdateApplyChangesButtonVisibility();
 }
 
 private function OnFilterCheckboxChanged(UICheckbox CheckBox)
@@ -478,7 +516,7 @@ function bool GetApplyToListCheckboxStatus(name FilterName)
 	return ListItem != none && ListItem.Checkbox.bChecked;
 }
 
-private function OnApplyChangesClicked()
+private function OnApplyChangesClicked(UIButton Button)
 {
 	local TDialogueBoxData kDialogData;
 	local int iNumUnitsToChange;
@@ -734,7 +772,7 @@ private function AppearanceListItemClicked(UIList ContainerList, int ItemIndex)
 	AppearanceOptionCheckboxChanged(ListItem.Checkbox);
 
 	bCanExitWithoutPopup = ArmoryUnit.kAppearance == OriginalAppearance;
-	ApplyChangesButton.SetDisabled(bCanExitWithoutPopup);
+	UpdateApplyChangesButtonVisibility();
 }
 
 private function AppearanceOptionCheckboxChanged(UICheckbox CheckBox)
@@ -1065,7 +1103,7 @@ private function UpdateUnitAppearance()
 	CopyAppearance(NewAppearance, SelectedAppearance, ArmoryUnit, SelectedUnit);
 
 	bCanExitWithoutPopup = NewAppearance == OriginalAppearance;
-	ApplyChangesButton.SetDisabled(bCanExitWithoutPopup);
+	UpdateApplyChangesButtonVisibility();
 		
 	ArmoryUnit.SetTAppearance(NewAppearance);
 	ArmoryPawn.SetAppearance(NewAppearance);
@@ -1118,7 +1156,6 @@ final function OnRefreshPawn()
 	ArmoryPawn = XComHumanPawn(CustomizeManager.ActorPawn);
 	if (ArmoryPawn != none)
 	{
-		//UpdatePawnLocation();
 		UpdatePawnAttitudeAnimation();
 		ApplyChangesToUnitWeapons(ArmoryUnit, ArmoryPawn.m_kAppearance, none);
 
@@ -1218,6 +1255,7 @@ simulated function CloseScreen()
 		CancelChanges();
 		ArmoryPawn.SetLocation(OriginalPawnLocation);
 		SavePresetCheckboxPositions();
+		ApplyChangesButton.Destroy();
 		super.CloseScreen();
 	}
 	else
@@ -1239,6 +1277,7 @@ private function OnCloseScreenDialogCallback(Name eAction)
 		CancelChanges();
 		ArmoryPawn.SetLocation(OriginalPawnLocation);
 		SavePresetCheckboxPositions();
+		ApplyChangesButton.Destroy();
 		super.CloseScreen();
 	}
 }
@@ -1717,6 +1756,8 @@ function UpdateOptionsList()
 		MaybeCreateAppearanceOption('Biography',			ArmoryUnit.GetBackground(),				SelectedUnit.GetBackground(),			ECosmeticType_Biography);
 		//MaybeCreateAppearanceOption('nmLanguage',			OriginalAppearance.nmLanguage,			SelectedAppearance.nmLanguage,			ECosmeticType_Name);
 	}
+
+	UpdateApplyChangesButtonVisibility();
 }
 
 private function MaybeCreateAppearanceOption(name OptionName, coerce string CurrentCosmetic, coerce string NewCosmetic, ECosmeticType CosmeticType)
