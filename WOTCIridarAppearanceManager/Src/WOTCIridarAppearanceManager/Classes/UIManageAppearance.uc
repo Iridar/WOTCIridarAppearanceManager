@@ -4,8 +4,6 @@ class UIManageAppearance extends UICustomize;
 /*
 # Priority
 
-Show Race near Face change. Race is now changed along with the face automatically, but you can't tell cuz of stuff like Face C -> Face C
-
 Should APply Changes button select Original Apperance?
 
 Make chevron animation on Apply Changes button go away when there's no changes to apply, and add a disabled reason for it. Alternatively, hide the button.
@@ -1831,11 +1829,20 @@ private function MaybeCreateAppearanceOption(name OptionName, coerce string Curr
 			break;
 
 		case ECosmeticType_Name:
-			if (bNewIsSameAsCurrent)
-				strDesc = GetOptionFriendlyName(OptionName) $ ":" @ GetBodyPartFriendlyName(OptionName, CurrentCosmetic);
+			if (OptionName == 'nmHead') // We always change face and race together, so display them together as well.
+			{
+				if (bNewIsSameAsCurrent)
+					strDesc = GetOptionFriendlyName(OptionName) $ ":" @ GetRaceFriendlyName(ArmoryUnit.kAppearance.iRace) @ GetBodyPartFriendlyName(OptionName, CurrentCosmetic);
+				else
+					strDesc = GetOptionFriendlyName(OptionName) $ ":" @ GetRaceFriendlyName(ArmoryUnit.kAppearance.iRace) @ GetBodyPartFriendlyName(OptionName, CurrentCosmetic) @ "->" @ GetRaceFriendlyName(SelectedAppearance.iRace) @ GetBodyPartFriendlyName(OptionName, NewCosmetic);
+			}
 			else
-				strDesc = GetOptionFriendlyName(OptionName) $ ":" @ GetBodyPartFriendlyName(OptionName, CurrentCosmetic) @ "->" @ GetBodyPartFriendlyName(OptionName, NewCosmetic);
-			
+			{
+				if (bNewIsSameAsCurrent)
+					strDesc = GetOptionFriendlyName(OptionName) $ ":" @ GetBodyPartFriendlyName(OptionName, CurrentCosmetic);
+				else
+					strDesc = GetOptionFriendlyName(OptionName) $ ":" @ GetBodyPartFriendlyName(OptionName, CurrentCosmetic) @ "->" @ GetBodyPartFriendlyName(OptionName, NewCosmetic);
+			}
 			SpawnedItem.UpdateDataCheckbox(strDesc, "", bChecked, OnOptionCheckboxChanged, none);
 			break;
 
@@ -2489,15 +2496,24 @@ private function string GetBodyPartFriendlyName(name OptionName, coerce string C
 	if (PartType != "" && CosmeticTemplateName != '')
 	{
 		BodyPartTemplate = BodyPartMgr.FindUberTemplate(PartType, CosmeticTemplateName);
-	}
-
-	if (BodyPartTemplate != none && BodyPartTemplate.DisplayName != "")
-	{
-		`AMLOG("No localized name for body part template:" @ BodyPartTemplate.DataName @ `showvar(PartType) @ `showvar(OptionName));
-		return BodyPartTemplate.DisplayName;
-	}
-
+		if (BodyPartTemplate != none)
+		{
+			if (BodyPartTemplate.DisplayName != "")
+			{
+				return BodyPartTemplate.DisplayName;
+			}
+			else
+			{	
+				`AMLOG("No localized name for body part template:" @ BodyPartTemplate.DataName @ `showvar(PartType) @ `showvar(OptionName));
+			}
+		}
+	}	
 	return string(CosmeticTemplateName);
+}
+
+private function string GetRaceFriendlyName(const int iRace)
+{
+	return "R" $ string(iRace);
 }
 
 private function string GetPartType(name OptionName)
