@@ -118,6 +118,7 @@ var localized string strInvalidEmptyUniformNameTitle;
 var localized string strInvalidEmptyUniformNameText;
 var localized string strDeletePreset;
 var localized string strCannotDeleteThisPreset;
+var localized string strRacePrefix;
 
 // ==============================================================================
 // Screen Options - preserved between game restarts.
@@ -2513,7 +2514,7 @@ private function string GetBodyPartFriendlyName(name OptionName, coerce string C
 
 private function string GetRaceFriendlyName(const int iRace)
 {
-	return "R" $ string(iRace);
+	return strRacePrefix $ string(iRace);
 }
 
 private function string GetPartType(name OptionName)
