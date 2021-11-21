@@ -122,7 +122,7 @@ private function bool EquipArmorStrategy(const name ArmorTemplateName)
 	local XComGameState_Item				PreviousItemState;
 	local XComGameState						NewGameState;
 	local XComGameState_Unit				NewUnitState;
-	local TAppearance						OldAppearance;
+	//local TAppearance						OldAppearance;
 
 	XComHQ = class'UIUtilities_Strategy'.static.GetXComHQ(true);
 	if (XComHQ == none)
@@ -135,7 +135,7 @@ private function bool EquipArmorStrategy(const name ArmorTemplateName)
 		return false;
 	}
 
-	OldAppearance = UnitState.kAppearance;
+	//OldAppearance = UnitState.kAppearance;
 
 	NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState("Equip armor for stored appearance on:" @ UnitState.GetFullName() @ ArmorTemplateName);
 	XComHQ = XComGameState_HeadquartersXCom(NewGameState.ModifyStateObject(XComHQ.Class, XComHQ.ObjectID));
@@ -170,15 +170,19 @@ private function bool EquipArmorStrategy(const name ArmorTemplateName)
 
 	if (NewUnitState.AddItemToInventory(NewItemState, eInvSlot_Armor, NewGameState))
 	{
+		NewUnitState.ValidateLoadout(NewGameState); // Need to do this to prevent things like soldier having a heavy weapon when switching from EXO suit to kevlar.
+
 		//NewUnitState.SetTAppearance(SelectedAppearance); // Should happen automatically when the armor is equippped
 		`GAMERULES.SubmitGameState(NewGameState);
 		//CustomizeManager.SubmitUnitCustomizationChanges();
+
+
 		`AMLOG("Equipped successfully, new torso:" @ NewUnitState.kAppearance.nmTorso);
-		if (OldAppearance != NewUnitState.kAppearance) // Refresh pawn only when necessary to reduce pawn flicker
-		{
+		/if (OldAppearance != NewUnitState.kAppearance) // Refresh pawn only when necessary to reduce pawn flicker // EDIT: have to refresh every time to get rid of the heavy weapon model. Or draw one.
+		//{
 			CustomizeManager.ReCreatePawnVisuals(CustomizeManager.ActorPawn, true);
 			bPawnIsRefreshing = true;
-		}
+		//}
 		return true;
 	}
 	else
