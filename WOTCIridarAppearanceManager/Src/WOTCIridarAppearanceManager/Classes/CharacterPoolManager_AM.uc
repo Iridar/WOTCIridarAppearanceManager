@@ -102,7 +102,7 @@ simulated final function InitSoldierAppearance(XComGameState_Unit Unit, const ou
 
 	// ADDED
 	// Skip appearance validation if MCM is configured so.
-	if (!class'Help'.static.IsAppearanceValidationDisabled())
+	if (class'Help'.static.IsAppearanceValidationDisabled())
 		return;
 	// END OF ADDED
 

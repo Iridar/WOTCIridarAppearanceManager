@@ -10,7 +10,7 @@ var private TAppearance				OriginalAppearance;
 var private TAppearance				SelectedAppearance;
 var private bool					bPawnRefreshIsCooldown;
 var private CharacterPoolManager_AM PoolMgr;
-var private bool					bPawnRefreshed;
+var private bool					bPawnIsRefreshing;
 var private X2PawnRefreshHelper		PawnRefreshHelper;
 
 const PAWN_REFRESH_COOLDOWN = 0.15f;
@@ -74,7 +74,14 @@ private function AppearanceListItemClicked(UIList ContainerList, int ItemIndex)
 	if (bSuccess)
 	{	
 		PlayArmorEquipSound(ListItem.ArmorTemplateName);
-		super.CloseScreen();
+		if (bPawnIsRefreshing) 
+		{
+			SetTimer(0.1f, false, nameof(OnRefreshPawn_CloseScreen), self);
+		}
+		else
+		{
+			super.CloseScreen();
+		}
 	}
 	else
 	{
@@ -115,6 +122,7 @@ private function bool EquipArmorStrategy(const name ArmorTemplateName)
 	local XComGameState_Item				PreviousItemState;
 	local XComGameState						NewGameState;
 	local XComGameState_Unit				NewUnitState;
+	local TAppearance						OldAppearance;
 
 	XComHQ = class'UIUtilities_Strategy'.static.GetXComHQ(true);
 	if (XComHQ == none)
@@ -126,6 +134,8 @@ private function bool EquipArmorStrategy(const name ArmorTemplateName)
 		`AMLOG(ArmorTemplateName @ "not found in HQ inventory");
 		return false;
 	}
+
+	OldAppearance = UnitState.kAppearance;
 
 	NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState("Equip armor for stored appearance on:" @ UnitState.GetFullName() @ ArmorTemplateName);
 	XComHQ = XComGameState_HeadquartersXCom(NewGameState.ModifyStateObject(XComHQ.Class, XComHQ.ObjectID));
@@ -142,23 +152,33 @@ private function bool EquipArmorStrategy(const name ArmorTemplateName)
 	PreviousItemState = NewUnitState.GetItemInSlot(eInvSlot_Armor);
 	if (PreviousItemState != none)
 	{
+		`AMLOG("Slot is currently occupied by:" @ PreviousItemState.GetMyTemplateName() @ ", attempting to unequip.");
 		if (NewUnitState.RemoveItemFromInventory(PreviousItemState, NewGameState))
 		{
+			`AMLOG("Unequipped successfully");
 			XComHQ.PutItemInInventory(NewGameState, PreviousItemState);
 		}
 		else
 		{
-			`AMLOG("Failed to free the inventory slot containing item:" @ PreviousItemState.GetMyTemplateName());
+			`AMLOG("Failed to unequip");
 			`XCOMHISTORY.CleanupPendingGameState(NewGameState);
 			return false;
 		}
 	}
 
+	`AMLOG("Attempting to equip:" @ NewItemState.GetMyTemplateName() @ "current torso:" @ NewUnitState.kAppearance.nmTorso);
+
 	if (NewUnitState.AddItemToInventory(NewItemState, eInvSlot_Armor, NewGameState))
 	{
-		NewUnitState.SetTAppearance(SelectedAppearance);
+		//NewUnitState.SetTAppearance(SelectedAppearance); // Should happen automatically when the armor is equippped
 		`GAMERULES.SubmitGameState(NewGameState);
-		CustomizeManager.SubmitUnitCustomizationChanges();
+		//CustomizeManager.SubmitUnitCustomizationChanges();
+		`AMLOG("Equipped successfully, new torso:" @ NewUnitState.kAppearance.nmTorso);
+		if (OldAppearance != NewUnitState.kAppearance) // Refresh pawn only when necessary to reduce pawn flicker
+		{
+			CustomizeManager.ReCreatePawnVisuals(CustomizeManager.ActorPawn, true);
+			bPawnIsRefreshing = true;
+		}
 		return true;
 	}
 	else
@@ -259,7 +279,47 @@ private function DelayedSetPawnAppearance()
 
 private function SetPawnAppearance(TAppearance NewAppearance)
 {
-	PawnRefreshHelper.RefreshPawn_UseAppearance(NewAppearance, true);
+	if (bInArmory)
+	{
+		UnitState.SetTAppearance(NewAppearance);
+		CustomizeManager.ReCreatePawnVisuals(CustomizeManager.ActorPawn, true);
+		bPawnIsRefreshing = true;
+		SetTimer(0.1f, false, nameof(OnRefreshPawn), self);
+	}
+	else
+	{
+		PawnRefreshHelper.RefreshPawn_UseAppearance(NewAppearance, true);
+	}
+}
+
+final function OnRefreshPawn()
+{
+	ArmoryPawn = XComHumanPawn(CustomizeManager.ActorPawn);
+	if (ArmoryPawn != none)
+	{
+		// Assign the actor pawn to the mouse guard so the pawn can be rotated by clicking and dragging
+		UIMouseGuard_RotatePawn(MouseGuardInst).SetActorPawn(CustomizeManager.ActorPawn);
+		bPawnIsRefreshing = false;
+	}
+	else
+	{
+		SetTimer(0.1f, false, nameof(OnRefreshPawn), self);
+	}
+}
+
+final function OnRefreshPawn_CloseScreen()
+{
+	ArmoryPawn = XComHumanPawn(CustomizeManager.ActorPawn);
+	if (ArmoryPawn != none)
+	{
+		// Assign the actor pawn to the mouse guard so the pawn can be rotated by clicking and dragging
+		UIMouseGuard_RotatePawn(MouseGuardInst).SetActorPawn(CustomizeManager.ActorPawn);
+		super.CloseScreen();
+	}
+	else
+	{
+		SetTimer(0.1f, false, nameof(OnRefreshPawn_CloseScreen), self);
+	}
 }
 
 private function OnDeleteButtonClicked(UIButton ButtonSource)
