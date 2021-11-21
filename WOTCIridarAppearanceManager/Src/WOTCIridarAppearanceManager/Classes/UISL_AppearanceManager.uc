@@ -25,6 +25,7 @@ event OnInit(UIScreen Screen)
 {
 	local UICustomize			CustomizeScreen;
 	local X2PawnRefreshHelper	PawnRefreshHelper;
+	local bool					bPawnRefreshing;
 
 	CustomizeScreen = GetUnitCustomizeMenuScreen(Screen);
 	if (CustomizeScreen != none)
@@ -52,11 +53,17 @@ event OnInit(UIScreen Screen)
 			PawnRefreshHelper.CustomizeScreen = CustomizeScreen;
 			PawnRefreshHelper.InitHelper();
 			PawnRefreshHelper.RefreshPawn(true);
+			bPawnRefreshing = true;
 		}
-		else
+	}
+
+	if (!bPawnRefreshing)
+	{
+		CustomizeScreen = UICustomize(Screen);
+		if (CustomizeScreen != none && CustomizeScreen.CustomizeManager.ActorPawn != none && UIMouseGuard_RotatePawn(CustomizeScreen.MouseGuardInst) != none)
 		{
 			// Always add customize pawn to mouse guard so it can be rotated always, not just in actual customization menu.
-			UIMouseGuard_RotatePawn(`SCREENSTACK.GetFirstInstanceOf(class'UIMouseGuard_RotatePawn')).SetActorPawn(CustomizeScreen.CustomizeManager.ActorPawn);
+			UIMouseGuard_RotatePawn(CustomizeScreen.MouseGuardInst).SetActorPawn(CustomizeScreen.CustomizeManager.ActorPawn);
 		}
 	}
 }

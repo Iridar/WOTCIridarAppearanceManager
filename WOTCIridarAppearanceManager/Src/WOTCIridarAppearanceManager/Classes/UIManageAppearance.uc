@@ -4,6 +4,19 @@ class UIManageAppearance extends UICustomize;
 /*
 # Priority
 
+NavHelp.ContinueButton
+make your button, yes, but on the navhelp
+override Show()/Hide() in your screen to propagate the changes to that button
+Destroy the button when screen is closed
+
+Apply Changes button is disabled while "Show All Options" is enabled and I want to copy parts of the currently selected appearance onto CP or something.
+
+Show Race near Face change. Race is now changed along with the face automatically, but you can't tell cuz of stuff like Face C -> Face C
+
+Should APply Changes button select Original Apperance?
+
+Handle UIMouseGuard_RotatePawn(CustomizeScreen.MouseGuardInst).SetActorPawn(CustomizeScreen.CustomizeManager.ActorPawn);
+
 Make chevron animation on Apply Changes button go away when there's no changes to apply, and add a disabled reason for it. Alternatively, hide the button.
 Genders sometimes doesn't refresh automatically, deforming the pawn.
 
@@ -323,7 +336,7 @@ simulated function UpdateData()
 	if (CustomizeManager.ActorPawn != none)
 	{
 		// Assign the actor pawn to the mouse guard so the pawn can be rotated by clicking and dragging
-		UIMouseGuard_RotatePawn(`SCREENSTACK.GetFirstInstanceOf(class'UIMouseGuard_RotatePawn')).SetActorPawn(CustomizeManager.ActorPawn);
+		UIMouseGuard_RotatePawn(MouseGuardInst).SetActorPawn(CustomizeManager.ActorPawn);
 	}
 
 	UpdateAppearanceList();
@@ -1110,7 +1123,7 @@ final function OnRefreshPawn()
 		ApplyChangesToUnitWeapons(ArmoryUnit, ArmoryPawn.m_kAppearance, none);
 
 		// Assign the actor pawn to the mouse guard so the pawn can be rotated by clicking and dragging
-		UIMouseGuard_RotatePawn(`SCREENSTACK.GetFirstInstanceOf(class'UIMouseGuard_RotatePawn')).SetActorPawn(CustomizeManager.ActorPawn);
+		UIMouseGuard_RotatePawn(MouseGuardInst).SetActorPawn(CustomizeManager.ActorPawn);
 	}
 	else
 	{
