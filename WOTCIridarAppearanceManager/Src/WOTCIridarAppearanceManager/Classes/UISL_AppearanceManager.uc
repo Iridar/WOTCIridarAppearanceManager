@@ -53,6 +53,11 @@ event OnInit(UIScreen Screen)
 			PawnRefreshHelper.InitHelper();
 			PawnRefreshHelper.RefreshPawn(true);
 		}
+		else
+		{
+			// Always add customize pawn to mouse guard so it can be rotated always, not just in actual customization menu.
+			UIMouseGuard_RotatePawn(`SCREENSTACK.GetFirstInstanceOf(class'UIMouseGuard_RotatePawn')).SetActorPawn(CustomizeScreen.CustomizeManager.ActorPawn);
+		}
 	}
 }
 
