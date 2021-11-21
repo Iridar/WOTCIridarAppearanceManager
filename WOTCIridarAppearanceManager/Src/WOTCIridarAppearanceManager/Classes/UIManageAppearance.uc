@@ -608,9 +608,9 @@ function UpdateAppearanceList()
 	strDisplaySearchText = strSearchTitle;
 	if (SearchText != "")
 	{
-		if (Len(SearchText) > 13)
+		if (Len(SearchText) > 12)
 		{
-			strDisplaySearchText $= ":" @ Left(SearchText, 12) $ "...";
+			strDisplaySearchText $= ":" @ Left(SearchText, 11) $ "...";
 		}
 		else
 		{

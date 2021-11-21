@@ -3,33 +3,7 @@ class UICharacterPool_AM extends UICharacterPool;
 var private UIButton SearchButton;
 var private string SearchText;
 
-// Sort the displayed list of soldiers and display more info.
-simulated function array<string> GetCharacterNames()
-{
-	local array<string> CharacterNames; 
-	local int i; 
-	
-	local XComGameState_Unit Soldier;
-	local string soldierName;
 
-	CharacterPoolManager_AM(CharacterPoolMgr).SortCharacterPoolBySoldierName();
-	CharacterPoolManager_AM(CharacterPoolMgr).SortCharacterPoolBySoldierClass();
-	
-	for (i = 0; i < CharacterPoolMgr.CharacterPool.Length; i++)
-	{
-		Soldier = CharacterPoolMgr.CharacterPool[i];
-
-		soldierName = class'Help'.static.GetUnitDisplayString(Soldier);
-
-		if (SearchText != "" && InStr(soldierName, SearchText,, true) == INDEX_NONE) // Ignore case
-		{
-			continue;
-		}
-
-		CharacterNames.AddItem(soldierName);
-	}
-	return CharacterNames; 
-}
 
 simulated function InitScreen(XComPlayerController InitController, UIMovie InitMovie, optional name InitName)
 {
@@ -160,6 +134,117 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 	SetTimer(2.0, false, nameof(ForceShow));
 	
 	bAnimateOut = false;
+}
+
+// Sort the displayed list of soldiers and display more info.
+// Not actually used.
+simulated function array<string> GetCharacterNames()
+{
+	local array<string> CharacterNames; 
+	local int i; 
+	
+	local XComGameState_Unit Soldier;
+	local string soldierName;
+
+	CharacterPoolManager_AM(CharacterPoolMgr).SortCharacterPoolBySoldierName();
+	CharacterPoolManager_AM(CharacterPoolMgr).SortCharacterPoolBySoldierClass();
+	
+	for (i = 0; i < CharacterPoolMgr.CharacterPool.Length; i++)
+	{
+		Soldier = CharacterPoolMgr.CharacterPool[i];
+
+		soldierName = class'Help'.static.GetUnitDisplayString(Soldier);
+
+		if (SearchText != "" && InStr(soldierName, SearchText,, true) == INDEX_NONE) // Ignore case
+		{
+			continue;
+		}
+
+		CharacterNames.AddItem(soldierName);
+	}
+	return CharacterNames; 
+}
+
+// Original Character Pool relies on the order of soldiers in the list.
+// Since the SearchText functionality means not all soldiers may be displayed all the time,
+// that functionality stops working reliably, so a new UIMechaList element is used to get
+// the UnitState stored in that list element specifically.
+simulated function UpdateDisplay()
+{
+	local XComGameState_Unit		UnitState;
+	local string					strDisplayName;
+	local UIMechaListItem_Soldier	SpawnedItem;
+
+	CharacterPoolManager_AM(CharacterPoolMgr).SortCharacterPoolBySoldierName();
+	CharacterPoolManager_AM(CharacterPoolMgr).SortCharacterPoolBySoldierClass();
+
+	List.ClearItems();
+
+	foreach CharacterPoolMgr.CharacterPool(UnitState)
+	{	
+		strDisplayName = class'Help'.static.GetUnitDisplayString(UnitState);
+
+		if (SearchText != "" && InStr(strDisplayName, SearchText,, true) == INDEX_NONE) // Ignore case
+		{
+			continue;
+		}
+
+		SpawnedItem = Spawn(class'UIMechaListItem_Soldier', List.ItemContainer);
+		SpawnedItem.bAnimateOnInit = false;
+		SpawnedItem.InitListItem();
+		SpawnedItem.UnitState = UnitState;
+		SpawnedItem.UpdateDataCheckbox(strDisplayName, 
+			"",
+			SelectedCharacters.Find(UnitState) != INDEX_NONE, 
+			SelectSoldier, 
+			EditSoldier);
+	}
+
+	UpdateNavHelp();
+	if( !`ISCONTROLLERACTIVE )
+		UpdateEnabledButtons();
+}
+
+simulated function EditSoldier()
+{
+	local UIMechaListItem_Soldier	SelectedPanel;
+	local XComGameState_Unit		SelectedUnit;
+
+	SelectedPanel = UIMechaListItem_Soldier(List.GetSelectedItem());
+	SelectedUnit = SelectedPanel.UnitState;
+
+	PC.Pres.UICustomize_Menu(SelectedUnit, none);
+	CharacterPoolMgr.SaveCharacterPool();
+}
+
+simulated function SelectSoldier(UICheckbox CheckBox)
+{
+	local UIMechaListItem_Soldier	SelectedPanel;
+	local XComGameState_Unit		SelectedUnit;
+
+	SelectedPanel = UIMechaListItem_Soldier(List.GetSelectedItem());
+	SelectedUnit = SelectedPanel.UnitState;
+
+	if (CheckBox.bChecked)
+		SelectedCharacters.AddItem(SelectedUnit);
+	else
+		SelectedCharacters.RemoveItem(SelectedUnit);
+	
+	if( `ISCONTROLLERACTIVE )
+		UpdateNavHelp();
+	else
+		UpdateEnabledButtons();
+}
+
+function XComGameState_Unit GetSoldierInSlot( int iSlot )
+{
+	local UIMechaListItem_Soldier	SelectedPanel;
+	local XComGameState_Unit		SelectedUnit;
+
+	SelectedPanel = UIMechaListItem_Soldier(List.GetItem(iSlot));
+	SelectedUnit = SelectedPanel.UnitState;
+
+	return SelectedUnit;
 }
 
 simulated function OnSelectAllButtonSizeRealized()
