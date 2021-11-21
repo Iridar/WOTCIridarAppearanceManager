@@ -5,10 +5,8 @@ class UIManageAppearance extends UICustomize;
 # Priority
 
 Make chevron animation on Apply Changes button go away when there's no changes to apply, and add a disabled reason for it. Alternatively, hide the button.
-CP search doesn't update OnClick methods
-Pawn plays wrong armory animation "created a new rookie in the charpool, left, came back and they were posed like this"
 
-Pawn sometimes doesn't refresh automatically.
+Genders sometimes doesn't refresh automatically, deforming the pawn.
 Add pawn to mouse guard in UISL so that pawn can be rotated on any UICustomize screen.
 
 Validate Appearance caused double pawn. Need for Validate Appearance occured when deleting appearance stores caused the unit to glitch out.

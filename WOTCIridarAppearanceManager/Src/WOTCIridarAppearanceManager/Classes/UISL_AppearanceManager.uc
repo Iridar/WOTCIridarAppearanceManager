@@ -49,6 +49,7 @@ event OnInit(UIScreen Screen)
 		if (!CustomizeScreen.bInArmory)
 		{
 			PawnRefreshHelper = new class'X2PawnRefreshHelper';
+			PawnRefreshHelper.CustomizeScreen = CustomizeScreen;
 			PawnRefreshHelper.InitHelper();
 			PawnRefreshHelper.RefreshPawn(true);
 		}
@@ -478,7 +479,7 @@ private function OnConvertToUniformInputBoxAccepted(string strLastName)
 	UnitState.StoreAppearance(UnitState.kAppearance.iGender, class'Help'.static.GetEquippedArmorTemplateName(UnitState, CharPoolMgr));
 	CustomizeScreen.CustomizeManager.CommitChanges(); // This saves the CP.
 
-	class'X2PawnRefreshHelper'.static.RefreshPawn_Static(true, CustomizeScreen.CustomizeManager, CharPoolMgr);
+	class'X2PawnRefreshHelper'.static.RefreshPawn_Static(true, CustomizeScreen.CustomizeManager, CharPoolMgr, CustomizeScreen);
 
 	CharPoolMgr.SetUniformStatus(UnitState, EUS_Manual); // This also saves CP. Much redundancy, such wow.
 	
@@ -540,7 +541,7 @@ private function OnValidateButtonClicked(UIButton ButtonSource)
 	}
 	else
 	{
-		class'X2PawnRefreshHelper'.static.RefreshPawn_Static(true, CustomizeScreen.CustomizeManager, CharPool);
+		class'X2PawnRefreshHelper'.static.RefreshPawn_Static(true, CustomizeScreen.CustomizeManager, CharPool, CustomizeScreen);
 	}
 	CustomizeScreen.UpdateData();
 

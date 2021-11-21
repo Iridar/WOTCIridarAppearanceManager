@@ -3,6 +3,7 @@ class X2PawnRefreshHelper extends Object;
 var UIArmory_Loadout_CharPool	LoadoutScreen;
 var UIAppearanceStore			AppearanceStoreScreen;
 var UIManageAppearance			ManageAppearanceScreen;
+var UICustomize					CustomizeScreen;
 
 var private XComCharacterCustomization	CustomizationManager;
 var private CharacterPoolManager_AM		PoolMgr;
@@ -12,10 +13,11 @@ var private XComGameStateHistory		History;
 var private X2ItemTemplateManager		ItemMgr;
 var private XComGameState				TempGameState;
 
-static final function RefreshPawn_Static(optional bool bForce, optional XComCharacterCustomization _CustomizationManager, optional CharacterPoolManager_AM _PoolMgr)
+static final function RefreshPawn_Static(optional bool bForce, optional XComCharacterCustomization _CustomizationManager, optional CharacterPoolManager_AM _PoolMgr, optional UICustomize _CustomizeScreen)
 {
 	local X2PawnRefreshHelper PawnRefreshHelper;
 	PawnRefreshHelper = new class'X2PawnRefreshHelper';
+	PawnRefreshHelper.CustomizeScreen = _CustomizeScreen;
 	PawnRefreshHelper.InitHelper(_CustomizationManager, _PoolMgr);
 	PawnRefreshHelper.RefreshPawn(bForce);
 }
@@ -135,7 +137,10 @@ private function OnPawnVisualsCreated(XComUnitPawn inPawn)
 		AppearanceStoreScreen.ArmoryPawn = XComHumanPawn(inPawn);
 		AppearanceStoreScreen.UpdateData(); // Play HQ Idle Anim
 	}
-	
+	else if (CustomizeScreen != none)
+	{
+		CustomizeScreen.UpdateData(); // Play HQ Idle Anim
+	}
 
 	`AMLOG(GetFuncName() @ " running for unit:" @ UnitState.GetFullName() @ "Pawn state:" @ CustomizationManager.ActorPawn.GetStateName());
 
