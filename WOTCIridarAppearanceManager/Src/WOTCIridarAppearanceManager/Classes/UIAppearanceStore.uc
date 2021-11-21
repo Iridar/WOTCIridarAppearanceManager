@@ -141,6 +141,9 @@ private function bool EquipArmorStrategy(const name ArmorTemplateName)
 	XComHQ = XComGameState_HeadquartersXCom(NewGameState.ModifyStateObject(XComHQ.Class, XComHQ.ObjectID));
 	NewUnitState = XComGameState_Unit(NewGameState.ModifyStateObject(UnitState.Class, UnitState.ObjectID));
 
+	// Restore unit's original appearance before doing anything, otherwise we risk ruining unit's stored appearance for whatever armor they have equipped.
+	NewUnitState.SetTAppearance(OriginalAppearance);
+
 	XComHQ.GetItemFromInventory(NewGameState, ItemState.GetReference(), NewItemState);
 	if (NewItemState == none)
 	{
@@ -174,12 +177,12 @@ private function bool EquipArmorStrategy(const name ArmorTemplateName)
 
 		//NewUnitState.SetTAppearance(SelectedAppearance); // Should happen automatically when the armor is equippped
 		`GAMERULES.SubmitGameState(NewGameState);
-		//CustomizeManager.SubmitUnitCustomizationChanges();
-
+		CustomizeManager.SubmitUnitCustomizationChanges();
 
 		`AMLOG("Equipped successfully, new torso:" @ NewUnitState.kAppearance.nmTorso);
-		/if (OldAppearance != NewUnitState.kAppearance) // Refresh pawn only when necessary to reduce pawn flicker // EDIT: have to refresh every time to get rid of the heavy weapon model. Or draw one.
+		//if (OldAppearance != NewUnitState.kAppearance) // Refresh pawn only when necessary to reduce pawn flicker // EDIT: have to refresh every time to get rid of the heavy weapon model. Or draw one.
 		//{
+			//CustomizeManager.UpdatedUnitState = NewUnitState;
 			CustomizeManager.ReCreatePawnVisuals(CustomizeManager.ActorPawn, true);
 			bPawnIsRefreshing = true;
 		//}
@@ -287,7 +290,6 @@ private function SetPawnAppearance(TAppearance NewAppearance)
 	{
 		UnitState.SetTAppearance(NewAppearance);
 		CustomizeManager.ReCreatePawnVisuals(CustomizeManager.ActorPawn, true);
-		bPawnIsRefreshing = true;
 		SetTimer(0.1f, false, nameof(OnRefreshPawn), self);
 	}
 	else
@@ -303,7 +305,6 @@ final function OnRefreshPawn()
 	{
 		// Assign the actor pawn to the mouse guard so the pawn can be rotated by clicking and dragging
 		UIMouseGuard_RotatePawn(MouseGuardInst).SetActorPawn(CustomizeManager.ActorPawn);
-		bPawnIsRefreshing = false;
 	}
 	else
 	{
