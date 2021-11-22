@@ -2,6 +2,11 @@
 
 More info here: https://www.patreon.com/Iridar
 
+Forest Walk by Alexander Nakarada | https://www.serpentsoundstudios.com
+Music promoted by https://www.chosic.com/free-music/all/
+Attribution 4.0 International (CC BY 4.0)
+https://creativecommons.org/licenses/by/4.0/
+
 
 [WOTC] Iridar's Appearance Manager
 
@@ -48,7 +53,8 @@ UICharacterPool_ListPools - required for the mod to Import and Export additional
 
 [h1]COMPANION MODS[/h1]
 [list]
-[*] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2518586673][b][WOTC] No Tech Gated Helmets[/b][/url] - allows equipping any helmet in Character Pool.[/list]
+[*] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2518586673][b][WOTC] No Tech Gated Helmets[/b][/url] - allows equipping any helmet in Character Pool.
+[*] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=1125727531][b]WOTC Use My Class[/b][/url] - makes soldiers properly promote to the soldier class set in Character Pool.[/list]
 
 [h1]CREDITS[/h1]
 

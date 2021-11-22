@@ -1,5 +1,7 @@
 class X2EventListener_AM extends X2EventListener;
 
+var private name RefreshPawnEventName;
+
 static function array<X2DataTemplate> CreateTemplates()
 {
 	local array<X2DataTemplate> Templates;
@@ -27,6 +29,7 @@ static private function CHEventListenerTemplate Create_ListenerTemplate_Strategy
 	Template.AddCHEvent('ItemAddedToSlot', OnItemAddedToSlot, ELD_Immediate, 50);
 	Template.AddCHEvent('UnitRankUp', OnUnitRankUp, ELD_Immediate, 50);
 	Template.AddCHEvent('OnCreateCinematicPawn', OnCreateCinematicPawn, ELD_Immediate, 10);
+	Template.AddCHEvent(default.RefreshPawnEventName, OnRefreshPawnEvent, ELD_OnStateSubmitted, 50);
 
 	return Template;
 }
@@ -42,6 +45,7 @@ static private function CHEventListenerTemplate Create_ListenerTemplate_Tactical
 	Template.AddCHEvent('UnitRankUp', OnUnitRankUp, ELD_Immediate, 50);
 	Template.AddCHEvent('PostAliensSpawned', OnPostAliensSpawned, ELD_Immediate, 50);
 	Template.AddCHEvent('OnCreateCinematicPawn', OnCreateCinematicPawn, ELD_Immediate, 10);
+	Template.AddCHEvent(default.RefreshPawnEventName, OnRefreshPawnEvent, ELD_OnStateSubmitted, 50);
 
 	return Template;
 }
@@ -87,7 +91,7 @@ static private function EventListenerReturn OnItemAddedToSlot(Object EventData, 
 		return ELR_NoInterrupt;
 	}
 
-	MaybeApplyUniformAppearance(UnitState, ItemState.GetMyTemplateName());
+	MaybeApplyUniformAppearance(UnitState, ItemState.GetMyTemplateName(), NewGameState);
 
 	return ELR_NoInterrupt;
 }
@@ -119,16 +123,19 @@ static private function EventListenerReturn OnItemAddedToSlot_CampaignStart(Obje
 	//	return ELR_NoInterrupt;
 	//}
 
-	MaybeApplyUniformAppearance(UnitState, ItemState.GetMyTemplateName());
+	MaybeApplyUniformAppearance(UnitState, ItemState.GetMyTemplateName(), NewGameState);
 
 	return ELR_NoInterrupt;
 }
 
-static private function bool MaybeApplyUniformAppearance(XComGameState_Unit UnitState, name ArmorTemplateName, optional bool bClassUniformOnly = false)
+static private function bool MaybeApplyUniformAppearance(XComGameState_Unit UnitState, name ArmorTemplateName, XComGameState NewGameState, optional bool bClassUniformOnly = false)
 {
 	local CharacterPoolManager_AM		CharacterPool;
 	local TAppearance					NewAppearance;
-	local UIArmory						ArmoryScreen;
+	local XComGameState_Item			ItemState;
+	local XComGameState_Item			NewItemState;
+	local array<XComGameState_Item>		ItemStates;
+	local X2WeaponTemplate				WeaponTemplate;
 	
 	CharacterPool = `CHARACTERPOOLMGRAM;
 	if (CharacterPool == none || !CharacterPool.ShouldAutoManageUniform(UnitState))
@@ -142,12 +149,33 @@ static private function bool MaybeApplyUniformAppearance(XComGameState_Unit Unit
 		UnitState.SetTAppearance(NewAppearance);
 		UnitState.StoreAppearance(UnitState.kAppearance.iGender, ArmorTemplateName);
 
-		// Update pawn appearance as well so that uniform takes effect immediately.
-		ArmoryScreen = UIArmory(`SCREENSTACK.GetCurrentScreen());
-		if (ArmoryScreen != none && UnitState.ObjectID == ArmoryScreen.UnitReference.ObjectID)
+		// Weapon camo needs to be updated separately.
+		ItemStates = UnitState.GetAllInventoryItems(NewGameState, true);
+		foreach ItemStates(ItemState)
 		{
-			XComHumanPawn(ArmoryScreen.ActorPawn).SetAppearance(NewAppearance, true);
+			NewItemState = XComGameState_Item(NewGameState.GetGameStateForObjectID(ItemState.ObjectID));
+			if (NewItemState == none)
+				NewItemState = XComGameState_Item(NewGameState.ModifyStateObject(ItemState.Class, ItemState.ObjectID));
+
+			WeaponTemplate = X2WeaponTemplate(ItemState.GetMyTemplate());
+			if (WeaponTemplate == none) continue;
+
+			if (WeaponTemplate.bUseArmorAppearance)
+			{
+				NewItemState.WeaponAppearance.iWeaponTint = NewAppearance.iArmorTint;
+			}
+			else
+			{
+				NewItemState.WeaponAppearance.iWeaponTint = NewAppearance.iWeaponTint;
+			}
+		
+			NewItemState.WeaponAppearance.nmWeaponPattern = NewAppearance.nmWeaponPattern;
 		}
+
+		// At this point we want to refresh the soldier pawn so that uniform takes effect,
+		// but doing so _right meow_ wouldn't work, because at this point Game State with our state changes
+		// has not been submitted yet, so we delay this until the game state is submitted.
+		`XEVENTMGR.TriggerEvent(default.RefreshPawnEventName, UnitState, UnitState, NewGameState);
 
 		return true;
 	}
@@ -155,6 +183,8 @@ static private function bool MaybeApplyUniformAppearance(XComGameState_Unit Unit
 
 	return false;
 }
+
+
 
 
 static private function EventListenerReturn OnUnitRankUp(Object EventData, Object EventSource, XComGameState NewGameState, Name Event, Object CallbackData)
@@ -176,7 +206,7 @@ static private function EventListenerReturn OnUnitRankUp(Object EventData, Objec
 
 	`AMLOG(UnitState.GetFullName() @ "promoted to rank:" @ UnitState.GetRank() @ ", and has armor equipped:" @ ItemState.GetMyTemplateName());
 
-	MaybeApplyUniformAppearance(UnitState, ItemState.GetMyTemplateName(), true);
+	MaybeApplyUniformAppearance(UnitState, ItemState.GetMyTemplateName(), NewGameState, true);
 
 	return ELR_NoInterrupt;
 }
@@ -243,4 +273,40 @@ static private function EventListenerReturn OnCreateCinematicPawn(Object EventDa
 	else `AMLOG("Has no uniform");
 	
 	return ELR_NoInterrupt;
+}
+
+
+static private function EventListenerReturn OnRefreshPawnEvent(Object EventData, Object EventSource, XComGameState GameState, Name Event, Object CallbackData)
+{
+	local XComGameState_Unit	UnitState;
+	local UIArmory				ArmoryScreen;
+	local Rotator				CachedSoldierRotation;
+	local UIScreenStack			ScreenStack;
+	local int i;
+
+	UnitState = XComGameState_Unit(EventData);
+	if (UnitState == none)
+		return ELR_NoInterrupt;
+
+	ScreenStack = `SCREENSTACK;
+	if (ScreenStack == none)
+		return ELR_NoInterrupt;
+
+	for (i = ScreenStack.Screens.Length - 1; i >= 0; --i)
+	{
+		ArmoryScreen = UIArmory(ScreenStack.Screens[i]);
+		if (ArmoryScreen != none && ArmoryScreen.ActorPawn != none && UnitState.ObjectID == ArmoryScreen.UnitReference.ObjectID)
+		{
+			CachedSoldierRotation = ArmoryScreen.ActorPawn.Rotation;
+			ArmoryScreen.ReleasePawn(true);
+			ArmoryScreen.CreateSoldierPawn(CachedSoldierRotation);
+		}
+	}
+	
+	return ELR_NoInterrupt;
+}
+
+defaultproperties
+{
+	RefreshPawnEventName = "IRI_AM_RefreshPawnEvent";
 }
