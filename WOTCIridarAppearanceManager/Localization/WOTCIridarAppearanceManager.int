@@ -86,6 +86,11 @@ strUniformStatus[1] = "Apply to any soldier class"
 strUniformStatus[2] = "Apply to same soldier class"
 strUniformStatus[3] = "Apply to non-soldier characters"
 
+;strUniformStatus[0] = "<font color='#27aae1'>Do not apply automatically</font>" ; blue
+;strUniformStatus[1] = "<font color='#53b45e'>Apply to any soldier class</font>" ; green
+;strUniformStatus[2] = "<font color='#fdce2b'>Apply to same soldier class</font>" ; yellow
+;strUniformStatus[3] = "<font color='#bf1e2e'>Apply to non-soldier characters</font>" ; red
+
 strUniformUnitTypes = "Select non-soldier characters"
 
 [AM_MCM_Screen]

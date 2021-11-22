@@ -4,6 +4,7 @@ class UIManageAppearance extends UICustomize;
 /*
 # Priority
 
+Fix placeholder ApplyChangesButton.Hide()
 Should APply Changes button select Original Apperance?
 
 Make chevron animation on Apply Changes button go away when there's no changes to apply, and add a disabled reason for it. Alternatively, hide the button.
@@ -268,7 +269,7 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 	CreateApplyChangesButton();
 }
 
-private function CreateApplyChangesButton()
+function CreateApplyChangesButton()
 {
 	local int iconYOffset;
 
@@ -309,7 +310,7 @@ private function CreateApplyChangesButton()
 
 // Button should be disabled if there are no changes to apply to this unit,
 // unless we want to copy parts of the soldier's original appearance to other units.
-private function UpdateApplyChangesButtonVisibility()
+function UpdateApplyChangesButtonVisibility()
 {
 	if (bShowAllCosmeticOptions && bOriginalAppearanceSelected)
 	{
@@ -330,13 +331,13 @@ private function CacheArmoryUnitData()
 	ArmoryUnit = CustomizeManager.UpdatedUnitState;
 	if (ArmoryUnit == none)
 	{
-		ApplyChangesButton.Destroy();
+		if (ApplyChangesButton != none) ApplyChangesButton.Remove();
 		super.CloseScreen();
 	}
 	ArmoryPawn = XComHumanPawn(CustomizeManager.ActorPawn);
 	if (ArmoryPawn == none)
 	{
-		ApplyChangesButton.Destroy();
+		if (ApplyChangesButton != none) ApplyChangesButton.Remove();
 		super.CloseScreen();
 	}
 	ArmorTemplate = class'Help'.static.GetItemTemplateFromCosmeticTorso(ArmoryPawn.m_kAppearance.nmTorso);
@@ -390,13 +391,13 @@ simulated function UpdateData()
 simulated function Show()
 {
 	super.Show();
-	ApplyChangesButton.Show();
+	if (ApplyChangesButton != none) ApplyChangesButton.Show();
 }
 
 simulated function Hide()
 {
 	super.Hide();
-	ApplyChangesButton.Hide();
+	if (ApplyChangesButton != none) ApplyChangesButton.Hide();
 }
 
 // ================================================================================================================================================
@@ -1254,7 +1255,7 @@ simulated function CloseScreen()
 		CancelChanges();
 		ArmoryPawn.SetLocation(OriginalPawnLocation);
 		SavePresetCheckboxPositions();
-		ApplyChangesButton.Destroy();
+		if (ApplyChangesButton != none) ApplyChangesButton.Remove();
 		super.CloseScreen();
 	}
 	else
@@ -1276,7 +1277,7 @@ private function OnCloseScreenDialogCallback(Name eAction)
 		CancelChanges();
 		ArmoryPawn.SetLocation(OriginalPawnLocation);
 		SavePresetCheckboxPositions();
-		ApplyChangesButton.Destroy();
+		if (ApplyChangesButton != none) ApplyChangesButton.Remove();
 		super.CloseScreen();
 	}
 }

@@ -1016,6 +1016,12 @@ final function SortCharacterPoolBySoldierName()
 	CharacterPool.Sort(SortCharacterPoolBySoldierNameFn);
 }
 
+final function SortCharacterPoolByUniformStatus()
+{
+	CharacterPool.Sort(SortCharacterPoolByUniformStatusFn);
+}
+
+
 private final function int SortCharacterPoolBySoldierNameFn(XComGameState_Unit UnitA, XComGameState_Unit UnitB)
 {
 	if (UnitA.GetFullName() < UnitB.GetFullName())
@@ -1073,4 +1079,23 @@ private final function int SortCharacterPoolBySoldierClassFn(XComGameState_Unit 
 		return 1;
 	}
 	return -1;
+}
+
+private final function int SortCharacterPoolByUniformStatusFn(XComGameState_Unit UnitA, XComGameState_Unit UnitB)
+{
+	local EUniformStatus UniformStatusA; 
+	local EUniformStatus UniformStatusB;
+
+	UniformStatusA = GetUniformStatus(UnitA);
+	UniformStatusB = GetUniformStatus(UnitB);
+
+	if (UniformStatusA < UniformStatusB)
+	{
+		return 1;
+	}
+	else if (UniformStatusA > UniformStatusB)
+	{
+		return -1;
+	}
+	return 0;
 }

@@ -17,6 +17,8 @@ simulated function InitScreen(XComPlayerController InitController, UIMovie InitM
 
 	super.InitScreen(InitController, InitMovie, InitName);
 
+	AppearanceListBG.Hide();
+	AppearanceList.Hide();
 	List.Hide();
 	ListBG.Hide();
 }
@@ -34,6 +36,8 @@ function UIMechaListItem_Button CreateOptionShowAll()
 
 function CreateFiltersList() {}
 function UpdateAppearanceList() {}
+function CreateApplyChangesButton() {}
+function UpdateApplyChangesButtonVisibility() {}
 
 simulated function UpdateOptionsList()
 {

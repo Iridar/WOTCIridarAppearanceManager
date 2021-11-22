@@ -146,6 +146,7 @@ simulated function array<string> GetCharacterNames()
 	local XComGameState_Unit Soldier;
 	local string soldierName;
 
+	CharacterPoolManager_AM(CharacterPoolMgr).SortCharacterPoolByUniformStatus();
 	CharacterPoolManager_AM(CharacterPoolMgr).SortCharacterPoolBySoldierName();
 	CharacterPoolManager_AM(CharacterPoolMgr).SortCharacterPoolBySoldierClass();
 	
@@ -174,11 +175,43 @@ simulated function UpdateDisplay()
 	local XComGameState_Unit		UnitState;
 	local string					strDisplayName;
 	local UIMechaListItem_Soldier	SpawnedItem;
+	local EUniformStatus			UniformStatus;
 
 	CharacterPoolManager_AM(CharacterPoolMgr).SortCharacterPoolBySoldierName();
 	CharacterPoolManager_AM(CharacterPoolMgr).SortCharacterPoolBySoldierClass();
 
 	List.ClearItems();
+
+	// Do two passes through Character Pool. First, make a list of non-uniforms.
+	foreach CharacterPoolMgr.CharacterPool(UnitState)
+	{	
+		strDisplayName = class'Help'.static.GetUnitDisplayString(UnitState);
+
+		if (SearchText != "" && InStr(strDisplayName, SearchText,, true) == INDEX_NONE) // Ignore case
+		{
+			continue;
+		}
+
+		UniformStatus = CharacterPoolManager_AM(CharacterPoolMgr).GetUniformStatus(UnitState);
+		if (UniformStatus != EUS_NotUniform)
+			continue;
+
+		if (!UnitState.bAllowedTypeSoldier && !UnitState.bAllowedTypeVIP && !UnitState.bAllowedTypeDarkVIP)
+					strDisplayName = class'Help'.static.GetHTMLColoredText(strDisplayName, class'UIUtilities_Colors'.const.DISABLED_HTML_COLOR); // Grey	
+
+		SpawnedItem = Spawn(class'UIMechaListItem_Soldier', List.ItemContainer);
+		SpawnedItem.bAnimateOnInit = false;
+		SpawnedItem.InitListItem();
+		SpawnedItem.UnitState = UnitState;
+		SpawnedItem.UpdateDataCheckbox(strDisplayName, 
+			"",
+			SelectedCharacters.Find(UnitState) != INDEX_NONE, 
+			SelectSoldier, 
+			EditSoldier);
+	}
+
+	// Then handle the uniforms, so they're grouped at the bottom of the list.
+	CharacterPoolManager_AM(CharacterPoolMgr).SortCharacterPoolByUniformStatus();
 
 	foreach CharacterPoolMgr.CharacterPool(UnitState)
 	{	
@@ -187,6 +220,28 @@ simulated function UpdateDisplay()
 		if (SearchText != "" && InStr(strDisplayName, SearchText,, true) == INDEX_NONE) // Ignore case
 		{
 			continue;
+		}
+
+		UniformStatus = CharacterPoolManager_AM(CharacterPoolMgr).GetUniformStatus(UnitState);
+		if (UniformStatus == EUS_NotUniform)
+			continue;  // Would love to do this in the Switch(), but compiler's not letting me.
+
+		switch (UniformStatus)
+		{
+			case EUS_Manual:
+				strDisplayName = class'Help'.static.GetHTMLColoredText(strDisplayName, class'UIUtilities_Colors'.const.SCIENCE_HTML_COLOR); // Blue
+				break;
+			case EUS_AnyClass:
+				strDisplayName = class'Help'.static.GetHTMLColoredText(strDisplayName, class'UIUtilities_Colors'.const.GOOD_HTML_COLOR); // Green
+				break;
+			case EUS_ClassSpecific:
+				strDisplayName = class'Help'.static.GetHTMLColoredText(strDisplayName, class'UIUtilities_Colors'.const.WARNING_HTML_COLOR); // Yellow
+				break;
+			case EUS_NonSoldier:
+				strDisplayName = class'Help'.static.GetHTMLColoredText(strDisplayName, class'UIUtilities_Colors'.const.BAD_HTML_COLOR); // Red
+				break;
+			default:
+				break;
 		}
 
 		SpawnedItem = Spawn(class'UIMechaListItem_Soldier', List.ItemContainer);

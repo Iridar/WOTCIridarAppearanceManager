@@ -32,6 +32,31 @@ static final function string GetUnitDisplayString(const XComGameState_Unit UnitS
 	return SoldierString;
 }
 
+static final function string GetHTMLColoredText(string txt, string HTML_Color, optional int fontSize = -1, optional string align)
+{
+	local string retTxt, prefixTxt;
+
+	if(Len(txt) == 0) return txt;
+
+	if(align != "")
+		prefixTxt $=  "<p align='"$align$"'>";
+
+	if(fontSize > 0)
+		prefixTxt $= "<font size='" $ fontSize $ "' color='#";
+	else
+		prefixTxt $= "<font color='#";
+
+	prefixTxt $= HTML_Color;
+
+	prefixTxt $= "'>";
+	retTxt = prefixTxt $txt$"</font>";
+
+	if(align != "")
+		retTxt $= "</p>";
+
+	return retTxt;
+}
+
 static final function name GetArmorTemplateNameFromCharacterPoolLoadout(const array<CharacterPoolLoadoutStruct> CharacterPoolLoadout)
 {
 	local CharacterPoolLoadoutStruct LoadoutElement;
