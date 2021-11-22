@@ -7,7 +7,6 @@ simulated function DoImportCharacter(string FilenameForImport, int IndexOfCharac
 	local CharacterPoolManager		ImportPool;
 	local XComGameState_Unit		ImportUnit;
 	local CharacterPoolExtraData	ImportExtraData;
-	local int						Index;
 
 	//Find the character pool we want to import from
 	foreach ImportablePoolsLoaded(ImportPool)
@@ -23,20 +22,17 @@ simulated function DoImportCharacter(string FilenameForImport, int IndexOfCharac
 	//Put the unit in the default character pool
 	if (ImportUnit != None)
 	{
-		CharacterPoolMgr.CharacterPool.AddItem(ImportUnit);
+		ImportExtraData = CharacterPoolManager_AM(ImportPool).GetExtraDataForUnit(ImportUnit);
+
+		CharacterPoolManager_AM(CharacterPoolMgr).AddUnitToCharacterPool(ImportUnit, ImportExtraData);
 
 		`AMLOG("ImportPool class:" @ ImportPool.Class.Name @ "CharacterPoolMgr class:" @ CharacterPoolMgr.Class.Name);
-		Index = CharacterPoolManager_AM(ImportPool).GetExtraDataIndexForUnit(ImportUnit);
-		ImportExtraData = CharacterPoolManager_AM(ImportPool).ExtraDatas[Index];
-
-		ImportExtraData.ObjectID = ImportUnit.ObjectID;
-		CharacterPoolManager_AM(CharacterPoolMgr).ExtraDatas.AddItem(ImportExtraData);
 	}
 
 	//Save the default character pool
 	CharacterPoolMgr.SaveCharacterPool();
 
-	`log("Imported character" @ FilenameForImport @ IndexOfCharacter @ ":" @ ImportUnit.GetFullName());
+	`log("Imported character" @ FilenameForImport @ `showvar(IndexOfCharacter) @ ":" @ ImportUnit.GetFullName());
 }
 
 simulated function DoImportAllCharacters(string FilenameForImport)
@@ -44,7 +40,6 @@ simulated function DoImportAllCharacters(string FilenameForImport)
 	local CharacterPoolManager		ImportPool;
 	local XComGameState_Unit		ImportUnit;
 	local CharacterPoolExtraData	ImportExtraData;
-	local int						Index;
 
 	if(ImportablePoolsLoaded.Length > 0)
 	{
@@ -66,13 +61,10 @@ simulated function DoImportAllCharacters(string FilenameForImport)
 		{
 			if(ImportUnit != None)
 			{
-				CharacterPoolMgr.CharacterPool.AddItem(ImportUnit);
-
 				`AMLOG("ImportPool class:" @ ImportPool.Class.Name @ "CharacterPoolMgr class:" @ CharacterPoolMgr.Class.Name);
-				Index = CharacterPoolManager_AM(ImportPool).GetExtraDataIndexForUnit(ImportUnit);
-				ImportExtraData = CharacterPoolManager_AM(ImportPool).ExtraDatas[Index];
-				ImportExtraData.ObjectID = ImportUnit.ObjectID;
-				CharacterPoolManager_AM(CharacterPoolMgr).ExtraDatas.AddItem(ImportExtraData);
+				ImportExtraData = CharacterPoolManager_AM(ImportPool).GetExtraDataForUnit(ImportUnit);
+
+				CharacterPoolManager_AM(CharacterPoolMgr).AddUnitToCharacterPool(ImportUnit, ImportExtraData);
 			}
 		}
 
@@ -88,7 +80,6 @@ simulated function DoExportCharacters(string FilenameForExport)
 	local int i;
 	local XComGameState_Unit		ExportUnit;
 	local CharacterPoolManager_AM	ExportPool;
-	local int						Index;
 	local CharacterPoolExtraData	ExportExtraData;
 
 	//Just to be sure we don't have stale data, kill all cached pools and re-open the one we want
@@ -104,13 +95,8 @@ simulated function DoExportCharacters(string FilenameForExport)
 
 		if (ExportUnit != None)
 		{
-			ExportPool.CharacterPool.AddItem(ExportUnit);
-			
-			Index = CharacterPoolManager_AM(CharacterPoolMgr).GetExtraDataIndexForUnit(ExportUnit);
-			ExportExtraData = CharacterPoolManager_AM(CharacterPoolMgr).ExtraDatas[Index];
-			ExportPool.ExtraDatas.AddItem(ExportExtraData);
-
-			`AMLOG("Saving extra data for unit:" @ ExportUnit.GetFullName() @ Index @ ExportExtraData.ObjectID @ ExportUnit.ObjectID);
+			ExportExtraData = CharacterPoolManager_AM(CharacterPoolMgr).GetExtraDataForUnit(ExportUnit);
+			ExportPool.AddUnitToCharacterPool(ExportUnit, ExportExtraData);
 		}
 
 		`log("Exported character" @ ExportUnit.GetFullName() @ "to pool" @ FilenameForExport);

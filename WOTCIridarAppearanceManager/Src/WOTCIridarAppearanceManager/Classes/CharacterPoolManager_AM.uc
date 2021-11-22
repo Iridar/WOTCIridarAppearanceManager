@@ -12,6 +12,7 @@ class CharacterPoolManager_AM extends CharacterPoolManager;
 // This class mostly expands existing Character Pool functions; the only change in the normal functionality is that 
 // we validate units' appearance (to remove broken body parts caused by removed mods) only if the mod is configured to do so via MCM. 
 // This is done so that people's Character Pool isn't immediately broken the moment they dare to run the game with a few mods disabled.
+// We also allow "dormant" character pool units that don't appear as soldier nor VIPs (vanilla forces them to at least be soldiers).
 
 struct CosmeticOptionStruct
 {
@@ -47,10 +48,23 @@ enum EUniformStatus
 	EUS_NonSoldier		// This uniform will be auto applied to non-soldier units, like resistance militia. Separate button is displayed to select which units, exactly.
 };
 
+// The technically challenging task is figuring out how to connect the Extra Data with each specific unit in Character Pool array.
+// Keeping in mind that the order of units in the array cannot be guaranteed in case some mod decides to inject a Unit State at the start or in the middle,
+// and - majorly - because we sort the character pool constantly.
+
+// Normally we'd identify units by their Object ID, but due to how character pool is set up, we can't rely on it, since duplicates are possible.
+// When Character Pool is loaded, we can read the Extra Data entries, and we're provided with the unit's 'CharacterPoolDataElement' data.
+// We can use it to identify unit's ExtraData entry. The 'CharacterPoolDataElement' includes a lot of info about the unit, including a timestamp, so it's pretty much guaranteed to be unique.
+// The 'CharacterPoolDataElement' can be written into extra data for every unit when we're saving character pool.
+
+// However, when Character Pool is saved, and while the game is running, we need a way to identify which Extra Data belongs to which unit.
+// To do so, we assign a unique ObjectID to each Extra Data object (when character pool is loaded, and when units are imported from other character pools), 
+// and write the same ObjectID into a UnitValue on the UnitState.
+// If we attempt to find ExtraData for such a unit and can't find it, it is assumed this unit has no extra data saved, so new one is created.
+
 struct CharacterPoolExtraData
 {
 	// Used to sync Extra Data with specific UnitStates while the game is in play.
-	// It will end up being saved in the Character Pool file, even though we don't need it there.
 	var int ObjectID; 
 
 	// Used to sync Extra Data with specific units when the CP.bin is saved or loaded.
@@ -70,6 +84,7 @@ struct CharacterPoolExtraData
 };
 var array<CharacterPoolExtraData> ExtraDatas;
 
+const ExtraDataValueName = 'IRI_AppearanceManager_ExtraData_Value';
 const NonSoldierUniformSettings = 'NonSoldierUniformSettings';
 const BackupCharacterPoolPath = "CharacterPool\\DefaultCharacterPool_AppearanceManagerBackup.bin";
 
@@ -124,33 +139,23 @@ event InitSoldier(XComGameState_Unit Unit, const out CharacterPoolDataElement Ch
 
 	InitSoldierAppearance(Unit, CharacterPoolData);
 
-	`AMLOG("Loading Extra Data for" @ Unit.GetFullName());
+	`AMLOG("Loading Extra Data for" @ Unit.GetFullName() @ "unit order:" @ CharacterPool.Find(Unit) @ "out of:" @ CharacterPool.Length);
 	if (ExtraDatas.Length == 0)
 	{
 		LoadBackupCharacterPool();
 	}
 
 	// Use Character Pool Data to locate saved Extra Data for this unit.
-	// Save unit's ObjectID in Extra Data so we can find it later when we will be saving the Character Pool into the .bin file, 
-	// as well as if we need to change some Extra Data property for this unit.
 	Index = GetExtraDataIndexForCharPoolData(CharacterPoolData);
-	ExtraDatas[Index].ObjectID = Unit.ObjectID;
+
+	// The order of this unit in current Character Pool will serve as this Extra Data's unique ObjectID.
+	ExtraDatas[Index].ObjectID = CharacterPool.Find(Unit);
+
+	// We record this ObjectID on the unit as a UnitValue so we can connect this ExtraData to this Unit.
+	Unit.SetUnitFloatValue(ExtraDataValueName, ExtraDatas[Index].ObjectID, eCleanup_Never);
 
 	// Read actual Extra Data.
 	Unit.AppearanceStore = ExtraDatas[Index].AppearanceStore;
-}
-
-private function LoadBackupCharacterPool()
-{
-	local CharacterPoolManager_AM BackupPool;
-
-	BackupPool = new class'CharacterPoolManager_AM';
-	BackupPool.PoolFileName = BackupCharacterPoolPath;
-	BackupPool.LoadCharacterPool();
-
-	`AMLOG("WARNING :: No Extra Data found in Default Character Pool. Loading Extra Data from backup:" @ BackupPool.ExtraDatas.Length);
-
-	ExtraDatas = BackupPool.ExtraDatas;
 }
 
 function SaveCharacterPool()
@@ -160,13 +165,13 @@ function SaveCharacterPool()
 
 	foreach CharacterPool(UnitState)
 	{
-		`AMLOG("Saving Extra Data for" @ UnitState.GetFullName());
-
-		// Use unit's Object ID to locate Extra Data for this unit.
+		// Locate Extra Data for this unit using ExtraData's ObjectID and UnitValue on the unit.
 		// Save unit's Character Pool Data in Extra Data so we can find it later when we will be loading the Character Pool from the .bin file.
 		FillCharacterPoolData(UnitState); // This writes info about Unit State into 'CharacterPoolSerializeHelper'.
 		Index = GetExtraDataIndexForUnit(UnitState);
 		ExtraDatas[Index].CharPoolData = CharacterPoolSerializeHelper;
+
+		`AMLOG("Saving Extra Data for" @ UnitState.GetFullName() @ "ExtraData Index:" @ Index @ "Unit Index:" @ CharacterPool.Find(UnitState) @ "out of:" @ CharacterPool.Length);
 
 		// Save actual Extra Data.
 		ExtraDatas[Index].AppearanceStore = UnitState.AppearanceStore;
@@ -194,6 +199,8 @@ function SaveCharacterPool()
 		}
 	}
 
+	// TODO: Cleanup unused extra data to avoid endless file bloat
+
 	super.SaveCharacterPool();
 
 	// Starting the game with Appearance Manager disabled will cause all Extra Data to be lost.
@@ -201,6 +208,19 @@ function SaveCharacterPool()
 	PoolFileName = BackupCharacterPoolPath;
 	super.SaveCharacterPool();
 	PoolFileName = default.PoolFileName;
+}
+
+private function LoadBackupCharacterPool()
+{
+	local CharacterPoolManager_AM BackupPool;
+
+	BackupPool = new class'CharacterPoolManager_AM';
+	BackupPool.PoolFileName = BackupCharacterPoolPath;
+	BackupPool.LoadCharacterPool();
+
+	`AMLOG("WARNING :: No Extra Data found in Default Character Pool. Loading Extra Data from backup:" @ BackupPool.ExtraDatas.Length);
+
+	ExtraDatas = BackupPool.ExtraDatas;
 }
 
 // Replace pointless 'assert' with 'return none' so we can do error detecting
@@ -263,19 +283,24 @@ event XComGameState_Unit CreateSoldier(name DataTemplateName)
 }
 
 function RemoveUnit(XComGameState_Unit Character)
-{
+{	
+	local UnitValue UV;
 	local int Index;
 
-	super.RemoveUnit(Character);
-
-	// Remove stored Extra Data for this unit, if there is any.
-	// Not using GetExtraDataIndexForUnit() here, since it would create Extra Data if it doesn't exist, which we don't need.
-	Index = ExtraDatas.Find('ObjectID', Character.ObjectID);
-	if (Index != INDEX_NONE)
+	if (Character.GetUnitValue(ExtraDataValueName, UV))
 	{
-		ExtraDatas.Remove(Index, 1);
+		// Remove stored Extra Data for this unit, if there is any.
+		// Not using GetExtraDataIndexForUnit() here, since it would create Extra Data if it doesn't exist, which we don't need.
+		Index = ExtraDatas.Find('ObjectID', UV.fValue);
+		if (Index != INDEX_NONE)
+		{
+			ExtraDatas.Remove(Index, 1);
+		}
 	}
+	super.RemoveUnit(Character);
 }
+
+// TODO: Handle ExtraData <> UnitState.UnitValue connection when importing and exporting characters between character pools.
 
 // Modified version of the original. If the created unit is taken from Character Pool, load CP unit's extra data for the newly created unit.
 function XComGameState_Unit CreateCharacter(XComGameState StartState, optional ECharacterPoolSelectionMode SelectionModeOverride = eCPSM_None, optional name CharacterTemplateName, optional name ForceCountry, optional string UnitName )
@@ -445,7 +470,7 @@ function XComGameState_Unit CreateCharacter(XComGameState StartState, optional E
 // INTERFACE FUNCTIONS 
 
 // Helper method that fixes unit's appearance if they have bodyparts from mods that are not currently active.
-simulated final function ValidateUnitAppearance(XComGameState_Unit UnitState)
+final function ValidateUnitAppearance(XComGameState_Unit UnitState)
 {
 	local XGCharacterGenerator CharacterGenerator;
 	local TSoldier             CharacterGeneratorResult;
@@ -461,6 +486,38 @@ simulated final function ValidateUnitAppearance(XComGameState_Unit UnitState)
 	}
 }
 
+final function AddUnitToCharacterPool(XComGameState_Unit NewUnit, optional CharacterPoolExtraData NewExtraData)
+{
+	local UnitValue OldValue;
+	local UnitValue NewValue;
+	local XComGameState_Unit CreateUnit;
+
+	// Have to create a copy rather, cannot use the passed unit as-is.
+	// Reason: imagine scenario, we're imporing a Unit X from Character Pool A to Character Pool B.
+	// In CharPool A, UX has its own Extra Data, connected to the unit by Unit Value.
+	// If we add reference to the Unit X into CharPool B, CharPool B will need to have its own copy of Extra Data.
+	// And Unit X will need a new Unit Value to be connected to it.
+	// But if we overwrite the Unit Value on Unit X, 
+	// their connection to its own Extra Data in its own CharPool A will be broken.
+	// Essentially we'd break Extra Data for every unit we attempt to export from any Character Pool.
+	// So in order to prevent that, we duplicate the passed unit, and then apply Unit Value to that instead.
+	CreateUnit = new class'XComGameState_Unit'(NewUnit);
+
+	NewExtraData.ObjectID = FindFreeExtraDataObjectID();
+	CreateUnit.SetUnitFloatValue(ExtraDataValueName, NewExtraData.ObjectID, eCleanup_Never);
+
+	ExtraDatas.AddItem(NewExtraData);
+	CharacterPool.AddItem(CreateUnit);
+
+	NewUnit.GetUnitValue(ExtraDataValueName, OldValue);
+	CreateUnit.GetUnitValue(ExtraDataValueName, NewValue);
+	`AMLOG("Adding new unit to Character Pool." @ CreateUnit.GetFullName() @ "old value:" @ int(OldValue.fValue) @ "new value:" @ int(NewValue.fValue) @ "new ExtraData ObjectID:" @ NewExtraData.ObjectID);
+}
+
+final function CharacterPoolExtraData GetExtraDataForUnit(const XComGameState_Unit UnitState)
+{
+	return ExtraDatas[ GetExtraDataIndexForUnit(UnitState) ];
+}
 
 final function EUniformStatus GetUniformStatus(XComGameState_Unit UnitState)
 {
@@ -473,7 +530,7 @@ final function SetUniformStatus(const XComGameState_Unit UnitState, const EUnifo
 	SaveCharacterPool();
 }
 
-final function EAutoManageUniformForUnit GetAutoManageUniformForUnit(XComGameState_Unit UnitState)
+final function EAutoManageUniformForUnit GetAutoManageUniformForUnit(const XComGameState_Unit UnitState)
 {
 	return ExtraDatas[ GetExtraDataIndexForUnit(UnitState) ].AutoManageUniformForUnit;
 }
@@ -574,7 +631,7 @@ final function RemoveItemFromCharacterPoolLoadout(const XComGameState_Unit UnitS
 
 	`AMLOG(UnitState.GetFullName() @ InventorySlot @ TemplateName);
 
-	ExtraDataIndex =  GetExtraDataIndexForUnit(UnitState);
+	ExtraDataIndex = GetExtraDataIndexForUnit(UnitState);
 	CharacterPoolLoadout = ExtraDatas[ExtraDataIndex].CharacterPoolLoadout;
 
 	for (i = CharacterPoolLoadout.Length - 1; i >= 0; i--)
@@ -735,7 +792,7 @@ event XComGameState_Unit CreateSoldierForceGender(name DataTemplateName, optiona
 
 // ============================================================================================
 // INTERNAL FUNCTIONS
-
+/*
 final function bool IsCharacterPoolCharacter(const XComGameState_Unit UnitState)
 {
 	local int Index;	
@@ -750,27 +807,55 @@ final function bool IsCharacterPoolCharacter(const XComGameState_Unit UnitState)
 	}
 
 	return false;
-}
+}*/
 
-final function int GetExtraDataIndexForUnit(XComGameState_Unit UnitState)
+private function int GetExtraDataIndexForUnit(const XComGameState_Unit UnitState)
 {
-	local CharacterPoolExtraData ExtraData;
+	local XComGameState_Unit		PoolUnit;
+	local CharacterPoolExtraData	ExtraData;
+	local UnitValue					UV;
 	local int Index;
 
-	// If this unit has Extra Data on record, then return index to it.
-	Index = ExtraDatas.Find('ObjectID', UnitState.ObjectID);
+	if (UnitState.GetUnitValue(ExtraDataValueName, UV))
+	{
+		// If this unit has Extra Data on record, then return index to it.
+		Index = ExtraDatas.Find('ObjectID', int(UV.fValue));
+		if (Index != INDEX_NONE)
+		{
+			return Index;
+		}
+	}
+
+	// If not, then create it and return index to final member of the Extra Data array.
+	Index = CharacterPool.Find(UnitState);
 	if (Index != INDEX_NONE)
 	{
-		return Index;
-	}
-	else
-	{
-		// If not, then create it and return index to final member of the Extra Data array.
-		ExtraData.ObjectID = UnitState.ObjectID;
+		ExtraData.ObjectID = FindFreeExtraDataObjectID();
 		ExtraDatas.AddItem(ExtraData);
 
-		return ExtraDatas.Length - 1;
-	}	
+		PoolUnit = CharacterPool[Index];
+		PoolUnit.SetUnitFloatValue(ExtraDataValueName, ExtraData.ObjectID, eCleanup_Never);
+
+		`AMLOG(UnitState.GetFullName() @ "ExtraData didn't exist and had to be created, new ObjectID:" @ ExtraData.ObjectID);
+	
+		return ExtraData.ObjectID;
+	}
+	`AMLOG("WARNING :: You are attempting to get ExtraData for a unit that's not in Chararacter Pool! Don't do that!" @ UnitState.GetFullName());
+	return INDEX_NONE;
+}
+
+private function int FindFreeExtraDataObjectID()
+{
+	local int i;
+
+	i = 0;
+	do
+	{
+		i++;
+	}
+	until (ExtraDatas.Find('ObjectID', i) == INDEX_NONE);
+
+	return i;
 }
 
 private function int GetExtraDataIndexForCharPoolData(const out CharacterPoolDataElement CharacterPoolData)
