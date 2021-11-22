@@ -412,6 +412,7 @@ simulated private function OnSoldierButtonClicked(UIButton ButtonSource)
 		strLastName = CharGen.kSoldier.strLastName;
 
 	UnitState.SetCharacterName(strFirstName, strLastName, CharGen.kSoldier.strNickName);
+	UnitState.bAllowedTypeSoldier = true;
 	CustomizeScreen.CustomizeManager.CommitChanges();
 	
 	CharPoolMgr.SetUniformStatus(UnitState, EUS_NotUniform);
