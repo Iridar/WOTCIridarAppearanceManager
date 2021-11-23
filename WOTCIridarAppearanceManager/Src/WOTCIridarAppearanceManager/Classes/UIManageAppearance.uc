@@ -4,7 +4,8 @@ class UIManageAppearance extends UICustomize;
 /*
 # Priority
 
-Fix placeholder ApplyChangesButton.Hide()
+Look into compatibiltiy of CP Loadout screen with Item Hider.
+
 Should APply Changes button select Original Apperance?
 
 Make chevron animation on Apply Changes button go away when there's no changes to apply, and add a disabled reason for it. Alternatively, hide the button.

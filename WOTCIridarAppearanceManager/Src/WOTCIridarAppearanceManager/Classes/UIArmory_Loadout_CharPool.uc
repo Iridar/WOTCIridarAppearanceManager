@@ -7,7 +7,7 @@ var XComCharacterCustomization		CustomizationManager;
 var CharacterPoolManager_AM			CharPoolMgr;
 var private	X2PawnRefreshHelper		PawnRefreshHelper;
 
-var private config(ExcludedItems) array<name> EXCLUDED_SKINS;
+var private config(ExcludedItems) array<name> EXCLUDED_CP_LOADOUT_ITEMS;
 
 simulated function InitArmory(StateObjectReference UnitRef, optional name DispEvent, optional name SoldSpawnEvent, optional name NavBackEvent, optional name HideEvent, optional name RemoveEvent, optional bool bInstant = false, optional XComGameState InitCheckGameState)
 {
@@ -110,7 +110,7 @@ private function bool ShouldShowTemplate(const X2ItemTemplate ItemTemplate)
 	 return ItemTemplate.iItemSize > 0 &&		//	Item worth wearing (e.g. not an XPAD)
 			ItemTemplate.HasDisplayData() &&	//	Has localized name
 			ItemTemplate.strImage != "" &&		//	Has inventory icon
-			EXCLUDED_SKINS.Find(ItemTemplate.DataName) == INDEX_NONE;
+			EXCLUDED_CP_LOADOUT_ITEMS.Find(ItemTemplate.DataName) == INDEX_NONE;
 }
 
 // Completely replaced the original functionality. Since in Character Pool units don't have any items equipped, we remember the unit's entire character pool loadout,
