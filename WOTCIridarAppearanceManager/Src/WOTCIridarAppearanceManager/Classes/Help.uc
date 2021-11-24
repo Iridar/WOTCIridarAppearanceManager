@@ -236,6 +236,7 @@ static final function EqualizeAppearance(out TAppearance Appearance)
 	if (Appearance.nmFacePropLower == '') Appearance.nmFacePropLower = 'Prop_FaceLower_Blank';
 	if (Appearance.nmFacePropUpper == '') Appearance.nmFacePropUpper = 'Prop_FaceUpper_Blank';
 	if (Appearance.nmFacePaint == '') Appearance.nmFacePaint = 'Facepaint_BLANK';
+	if (Appearance.nmLeftArm != '' && Appearance.nmRightArm != '') Appearance.nmArms = '';
 }
 
 static final function bool IsCosmeticEmpty(coerce string Cosmetic)

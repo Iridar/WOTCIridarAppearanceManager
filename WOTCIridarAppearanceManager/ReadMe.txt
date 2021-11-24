@@ -60,6 +60,10 @@ Other than that, should be compatible with anything and everything.
 [*] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2518586673][b][WOTC] No Tech Gated Helmets[/b][/url] - allows equipping any helmet in Character Pool.
 [*] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=1125727531][b]WOTC Use My Class[/b][/url] - makes soldiers properly promote to the soldier class set in Character Pool.[/list]
 
+[h1]KNOWN ISSUES[/h1]
+
+Mod causes a ton of log warnings and redscreens while working with Character Pool Loadout. Those are annoying, but completely harmless, and fixing them all would require way more effort and Highlander changes than its worth.
+
 [h1]CREDITS[/h1]
 
 Huge thanks to [b]Xymanek (Astral Descend)[/b] for crucial code support and UI improvements.

@@ -7,8 +7,6 @@ class UIManageAppearance extends UICustomize;
 Investigate compatibility with Instant Avenger Menus
 Psi Operative uniform works?
 
-Should APply Changes button select Original Apperance?
-
 Make chevron animation on Apply Changes button go away when there's no changes to apply, and add a disabled reason for it. Alternatively, hide the button.
 Genders sometimes doesn't refresh automatically, deforming the pawn.
 
@@ -48,6 +46,8 @@ Make clicking an item toggle its checkbox?
 1. Polish localization
 
 ## Addressed
+
+Should APply Changes button select Original Apperance? --No, it shouldn't, user might want to copy stuff one by one from selected appearance.
 
 Maybe allow Appearance Store button to work as a "reskin armor" button? - redundant, can be done with this mod's customization screen by importing unit's own appearance from another armor.
 
