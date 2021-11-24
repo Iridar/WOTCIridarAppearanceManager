@@ -24,7 +24,7 @@ strOriginalAppearance = "ORIGINAL APPEARANCE"
 strUniformsTitle = "UNIFORMS"
 
 strExitScreenPopupTitle = "CONFIRM EXIT"
-strExitScreenPopupText = "Appearance changes have not been applied yet. Are you sure you want to exit this screen?\n\nHint: click \"Apply Changes\" button in the top right corner of the screen to apply appearance changes."
+strExitScreenPopupText = "Appearance changes have not been applied yet. Are you sure you want to exit this screen?\n\nHint: click \"Apply Changes\" button in the bottom center of the screen to apply appearance changes."
 strExitScreenPopup_Leave = "Exit without changes"
 strExitScreenPopup_Stay = "Stay on screen"
 
