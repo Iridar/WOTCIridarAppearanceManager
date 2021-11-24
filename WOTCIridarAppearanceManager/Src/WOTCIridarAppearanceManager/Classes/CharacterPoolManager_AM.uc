@@ -139,8 +139,7 @@ event InitSoldier(XComGameState_Unit Unit, const out CharacterPoolDataElement Ch
 
 	InitSoldierAppearance(Unit, CharacterPoolData);
 
-	`AMLOG("Loading Extra Data for" @ Unit.GetFullName() @ "unit order:" @ CharacterPool.Find(Unit) @ "out of:" @ CharacterPool.Length);
-	if (ExtraDatas.Length == 0)
+	if (ExtraDatas.Length == 0 && PoolFileName == default.PoolFileName) // Load ExtraData from backup if this pool is the default character pool.
 	{
 		LoadBackupCharacterPool();
 	}
@@ -148,8 +147,8 @@ event InitSoldier(XComGameState_Unit Unit, const out CharacterPoolDataElement Ch
 	// Use Character Pool Data to locate saved Extra Data for this unit.
 	Index = GetExtraDataIndexForCharPoolData(CharacterPoolData);
 
-	// The order of this unit in current Character Pool will serve as this Extra Data's unique ObjectID.
-	ExtraDatas[Index].ObjectID = CharacterPool.Find(Unit);
+	// The current order of this Extra Data in the array will serve as its unique Object ID.
+	ExtraDatas[Index].ObjectID = Index;
 
 	// We record this ObjectID on the unit as a UnitValue so we can connect this ExtraData to this Unit.
 	Unit.SetUnitFloatValue(ExtraDataValueName, ExtraDatas[Index].ObjectID, eCleanup_Never);
@@ -162,20 +161,10 @@ function SaveCharacterPool()
 {
 	local XComGameState_Unit UnitState;
 	local int Index;
+	local array<CharacterPoolExtraData> NewExtraDatas;
 
 	foreach CharacterPool(UnitState)
 	{
-		// Locate Extra Data for this unit using ExtraData's ObjectID and UnitValue on the unit.
-		// Save unit's Character Pool Data in Extra Data so we can find it later when we will be loading the Character Pool from the .bin file.
-		FillCharacterPoolData(UnitState); // This writes info about Unit State into 'CharacterPoolSerializeHelper'.
-		Index = GetExtraDataIndexForUnit(UnitState);
-		ExtraDatas[Index].CharPoolData = CharacterPoolSerializeHelper;
-
-		`AMLOG("Saving Extra Data for" @ UnitState.GetFullName() @ "ExtraData Index:" @ Index @ "Unit Index:" @ CharacterPool.Find(UnitState) @ "out of:" @ CharacterPool.Length);
-
-		// Save actual Extra Data.
-		ExtraDatas[Index].AppearanceStore = UnitState.AppearanceStore;
-
 		// Originally these were set to "false" when the unit was first converted into a uniform,
 		// but 'bAllowedTypeSoldier' seemingly gets reset to "true" at some point, not sure when, but not particularly interested in finding out.
 		// Just hard reset them every time.
@@ -197,10 +186,22 @@ function SaveCharacterPool()
 			`AMLOG("This unit was just added to character pool. Setting \"allowed as soldier\" to true:" @ UnitState.PoolTimestamp);
 			UnitState.bAllowedTypeSoldier = true;
 		}
+
+		// Save unit's Character Pool Data in Extra Data so we can find it later when we will be loading the Character Pool from the .bin file.
+
+		FillCharacterPoolData(UnitState); // This writes info about Unit State into 'CharacterPoolSerializeHelper'.
+		Index = GetExtraDataIndexForUnit(UnitState); // Locate Extra Data for this unit using ExtraData's ObjectID and UnitValue on the unit.
+		ExtraDatas[Index].CharPoolData = CharacterPoolSerializeHelper;
+		ExtraDatas[Index].AppearanceStore = UnitState.AppearanceStore;
+
+		`AMLOG("Saving Extra Data for" @ UnitState.GetFullName() @ "ExtraData Index:" @ Index @ "Unit Index:" @ CharacterPool.Find(UnitState) @ "out of:" @ CharacterPool.Length);
+
+		// Use a temporary array to store Extra Datas for units we're saving.
+		NewExtraDatas.AddItem(ExtraDatas[Index]);
 	}
 
-	// TODO: Cleanup unused extra data to avoid endless file bloat
-
+	// Assign temporary array to the permanent one. That way we're sure to save only the Extra Data that is relevant to current Character Pool units. Prevents char pool file bloat.
+	ExtraDatas = NewExtraDatas;
 	super.SaveCharacterPool();
 
 	// Starting the game with Appearance Manager disabled will cause all Extra Data to be lost.
@@ -218,7 +219,7 @@ private function LoadBackupCharacterPool()
 	BackupPool.PoolFileName = BackupCharacterPoolPath;
 	BackupPool.LoadCharacterPool();
 
-	`AMLOG("WARNING :: No Extra Data found in Default Character Pool. Loading Extra Data from backup:" @ BackupPool.ExtraDatas.Length);
+	`AMLOG("WARNING :: No Extra Data found in Default Character Pool. Loading Extra Data from backup:" @ BackupPool.ExtraDatas.Length @ "for pool:" @ PoolFileName);
 
 	ExtraDatas = BackupPool.ExtraDatas;
 }

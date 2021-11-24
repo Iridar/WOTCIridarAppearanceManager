@@ -4,7 +4,8 @@ class UIManageAppearance extends UICustomize;
 /*
 # Priority
 
-Look into compatibiltiy of CP Loadout screen with Item Hider.
+Investigate compatibility with Instant Avenger Menus
+Psi Operative uniform works?
 
 Should APply Changes button select Original Apperance?
 
@@ -51,6 +52,8 @@ Make clicking an item toggle its checkbox?
 Maybe allow Appearance Store button to work as a "reskin armor" button? - redundant, can be done with this mod's customization screen by importing unit's own appearance from another armor.
 
 ## Ideas for later
+
+Lock specific customization slots on the soldier, and lock them between all stored appearances whenever armor is equipped.
 
 Compatibility with Allies Unknown classes? Can't select them in the CP or something like that.
 Compatibility with Trainable Faction Soldiers? When switching to their class in character pool, the pawn gets "outdated", still wearing the last equipped armor on the soldier. Exiting and entering soldier customization fixes it.
