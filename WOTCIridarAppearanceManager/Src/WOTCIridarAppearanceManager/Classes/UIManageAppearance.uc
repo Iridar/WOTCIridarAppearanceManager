@@ -937,7 +937,7 @@ private function CreateAppearanceStoreEntriesForUnit(const XComGameState_Unit Un
 	foreach UnitState.AppearanceStore(StoredAppearance)
 	{	
 		// Skip current appearance of current unit
-		if (StoredAppearance.Appearance == OriginalAppearance && UnitState == ArmoryUnit)
+		if (UnitState == ArmoryUnit && class'Help'.static.IsAppearanceCurrent(StoredAppearance.Appearance, OriginalAppearance))
 			continue;
 
 		Gender = EGender(int(Right(StoredAppearance.GenderArmorTemplate, 1)));
@@ -1001,13 +1001,9 @@ private function CreateAppearanceStoreEntriesForUnit(const XComGameState_Unit Un
 	}
 
 	// If Appearance Store didn't contain unit's current appearance, add unit's current appearance to the list as well.
-	// As long it's not the currently selected unit there's no value in having them in the list.
-	if (!bCurrentAppearanceFound)
+	// As long it's not the currently selected unit. There's no value in having that one in the list.
+	if (!bCurrentAppearanceFound && UnitState != ArmoryUnit)
 	{
-		// Skip current appearance of current unit
-		if (UnitState.kAppearance == OriginalAppearance && UnitState == ArmoryUnit)
-			return;
-
 		Gender = EGender(UnitState.kAppearance.iGender);
 		if (GetFilterListCheckboxStatus('FilterGender') && OriginalAppearance.iGender != Gender)
 			return;
@@ -1051,7 +1047,6 @@ private function CreateAppearanceStoreEntriesForUnit(const XComGameState_Unit Un
 		SpawnedItem.StoredAppearance.Appearance = UnitState.kAppearance;
 		SpawnedItem.SetPersonalityTemplate();
 		SpawnedItem.UnitState = UnitState;
-		SpawnedItem.SetDisabled(UnitState == ArmoryUnit); // Lock current appearance of current unit
 	}
 }
 
@@ -2456,7 +2451,7 @@ private function bool ShouldShowCategoryOption(name CategoryName)
 
 private function bool ShouldShowHeadCategory()
 {	
-	return  OriginalAppearance.iRace != SelectedAppearance.iRace ||
+	return /* OriginalAppearance.iRace != SelectedAppearance.iRace ||*/ // Race toggled together with face
 			OriginalAppearance.iSkinColor != SelectedAppearance.iSkinColor ||
 			OriginalAppearance.nmHead != SelectedAppearance.nmHead ||
 			OriginalAppearance.nmHelmet != SelectedAppearance.nmHelmet ||
