@@ -110,8 +110,28 @@ private function bool ShouldShowTemplate(const X2ItemTemplate ItemTemplate)
 	 return ItemTemplate.iItemSize > 0 &&		//	Item worth wearing (e.g. not an XPAD)
 			ItemTemplate.HasDisplayData() &&	//	Has localized name
 			ItemTemplate.strImage != "" &&		//	Has inventory icon
+			!HasItemBeenHiddenByItemHider(ItemTemplate) &&
 			EXCLUDED_CP_LOADOUT_ITEMS.Find(ItemTemplate.DataName) == INDEX_NONE;
 }
+
+// Compatibility with Item Hider mod.
+private function bool HasItemBeenHiddenByItemHider(const X2ItemTemplate Template)
+{
+	return  Template.CreatorTemplateName == '' &&
+			Template.CanBeBuilt == false &&
+			Template.HideInInventory == true &&
+			Template.HideInLootRecovered == true &&
+			Template.UpgradeItem == '' &&
+			Template.BaseItem == '';
+			//Template.bInfiniteItem == false && 
+			//Template.PointsToComplete == 999999 &&
+			//Template.Requirements.RequiredEngineeringScore == 999999 &&
+			//Template.Requirements.bVisibleifPersonnelGatesNotMet == false &&
+			//Template.OnBuiltFn == none &&
+			//Template.Cost.ResourceCosts.Length == 0 &&
+			//Template.Cost.ArtifactCosts.Length == 0;
+}
+
 
 // Completely replaced the original functionality. Since in Character Pool units don't have any items equipped, we remember the unit's entire character pool loadout,
 // end equip it entirely every time. When we need to "equip" a new item, we put the item into the CP loadout, and make the unit equip the entire loadout.
