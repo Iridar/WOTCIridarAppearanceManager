@@ -32,6 +32,27 @@ static final function string GetUnitDisplayString(const XComGameState_Unit UnitS
 	return SoldierString;
 }
 
+final static function ApplySoldierNameColorBasedOnUniformStatus(out string strDisplayName, const EUniformStatus UniformStatus)
+{
+	switch (UniformStatus)
+	{
+		case EUS_Manual:
+			strDisplayName = class'Help'.static.GetHTMLColoredText(strDisplayName, class'UIUtilities_Colors'.const.SCIENCE_HTML_COLOR); // Blue
+			break;
+		case EUS_AnyClass:
+			strDisplayName = class'Help'.static.GetHTMLColoredText(strDisplayName, class'UIUtilities_Colors'.const.GOOD_HTML_COLOR); // Green
+			break;
+		case EUS_ClassSpecific:
+			strDisplayName = class'Help'.static.GetHTMLColoredText(strDisplayName, class'UIUtilities_Colors'.const.WARNING_HTML_COLOR); // Yellow
+			break;
+		case EUS_NonSoldier:
+			strDisplayName = class'Help'.static.GetHTMLColoredText(strDisplayName, class'UIUtilities_Colors'.const.BAD_HTML_COLOR); // Red
+			break;
+		default:
+			break;
+	}
+}
+
 static final function string GetHTMLColoredText(string txt, string HTML_Color, optional int fontSize = -1, optional string align)
 {
 	local string retTxt, prefixTxt;

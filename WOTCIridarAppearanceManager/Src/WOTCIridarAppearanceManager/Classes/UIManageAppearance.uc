@@ -924,18 +924,14 @@ private function CreateAppearanceStoreEntriesForUnit(const XComGameState_Unit Un
 	local name						LocalArmorTemplateName;
 	local string					DisplayString;
 	local bool						bCurrentAppearanceFound;
-	local string					UnitName;
 	local UIMechaListItem_Soldier	SpawnedItem;
+	local EUniformStatus			UniformStatus;
 
 	if (!IsUnitSameType(UnitState))
 		return;
 
 	if (GetFilterListCheckboxStatus('FilterClass') && ArmoryUnit.GetSoldierClassTemplateName() != UnitState.GetSoldierClassTemplateName())
 		return;
-
-	UnitName = class'Help'.static.GetUnitDisplayString(UnitState);
-	if (bCharPool && IsUnitPresentInCampaign(UnitState)) // If unit was already drawn from the CP, color their entry green.
-			UnitName = `GREEN(UnitName);
 
 	// Cycle through Appearance Store, which may or may not include unit's current appearance.
 	foreach UnitState.AppearanceStore(StoredAppearance)
@@ -952,37 +948,47 @@ private function CreateAppearanceStoreEntriesForUnit(const XComGameState_Unit Un
 		if (GetFilterListCheckboxStatus('FilterArmorAppearance') && ArmorTemplateName != LocalArmorTemplateName)
 			continue;
 
+		DisplayString = GetUnitDisplayStringForAppearanceList(UnitState, Gender);
+
 		ArmorTemplate = ItemMgr.FindItemTemplate(LocalArmorTemplateName);
-
-		DisplayString = UnitName @ "|";
-
 		if (ArmorTemplate != none && ArmorTemplate.FriendlyName != "")
 		{
-			DisplayString @= ArmorTemplate.FriendlyName;
+			DisplayString $= ArmorTemplate.FriendlyName $ " ";
 		}
 		else
 		{
-			DisplayString @= string(LocalArmorTemplateName);
+			DisplayString $= string(LocalArmorTemplateName) $ " ";
 		}
 
 		if (Gender == eGender_Male)
 		{
-			DisplayString @= "|" @ class'XComCharacterCustomization'.default.Gender_Male;
+			DisplayString $= "|" @ class'XComCharacterCustomization'.default.Gender_Male $ " ";
 		}
 		else if (Gender == eGender_Female)
 		{
-			DisplayString @= "|" @ class'XComCharacterCustomization'.default.Gender_Female;
+			DisplayString $= "|" @ class'XComCharacterCustomization'.default.Gender_Female $ " ";
 		}
 
 		if (class'Help'.static.IsAppearanceCurrent(StoredAppearance.Appearance, UnitState.kAppearance))
 		{
 			bCurrentAppearanceFound = true;
 
-			DisplayString @= class'Help'.default.strCurrentAppearance;
+			DisplayString $= class'Help'.default.strCurrentAppearance;
 		}
 
 		if (SearchText != "" && InStr(DisplayString, SearchText,, true) == INDEX_NONE) // ignore case
 			continue;
+
+		UniformStatus = PoolMgr.GetUniformStatus(UnitState);
+		if (UniformStatus > EUS_NotUniform)
+		{
+			class'Help'.static.ApplySoldierNameColorBasedOnUniformStatus(DisplayString, UniformStatus);
+		}
+		else if (bCharPool && IsUnitPresentInCampaign(UnitState))
+		{
+			// If unit was already drawn from the CP, color their entry green.
+			DisplayString = `GREEN(DisplayString);
+		}
 		
 		SpawnedItem = Spawn(class'UIMechaListItem_Soldier', AppearanceList.ItemContainer);
 		SpawnedItem.bAnimateOnInit = false;
@@ -1012,24 +1018,26 @@ private function CreateAppearanceStoreEntriesForUnit(const XComGameState_Unit Un
 		if (GetFilterListCheckboxStatus('FilterArmorAppearance') && ArmorTemplateName != ArmorTemplate == none ? '' : ArmorTemplate.DataName)
 			return;
 
-		DisplayString = UnitState.GetFullName() @ "|";
+		DisplayString = GetUnitDisplayStringForAppearanceList(UnitState, Gender);
+		if (bCharPool && IsUnitPresentInCampaign(UnitState)) // If unit was already drawn from the CP, color their entry green.
+			DisplayString = `GREEN(DisplayString);
 
 		if (ArmorTemplate != none && ArmorTemplate.FriendlyName != "")
 		{
-			DisplayString @= ArmorTemplate.FriendlyName;
+			DisplayString $= ArmorTemplate.FriendlyName $ " ";
 		}
 		else
 		{
-			DisplayString @= string(LocalArmorTemplateName);
+			DisplayString $= string(LocalArmorTemplateName) $ " ";
 		}
 
 		if (Gender == eGender_Male)
 		{
-			DisplayString @= "|" @ class'XComCharacterCustomization'.default.Gender_Male;
+			DisplayString $= "|" @ class'XComCharacterCustomization'.default.Gender_Male $ " ";
 		}
 		else if (Gender == eGender_Female)
 		{
-			DisplayString @= "|" @ class'XComCharacterCustomization'.default.Gender_Female;
+			DisplayString $= "|" @ class'XComCharacterCustomization'.default.Gender_Female $ " ";
 		}
 		DisplayString @= class'Help'.default.strCurrentAppearance;
 
@@ -1045,6 +1053,84 @@ private function CreateAppearanceStoreEntriesForUnit(const XComGameState_Unit Un
 		SpawnedItem.UnitState = UnitState;
 		SpawnedItem.SetDisabled(UnitState == ArmoryUnit); // Lock current appearance of current unit
 	}
+}
+
+// Generate appearance name without redundant info.
+// If the apperance is from a uniform unit, we don't need to display "UNIFORM" name, it's already in the uniform apperance list.
+// Same for Last Name, which is equal to unit's gender by default.
+private function string GetUnitDisplayStringForAppearanceList(const XComGameState_Unit UnitState, const EGender Gender)
+{
+	local X2SoldierClassTemplate	ClassTemplate;
+	local string					strNickname;
+	local string					strFirstName;
+	local string					strLastName;
+	local string					SoldierString;
+	local bool						bAddDelim;
+	local string					strClassName;
+
+	ClassTemplate = UnitState.GetSoldierClassTemplate();
+	if (ClassTemplate != none)
+	{
+		strClassName = ClassTemplate.DisplayName;
+		SoldierString = strClassName $ ": ";
+	}
+	
+	strFirstName = UnitState.GetFirstName();
+	strFirstName = Repl(strFirstName, strClassName, ""); // Remove soldier class name from unit's name, since it will be displayed separately anyway.
+	RemoveEdgeEmptySpaces(strFirstName);
+	if (strFirstName != class'UISL_AppearanceManager'.default.strUniformSoldierFirstName)
+	{
+		SoldierString $= strFirstName $ " ";
+		bAddDelim = true;
+	}
+
+	strNickname = UnitState.GetNickName();
+	strNickname = Repl(strNickname, strClassName, "");
+	RemoveEdgeEmptySpaces(strNickname);
+	if (strNickname != "")
+	{
+		SoldierString $= strNickname $ " ";
+		bAddDelim = true;
+	}
+
+	strLastName = UnitState.GetLastName();
+	strLastName = Repl(strLastName, strClassName, "");
+	switch (Gender)
+	{
+		case eGender_Male:
+			strLastName = Repl(strLastName, class'XComCharacterCustomization'.default.Gender_Male, "");
+			break;
+		case eGender_Female:
+			strLastName = Repl(strLastName, class'XComCharacterCustomization'.default.Gender_Female, "");
+			break;
+		default:
+			break;
+	}	
+	RemoveEdgeEmptySpaces(strLastName);
+	if (strLastName != "")
+	{
+		SoldierString $= strLastName $ " ";
+		bAddDelim = true;
+	}
+
+	if (bAddDelim)
+	{
+		SoldierString $= "| ";
+	}
+	return SoldierString;
+}
+// Remove empty spaces from the left and right ends of the string.
+private function string RemoveEdgeEmptySpaces(out string strInput)
+{
+	while (Left(strInput, 1) == " ")
+	{
+		strInput = Right(strInput, Len(strInput) - 1);
+	}
+	while (Right(strInput, 1) == " ")
+	{
+		strInput = Left(strInput, Len(strInput) - 1);
+	}
+	return strInput;
 }
 
 private function array<XComGameState_Unit> GetDeadSoldiers(XComGameState_HeadquartersXCom XComHQ)
@@ -1140,6 +1226,10 @@ private function bool ShouldRefreshPawn(const TAppearance NewAppearance)
 {
 	`AMLOG("Previous gender:" @ GetEnum(enum'EGender', PreviousAppearance.iGender) @ "New gender:" @ GetEnum(enum'EGender', NewAppearance.iGender));
 	if (PreviousAppearance.iGender != NewAppearance.iGender)
+	{
+		return true;
+	}
+	if (PreviousAppearance.nmTorso != NewAppearance.nmTorso) // Unfortuantely needed to clear EXO Suit exo arms
 	{
 		return true;
 	}

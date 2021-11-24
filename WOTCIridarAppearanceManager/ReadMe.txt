@@ -96,15 +96,15 @@ The Loadout screen allows equipping different armor and weapons on Character Poo
 
 Equipping weapons is purely cosmetic and currently serves no specific purpose.
 
-There is only one Character Pool loadout stored per unit. It is equipped automatically on the soldier whenever you enter the customization screen for that soldier in character pool.
+There is only one Character Pool loadout stored per unit. It is equipped automatically on the soldier whenever you enter the customization screen for that soldier in Character Pool.
 
 [h1]Stored Appearance Screen[/h1]
 
 This screen allows browsing the Appearance Store for each unit. You can click on individual stored appearance to "equip" it. The mod will then attempt to equip the Armor that was used to customize that appearance.
 
-If you do so in the Armory, during an actual campaign, the mod will attempt to equip that specific armor. E.g. if you click on Rage Suit appearance, the mod will look for the Rage Suit in your HQ inventory and equip it.
+If you do so in the Armory, during an actual campaign, the mod will attempt to equip that specific armor. E.g. if you click on Rage Suit appearance, the mod will look for the Rage Suit in your HQ inventory and equip it, if it finds it.
 
-You can also delete specific stored appearance by clicking the respective button, except for the soldier's current appearance.
+You can also delete specific stored appearance by clicking the "Delete" button on it, except for the soldier's current appearance.
 
 [h1]Appearance Validation[/h1]
 

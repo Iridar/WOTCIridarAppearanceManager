@@ -226,23 +226,7 @@ simulated function UpdateDisplay()
 		if (UniformStatus == EUS_NotUniform)
 			continue;  // Would love to do this in the Switch(), but compiler's not letting me.
 
-		switch (UniformStatus)
-		{
-			case EUS_Manual:
-				strDisplayName = class'Help'.static.GetHTMLColoredText(strDisplayName, class'UIUtilities_Colors'.const.SCIENCE_HTML_COLOR); // Blue
-				break;
-			case EUS_AnyClass:
-				strDisplayName = class'Help'.static.GetHTMLColoredText(strDisplayName, class'UIUtilities_Colors'.const.GOOD_HTML_COLOR); // Green
-				break;
-			case EUS_ClassSpecific:
-				strDisplayName = class'Help'.static.GetHTMLColoredText(strDisplayName, class'UIUtilities_Colors'.const.WARNING_HTML_COLOR); // Yellow
-				break;
-			case EUS_NonSoldier:
-				strDisplayName = class'Help'.static.GetHTMLColoredText(strDisplayName, class'UIUtilities_Colors'.const.BAD_HTML_COLOR); // Red
-				break;
-			default:
-				break;
-		}
+		class'Help'.static.ApplySoldierNameColorBasedOnUniformStatus(strDisplayName, UniformStatus);
 
 		SpawnedItem = Spawn(class'UIMechaListItem_Soldier', List.ItemContainer);
 		SpawnedItem.bAnimateOnInit = false;
