@@ -128,7 +128,7 @@ static private function EventListenerReturn OnItemAddedToSlot_CampaignStart(Obje
 	return ELR_NoInterrupt;
 }
 
-static private function bool MaybeApplyUniformAppearance(XComGameState_Unit UnitState, name ArmorTemplateName, XComGameState NewGameState, optional bool bClassUniformOnly = false)
+static private function MaybeApplyUniformAppearance(XComGameState_Unit UnitState, name ArmorTemplateName, XComGameState NewGameState, optional bool bClassUniformOnly = false)
 {
 	local CharacterPoolManager_AM		CharacterPool;
 	local TAppearance					NewAppearance;
@@ -136,10 +136,40 @@ static private function bool MaybeApplyUniformAppearance(XComGameState_Unit Unit
 	local XComGameState_Item			NewItemState;
 	local array<XComGameState_Item>		ItemStates;
 	local X2WeaponTemplate				WeaponTemplate;
-	
+
+	local name							LocalArmorTemplateName;
+	local EGender						Gender;
+	local int							i;
+
 	CharacterPool = `CHARACTERPOOLMGRAM;
 	if (CharacterPool == none || !CharacterPool.ShouldAutoManageUniform(UnitState))
-		return false;
+		return;
+
+	// Normally we apply uniforms to soldiers only when they equip an armor they *don't* have stored appearance for.
+	// So applying uniforms to stored appearance sounds absurd.
+	// But 'bClassUniformOnly' is true only when this function runs for the soldier on their promotion to squaddie,
+	// at which point we might want to replace their stored appearance with class-specific uniforms.
+	// For currently equipped armor this is handled automatically, but that currently equipped armor my turn out to be Plated or Powered,
+	// so going through stored appearances allows us to apply uniform changes to armor appearance for previous tiers.
+	if (bClassUniformOnly)
+	{
+		for (i = 0; i < UnitState.AppearanceStore.Length; i++)
+		{
+			LocalArmorTemplateName = name(Left(UnitState.AppearanceStore[i].GenderArmorTemplate, Len(UnitState.AppearanceStore[i].GenderArmorTemplate) - 1));
+			if (LocalArmorTemplateName == '')
+				continue;
+
+			Gender = EGender(int(Right(UnitState.AppearanceStore[i].GenderArmorTemplate, 1)));
+
+			NewAppearance = UnitState.AppearanceStore[i].Appearance;
+			if (CharacterPool.GetUniformAppearanceForUnit(NewAppearance, UnitState, LocalArmorTemplateName, true /*bClassUniformOnly*/))
+			{
+				`AMLOG(UnitState.GetFullName() @ "saving uniform appearance for stored apperance for:" @ LocalArmorTemplateName @ GetEnum(enum'EGender', Gender));
+
+				UnitState.AppearanceStore[i].Appearance = NewAppearance;
+			}
+		}
+	}
 
 	NewAppearance = UnitState.kAppearance;
 	if (CharacterPool.GetUniformAppearanceForUnit(NewAppearance, UnitState, ArmorTemplateName, bClassUniformOnly))
@@ -176,16 +206,9 @@ static private function bool MaybeApplyUniformAppearance(XComGameState_Unit Unit
 		// but doing so _right meow_ wouldn't work, because at this point Game State with our state changes
 		// has not been submitted yet, so we delay this until the game state is submitted.
 		`XEVENTMGR.TriggerEvent(default.RefreshPawnEventName, UnitState, UnitState, NewGameState);
-
-		return true;
 	}
 	else `AMLOG(UnitState.GetFullName() @ "has no uniform for:" @ ArmorTemplateName);
-
-	return false;
 }
-
-
-
 
 static private function EventListenerReturn OnUnitRankUp(Object EventData, Object EventSource, XComGameState NewGameState, Name Event, Object CallbackData)
 {
@@ -266,6 +289,10 @@ static private function EventListenerReturn OnCreateCinematicPawn(Object EventDa
 
 	if (CharacterPool.GetUniformAppearanceForNonSoldier(NewAppearance, UnitState))
 	{
+		//if (NewAppearance.nmTorso != '')
+		//{	
+		//	  HumanPawn.Mesh = none; // Crashes the gume
+		//}
 		`AMLOG("Aplying uniform appearance. Uniform torso:" @ NewAppearance.nmTorso);
 		UnitState.SetTAppearance(NewAppearance);
 		HumanPawn.SetAppearance(NewAppearance, true);
