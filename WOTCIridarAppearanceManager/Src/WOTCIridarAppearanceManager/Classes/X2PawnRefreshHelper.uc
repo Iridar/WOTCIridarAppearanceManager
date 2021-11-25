@@ -95,6 +95,9 @@ function array<CharacterPoolLoadoutStruct> RefreshPawn(optional bool bForce)
 	// Causes three billion redscreens, but needs to be done.
 	UnitState.ValidateLoadout(TempGameState); 
 
+	// Didn't expect to need this here. Shouldn't weapon tints and stuff be already based on unit's appearance?
+	ApplyChangesToUnitWeapons(UnitState, UnitState.kAppearance);
+
 	//Add the state to the history so that the visualization functions can operate correctly
 	History.AddGameStateToHistory(TempGameState);
 
@@ -291,9 +294,14 @@ function array<CharacterPoolLoadoutStruct> RefreshPawn_UseAppearance(const out T
 	// Give the unit the standard soldier class loadout. If some slots were already filled by CP loadout items, this will just fail to equip standard items there, as intended.
 	UnitState.ApplyInventoryLoadout(TempGameState);
 
+	// Validate loadout to do stuff like granting a free heavy weapon to the unit when they equip exo suit.
+	// Causes three billion redscreens, but needs to be done.
+	UnitState.ValidateLoadout(TempGameState); 
+
 	// Apply Tint and Pattern to whatever weapons we end up having equipped.
 	ApplyChangesToUnitWeapons(UnitState, UseAppearance);
 
+	// Set appearance after equipping all items, cuz equipping armor would change it.
 	UnitState.SetTAppearance(UseAppearance);
 
 	//Add the state to the history so that the visualization functions can operate correctly
