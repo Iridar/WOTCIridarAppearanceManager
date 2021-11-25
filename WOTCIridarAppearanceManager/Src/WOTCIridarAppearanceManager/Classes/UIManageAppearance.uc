@@ -4,8 +4,6 @@ class UIManageAppearance extends UICustomize;
 /*
 # Priority
 
-Applying changes to weapon appearance is a hot mess.
-
 Psi Operative uniform works?
 
 Make chevron animation on Apply Changes button go away when there's no changes to apply. Alternatively, hide the button.
@@ -1254,7 +1252,7 @@ final function OnRefreshPawn()
 	if (ArmoryPawn != none)
 	{
 		UpdatePawnAttitudeAnimation();
-		ApplyChangesToUnitWeapons(ArmoryUnit, ArmoryPawn.m_kAppearance, none);
+		//ApplyChangesToUnitWeapons(ArmoryUnit, ArmoryPawn.m_kAppearance, none);
 
 		// Assign the actor pawn to the mouse guard so the pawn can be rotated by clicking and dragging
 		UIMouseGuard_RotatePawn(MouseGuardInst).SetActorPawn(CustomizeManager.ActorPawn);
@@ -1517,6 +1515,7 @@ private function ApplyChangesToUnitWeapons(XComGameState_Unit UnitState, TAppear
 
 	// While in Armory, we have to actually update the weapon appearance on Item States, which always requires submitting a Game State.
 	// So if a NewGameState wasn't provided, we create our own, ~~with blackjack and hookers~~
+	// (This function gets a GameState when applying changes to armory unit's weapon in armory)
 	if (NewGameState == none)
 	{		
 		NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState("Apply weeapon appearance changes");

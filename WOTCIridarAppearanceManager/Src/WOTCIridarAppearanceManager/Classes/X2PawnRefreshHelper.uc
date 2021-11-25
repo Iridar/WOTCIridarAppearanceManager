@@ -193,7 +193,6 @@ private function array<CharacterPoolLoadoutStruct> ApplyCharacterPoolLoadout(XCo
 	local CharacterPoolLoadoutStruct			LoadoutElement;
 	local X2ItemTemplate						ItemTemplate;
 	local XComGameState_Item					ItemState;
-	local X2WeaponTemplate						WeaponTemplate;
 	local array<int>							FailedToEquipItemIndices;
 	local int									i;
 	
@@ -223,13 +222,6 @@ private function array<CharacterPoolLoadoutStruct> ApplyCharacterPoolLoadout(XCo
 		if (UnitState.AddItemToInventory(ItemState, LoadoutElement.InventorySlot, TempGameState))
 		{
 			`AMLOG("Equipped item successfully.");
-
-			WeaponTemplate = X2WeaponTemplate(ItemTemplate);
-			if (WeaponTemplate != none && WeaponTemplate.bUseArmorAppearance)
-				ItemState.WeaponAppearance.iWeaponTint = UnitState.kAppearance.iArmorTint;
-			else
-				ItemState.WeaponAppearance.iWeaponTint = UnitState.kAppearance.iWeaponTint;
-			ItemState.WeaponAppearance.nmWeaponPattern = UnitState.kAppearance.nmWeaponPattern;
 		}
 		else 
 		{
@@ -299,6 +291,9 @@ function array<CharacterPoolLoadoutStruct> RefreshPawn_UseAppearance(const out T
 	// Give the unit the standard soldier class loadout. If some slots were already filled by CP loadout items, this will just fail to equip standard items there, as intended.
 	UnitState.ApplyInventoryLoadout(TempGameState);
 
+	// Apply Tint and Pattern to whatever weapons we end up having equipped.
+	ApplyChangesToUnitWeapons(UnitState, UseAppearance);
+
 	UnitState.SetTAppearance(UseAppearance);
 
 	//Add the state to the history so that the visualization functions can operate correctly
@@ -321,4 +316,30 @@ function array<CharacterPoolLoadoutStruct> RefreshPawn_UseAppearance(const out T
 	CustomizationManager.ActorPawn = PawnMgr.RequestPawnByState(PresBase, CustomizationManager.UpdatedUnitState, SpawnPawnLocation, UseRotation, OnPawnVisualsCreated);	
 
 	return ReturnArray;
+}
+
+private function ApplyChangesToUnitWeapons(XComGameState_Unit UnitState, const TAppearance NewAppearance)
+{
+	local XComGameState_Item		InventoryItem;
+	local array<XComGameState_Item> InventoryItems;
+	local X2WeaponTemplate			WeaponTemplate;
+
+	InventoryItems = UnitState.GetAllInventoryItems(TempGameState, true);
+	foreach InventoryItems(InventoryItem)
+	{
+		WeaponTemplate = X2WeaponTemplate(InventoryItem.GetMyTemplate());
+		if (WeaponTemplate == none)
+			continue;
+
+		`AMLOG(WeaponTemplate.DataName @ InventoryItem.InventorySlot @ InventoryItem.ObjectID);
+		if (WeaponTemplate.bUseArmorAppearance)
+		{
+			InventoryItem.WeaponAppearance.iWeaponTint = NewAppearance.iArmorTint;
+		}
+		else
+		{
+			InventoryItem.WeaponAppearance.iWeaponTint = NewAppearance.iWeaponTint;
+		}
+		InventoryItem.WeaponAppearance.nmWeaponPattern = NewAppearance.nmWeaponPattern;
+	}
 }
