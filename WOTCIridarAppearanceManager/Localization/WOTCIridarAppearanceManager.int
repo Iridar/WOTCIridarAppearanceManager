@@ -7,6 +7,7 @@ PresetNothing = "Nothing"
 
 strApplyTo = "APPLY TO"
 strApplyChangesButton = "Apply Changes"
+strApplyChangesButtonDisabled = "No changes to apply. Select appearance from the list on the right, and enable cosmetic options in the list on the left."
 
 strApplyToThisUnit = "THIS UNIT"
 strApplyToThisUnitTip = "If enabled, appearance changes will be applied to this specific unit."

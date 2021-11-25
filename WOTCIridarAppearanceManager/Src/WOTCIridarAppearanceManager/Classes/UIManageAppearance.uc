@@ -4,12 +4,11 @@ class UIManageAppearance extends UICustomize;
 /*
 # Priority
 
-Investigate compatibility with Instant Avenger Menus
+Applying changes to weapon appearance is a hot mess.
+
 Psi Operative uniform works?
 
-Make chevron animation on Apply Changes button go away when there's no changes to apply, and add a disabled reason for it. Alternatively, hide the button.
-Genders sometimes doesn't refresh automatically, deforming the pawn.
-
+Make chevron animation on Apply Changes button go away when there's no changes to apply. Alternatively, hide the button.
 Validate Appearance caused double pawn. Need for Validate Appearance occured when deleting appearance stores caused the unit to glitch out.
 
 1. Color bug in #beta_testing
@@ -22,6 +21,7 @@ Soldier customization bug repro steps:
 4. Can select only kevlar options, soldier now has kevlar equipped.
 
 Fixed already?
+Genders sometimes doesn't refresh automatically, deforming the pawn.
 3. Uniform preset somehow got broken. 
 Pawn sometimes hangs on character pool screen. 
 4. Apply to squad, apply to barracks doesn't work. 6:30
@@ -41,9 +41,14 @@ Fix wrong unit being opened in CP sometimes. (Has to do with deleting units?)
 Make clicking an item toggle its checkbox?
 
 ## Checks:
+1. Saves stored appearance in CP.
+2. Saves stored apearance when importing a unit from campaign into CP.
+3. Individual uniform setting.
+4. Saves stored appearance when exported and imported.
+5. Deleting stored appearance.
+6. Appearance validation options and button.
+7. Appearance list.
 
-## Finalization
-1. Polish localization
 
 ## Addressed
 
@@ -52,6 +57,8 @@ Should APply Changes button select Original Apperance? --No, it shouldn't, user 
 Maybe allow Appearance Store button to work as a "reskin armor" button? - redundant, can be done with this mod's customization screen by importing unit's own appearance from another armor.
 
 ## Ideas for later
+
+Set up uniforms from the armory
 
 Lock specific customization slots on the soldier, and lock them between all stored appearances whenever armor is equipped.
 
@@ -124,6 +131,7 @@ var localized string strInvalidEmptyUniformNameText;
 var localized string strDeletePreset;
 var localized string strCannotDeleteThisPreset;
 var localized string strRacePrefix;
+var localized string strApplyChangesButtonDisabled;
 
 // ==============================================================================
 // Screen Options - preserved between game restarts.
@@ -309,7 +317,7 @@ function CreateApplyChangesButton()
 	ApplyChangesButton.OnClickedDelegate = OnApplyChangesClicked;
 	ApplyChangesButton.Show();
 	ApplyChangesButton.ShowBG(true);
-	ApplyChangesButton.SetDisabled(true);
+	ApplyChangesButton.SetDisabled(true, strApplyChangesButtonDisabled); // Disabled reason doesn't seem to be working. Oh well.
 }
 
 // Button should be disabled if there are no changes to apply to this unit,
@@ -318,11 +326,11 @@ function UpdateApplyChangesButtonVisibility()
 {
 	if (bShowAllCosmeticOptions && bOriginalAppearanceSelected)
 	{
-		ApplyChangesButton.SetDisabled(!GetApplyToListCheckboxStatus('ApplyToCharPool') && !GetApplyToListCheckboxStatus('ApplyToSquad') && !GetApplyToListCheckboxStatus('ApplyToBarracks'));
+		ApplyChangesButton.SetDisabled(!GetApplyToListCheckboxStatus('ApplyToCharPool') && !GetApplyToListCheckboxStatus('ApplyToSquad') && !GetApplyToListCheckboxStatus('ApplyToBarracks'), strApplyChangesButtonDisabled);
 	}
 	else
 	{
-		ApplyChangesButton.SetDisabled(bCanExitWithoutPopup);
+		ApplyChangesButton.SetDisabled(bCanExitWithoutPopup, strApplyChangesButtonDisabled);
 	}
 }
 
@@ -1446,7 +1454,7 @@ private function ApplyChanges()
 	}
 
 	bCanExitWithoutPopup = true;
-	ApplyChangesButton.SetDisabled(true);
+	ApplyChangesButton.SetDisabled(true, strApplyChangesButtonDisabled);
 }
 
 private function ApplyChangesToUnit(XComGameState_Unit UnitState, optional XComGameState NewGameState)
