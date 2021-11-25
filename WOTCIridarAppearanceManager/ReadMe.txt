@@ -219,6 +219,8 @@ Even while you have soldier's Original Appearance selected, you can enable the S
 
 Keep in mind that some parts of the appearance will not be copied on soldiers of different gender. E.g. you cannot give the same cosmetic torso to both males and females.
 
+No parts of the appearance will be copied on soldiers of a different type. E.g. regular soldier customization will not be copied on top of a Reaper or a SPARK - the only exception here are universal things, like patterns and tattoos.
+
 [h1]Uniform Manager[/h1]
 
 Appearance Manager has a built-in Uniform Manager that can be used in both manual and automatic mode.

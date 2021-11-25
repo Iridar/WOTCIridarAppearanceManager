@@ -46,7 +46,10 @@ Make clicking an item toggle its checkbox?
 5. Deleting stored appearance.
 6. Appearance validation options and button.
 7. Appearance list.
-
+8. Applying weapon pattern changes in CP and armory.
+9. Appearance list - memorial and barracks
+10. Saving, creating, deleting presets.
+11. Applying changes to squad, barracks
 
 ## Addressed
 
@@ -1864,7 +1867,7 @@ private function MaybeCreateAppearanceOption(name OptionName, coerce string Curr
 	local bool						bDisabled;
 	local bool						bNewIsSameAsCurrent;
 
-	`AMLOG(`showvar(OptionName) @ `showvar(CurrentCosmetic) @ `showvar(NewCosmetic));
+	`AMLOG(`showvar(OptionName) @ `showvar(CurrentCosmetic) @ `showvar(NewCosmetic) @ "Gender-agnostic:" @ IsOptionGenderAgnostic(OptionName));
 
 	// Don't create the cosmetic option if both the current appearance and selected appearance are the same or empty.
 	switch (CosmeticType)
@@ -1894,16 +1897,30 @@ private function MaybeCreateAppearanceOption(name OptionName, coerce string Curr
 	SpawnedItem.bAnimateOnInit = false;
 	SpawnedItem.InitListItem(OptionName);
 
-	// If this cosmetic option cares about gender, and gender change is underway 
-	if (!IsOptionGenderAgnostic(OptionName) && OriginalAppearance.iGender != SelectedAppearance.iGender) // Is gender change required
-	{
-		// Disallow toggling the checkbox if the option cares about gender and we're changing either from non-empty or to non-empty.
-		bDisabled = CosmeticType == ECosmeticType_Name && (!class'Help'.static.IsCosmeticEmpty(CurrentCosmetic) || class'Help'.static.IsCosmeticEmpty(NewCosmetic));
-
-		bChecked = IsCheckboxChecked('iGender');
-	}
-	else 
+	// If appearances are of different gender and this option does cares about gender
+	if (OriginalAppearance.iGender != SelectedAppearance.iGender && !IsOptionGenderAgnostic(OptionName)) 
 	{	
+		`AMLOG("Appearance are of different genders and this option is not gender agnostic");
+		// Treat this option like any other only if we're changing from empty cosmetic to non empty, and we do change the gender at the same time.
+		// Then the player can choose whether they want to keep their previous empty cosmetic, or replace it with a new-non empty one.
+		// Have to hope really hard that empty cosmetics are same between males and females, because they can be differnt, and technically are in some cases (like bald hair).
+		// If this proves to be not the case, only the else() part of this condition should remain.
+		if (class'Help'.static.IsCosmeticEmpty(CurrentCosmetic) && !class'Help'.static.IsCosmeticEmpty(NewCosmetic) && IsCheckboxChecked('iGender'))
+		{
+			`AMLOG("Original cosmetic is empty and new cosmetic is not empty, and gender option is checked. Treating this option like any other.");
+			bChecked = GetOptionCheckboxPosition(OptionName);
+		}
+		else
+		{
+			`AMLOG("All other cases. Disable option and sync it to gender.");
+			// In all other cases, we disallow the player to do anything to this cosmetic option, and force copy it along with the gender. Or force not-copy it, if gender remains unchanged.
+			bDisabled = true;
+			bChecked = IsCheckboxChecked('iGender');
+		}
+	}
+	else
+	{
+		`AMLOG("Appearance are of same gender or this option doesn't care about gender.");
 		// If this option doesn't care about gender, or gender change is not needed for this appearance import, then we load the saved preset for it.
 		bChecked = GetOptionCheckboxPosition(OptionName);
 	}
@@ -2098,7 +2115,7 @@ private function SavePresetCheckboxPositions()
 	for (i = i; i < OptionsList.ItemCount; i++) // "i = i" bypasses compile error. Just need to have something in there.
 	{
 		ListItem = UIMechaListItem(OptionsList.GetItem(i));
-		if (ListItem == none || ListItem.Checkbox == none)
+		if (ListItem == none || ListItem.Checkbox == none || ListItem.bDisabled) // Don't save positions for disabled items. They have their checkbox locked to gender, and we don't want to ruin the preset.
 			continue;
 
 		`AMLOG(i @ "List item:" @ ListItem.MCName @ ListItem.Desc.htmlText @ "Checked:" @ ListItem.Checkbox.bChecked);
