@@ -62,6 +62,8 @@ Other than that, should be compatible with anything and everything.
 
 [h1]KNOWN ISSUES[/h1]
 
+In case of non-soldier uniforms for some characters, like Shen, their body will clip through the cosmetic body parts added by their uniform.
+
 Mod causes a ton of log warnings and redscreens while working with Character Pool Loadout. Those are annoying, but completely harmless, and fixing them all would require way more effort and Highlander changes than its worth.
 
 [h1]CREDITS[/h1]

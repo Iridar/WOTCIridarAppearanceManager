@@ -951,22 +951,27 @@ final function bool GetUniformAppearanceForNonSoldier(out TAppearance NewAppeara
 {
 	local array<XComGameState_Unit> UniformStates;
 	local XComGameState_Unit		UniformState;
+	local bool						bIgnoreGender;
+
+	// You'd never tell, but apparently Bradford is a female at least sometimes. Using bForceAppearance.
+	// Tygan doesn't have a gender at all... using bAppearanceDefinesPawn.
+	bIgnoreGender = UnitState.GetMyTemplate().bForceAppearance || !UnitState.GetMyTemplate().bAppearanceDefinesPawn;
 	
-	UniformStates = GetNonSoldierUniformsForUnit(NewAppearance.iGender, UnitState);
+	UniformStates = GetNonSoldierUniformsForUnit(NewAppearance.iGender, UnitState, bIgnoreGender);
 	if (UniformStates.Length > 0)
 	{
 		UniformState = UniformStates[`SYNC_RAND(UniformStates.Length)];
 
 		`AMLOG(UnitState.GetFullName() @ "selected random class uniform:" @ UniformState.GetFullName() @ "out of possible:" @ UniformStates.Length);
 		
-		CopyUniformAppearance(NewAppearance, UniformState, NonSoldierUniformSettings, UnitState.GetMyTemplate().bForceAppearance);
+		CopyUniformAppearance(NewAppearance, UniformState, NonSoldierUniformSettings, bIgnoreGender);
 		return true;		
 	}
 
 	return false;
 }
 
-private function array<XComGameState_Unit> GetNonSoldierUniformsForUnit(const int iGender, const XComGameState_Unit UnitState)
+private function array<XComGameState_Unit> GetNonSoldierUniformsForUnit(const int iGender, const XComGameState_Unit UnitState, const bool bIgnoreGender)
 {
 	local array<XComGameState_Unit> UniformStates;
 	local XComGameState_Unit		UniformState;
@@ -974,26 +979,26 @@ private function array<XComGameState_Unit> GetNonSoldierUniformsForUnit(const in
 	foreach CharacterPool(UniformState)
 	{
 		if (GetUniformStatus(UniformState) == EUS_NonSoldier &&
-			(UniformState.kAppearance.iGender == iGender || UnitState.GetMyTemplate().bForceAppearance) && // You'd never tell, but apparently Bradford is a female at least sometimes. 
+			(bIgnoreGender || UniformState.kAppearance.iGender == iGender) && 
 			IsUnitNonSoldierUniformForCharTemplate(UniformState, UnitState.GetMyTemplateName()))
 		{
 			`AMLOG(UniformState.GetFullName() @ "is a non-soldier uniform for" @ UnitState.GetFullName() @ UniformState.kAppearance.iGender @ UnitState.GetMyTemplateName());
 			UniformStates.AddItem(UniformState);
 		}
-		else 
-		{
-			if (UniformState.kAppearance.iGender != iGender)	
-			{
-				`AMLOG("Uniform:" @ UniformState.GetFullName() @ "Unit:" @ UnitState.GetFullName());
-				`AMLOG("Uniform gender:" @ GetEnum(enum'EGender', UniformState.kAppearance.iGender) @ "given gender:" @ GetEnum(enum'EGender', iGender) @ "Unit state gender:" @ GetEnum(enum'EGender', UnitState.kAppearance.iGender));
-			}		
-			//`AMLOG(UniformState.GetFullName() @ "is a non-soldier uniform:" @ GetUniformStatus(UniformState) == EUS_NonSoldier @ "is gender match:" @ UniformState.kAppearance.iGender == iGender @ "is for char template:" @ IsUnitNonSoldierUniformForCharTemplate(UniformState, UnitState.GetMyTemplateName()));
-		}
+		//else 
+		//{
+		//	if (UniformState.kAppearance.iGender != iGender)	
+		//	{
+		//		`AMLOG("Uniform:" @ UniformState.GetFullName() @ "Unit:" @ UnitState.GetFullName());
+		//		`AMLOG("Uniform gender:" @ GetEnum(enum'EGender', UniformState.kAppearance.iGender) @ "given gender:" @ GetEnum(enum'EGender', iGender) @ "Unit state gender:" @ GetEnum(enum'EGender', UnitState.kAppearance.iGender));
+		//	}		
+		//	//`AMLOG(UniformState.GetFullName() @ "is a non-soldier uniform:" @ GetUniformStatus(UniformState) == EUS_NonSoldier @ "is gender match:" @ UniformState.kAppearance.iGender == iGender @ "is for char template:" @ IsUnitNonSoldierUniformForCharTemplate(UniformState, UnitState.GetMyTemplateName()));
+		//}
 	}
 	return UniformStates;
 }
 
-private function CopyUniformAppearance(out TAppearance NewAppearance, const XComGameState_Unit UniformState, const name ArmorTemplateName, const optional bool bForceAppearance)
+private function CopyUniformAppearance(out TAppearance NewAppearance, const XComGameState_Unit UniformState, const name ArmorTemplateName, const optional bool bIgnoreGender)
 {
 	local TAppearance					UniformAppearance;
 	local array<CosmeticOptionStruct>	CosmeticOptions;
@@ -1014,17 +1019,16 @@ private function CopyUniformAppearance(out TAppearance NewAppearance, const XCom
 		CosmeticOptions = GetCosmeticOptionsForUnit(UniformState, GenderArmorTemplate);
 	}
 
-
 	if (CosmeticOptions.Length > 0)
 	{	
-		if (ShouldCopyUniformPiece('iGender', CosmeticOptions)) {bGenderChange = true;
+		if (bIgnoreGender || ShouldCopyUniformPiece('iGender', CosmeticOptions)) {bGenderChange = true;
 																 NewAppearance.iGender = UniformAppearance.iGender; 
 																 NewAppearance.nmPawn = UniformAppearance.nmPawn;
 																 NewAppearance.nmTorso_Underlay = UniformAppearance.nmTorso_Underlay;
 																 NewAppearance.nmArms_Underlay = UniformAppearance.nmArms_Underlay;
 																 NewAppearance.nmLegs_Underlay = UniformAppearance.nmLegs_Underlay;
 		}
-		if (bGenderChange || NewAppearance.iGender == UniformAppearance.iGender || UniformStatus == EUS_NonSoldier && bForceAppearance)
+		if (bGenderChange || NewAppearance.iGender == UniformAppearance.iGender)
 		{		
 			if (ShouldCopyUniformPiece('nmHead', CosmeticOptions)) {NewAppearance.nmHead = UniformAppearance.nmHead; 
 																	NewAppearance.nmEye = UniformAppearance.nmEye; 

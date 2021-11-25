@@ -59,6 +59,8 @@ Maybe allow Appearance Store button to work as a "reskin armor" button? - redund
 
 ## Ideas for later
 
+Patch Shen (and maybe Tygan) in a plugin mod so they can be uniform'd without their Mesh on their Pawn clipping.
+
 Set up uniforms from the armory
 
 Lock specific customization slots on the soldier, and lock them between all stored appearances whenever armor is equipped.
