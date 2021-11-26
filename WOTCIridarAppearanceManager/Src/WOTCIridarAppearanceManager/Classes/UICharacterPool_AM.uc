@@ -6,7 +6,7 @@ var private string SearchText;
 var private bool bShowSoldiers;
 var private bool bShowUniforms;
 var private bool bShiftPressed;
-var private int  iLastClickedCheckboxIndex;
+var private int  PrevSelectedIndex;
 
 simulated function InitScreen(XComPlayerController InitController, UIMovie InitMovie, optional name InitName)
 {
@@ -354,17 +354,17 @@ private function OnSoldierListCheckboxClicked(UICheckbox CheckBox)
 	SelectedPanel = UIMechaListItem_Soldier(List.GetSelectedItem());
 	SelectedIndex = List.GetItemIndex(SelectedPanel);
 
-	`AMLOG(`showvar(bShiftPressed) @ `showvar(SelectedIndex) @ `showvar(iLastClickedCheckboxIndex));
-	if (iLastClickedCheckboxIndex != INDEX_NONE && bShiftPressed)
+	`AMLOG(`showvar(bShiftPressed) @ `showvar(SelectedIndex) @ `showvar(PrevSelectedIndex));
+	if (PrevSelectedIndex != INDEX_NONE && bShiftPressed)
 	{
-		if (SelectedIndex < iLastClickedCheckboxIndex)
+		if (SelectedIndex < PrevSelectedIndex)
 		{
 			StartIndex = SelectedIndex;
-			EndIndex = iLastClickedCheckboxIndex;
+			EndIndex = PrevSelectedIndex;
 		}
 		else
 		{
-			StartIndex = iLastClickedCheckboxIndex;
+			StartIndex = PrevSelectedIndex;
 			EndIndex = SelectedIndex;
 		}
 			
@@ -381,8 +381,8 @@ private function OnSoldierListCheckboxClicked(UICheckbox CheckBox)
 	}
 
 	UpdateSelectedSoldiers();
-	iLastClickedCheckboxIndex = SelectedIndex;
-	`AMLOG("Setting" @ `showvar(iLastClickedCheckboxIndex));
+	PrevSelectedIndex = SelectedIndex;
+	`AMLOG("Setting" @ `showvar(PrevSelectedIndex));
 	
 	if (`ISCONTROLLERACTIVE)
 		UpdateNavHelp();
@@ -477,5 +477,5 @@ defaultproperties
 {
 	bShowSoldiers = true
 	bShowUniforms = true
-	iLastClickedCheckboxIndex = INDEX_NONE
+	PrevSelectedIndex = INDEX_NONE
 }
