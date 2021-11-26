@@ -5,7 +5,8 @@ var private string SearchText;
 
 var private bool bShowSoldiers;
 var private bool bShowUniforms;
-
+var private bool bShiftPressed;
+var private int  iLastClickedCheckboxIndex;
 
 simulated function InitScreen(XComPlayerController InitController, UIMovie InitMovie, optional name InitName)
 {
@@ -227,7 +228,7 @@ simulated function UpdateDisplay()
 			SpawnedItem.UpdateDataCheckbox(strDisplayName, 
 				"",
 				SelectedCharacters.Find(UnitState) != INDEX_NONE, 
-				SelectSoldier, 
+				OnSoldierListCheckboxClicked, 
 				EditSoldier);
 		}
 	}
@@ -275,8 +276,8 @@ simulated function UpdateDisplay()
 			SpawnedItem.UpdateDataCheckbox(strDisplayName, 
 				"",
 				SelectedCharacters.Find(UnitState) != INDEX_NONE, 
-				SelectSoldier, 
-				EditSoldier);
+				OnSoldierListCheckboxClicked, 
+				OnSoldierListItemClicked);
 		}
 	}
 
@@ -289,6 +290,7 @@ private function AppearanceListCategoryCollapseChanged(UIManageAppearance_ListHe
 {
 	SetOptionCategoryCheckboxStatus(HeaderItem.MCName, HeaderItem.bSectionVisible);
 	UpdateDisplay();
+	UpdateSelectedSoldiers();
 }
 
 private function SetOptionCategoryCheckboxStatus(name CategoryName, bool bNewValue)
@@ -302,7 +304,31 @@ private function SetOptionCategoryCheckboxStatus(name CategoryName, bool bNewVal
 	}
 }
 
-simulated function EditSoldier()
+simulated function bool OnUnrealCommand(int cmd, int arg)
+{
+	switch (cmd)
+	{
+		case class'UIUtilities_Input'.const.FXS_KEY_LEFT_SHIFT:
+		case class'UIUtilities_Input'.const.FXS_KEY_RIGHT_SHIFT:	
+			switch (arg)
+			{
+				case class'UIUtilities_Input'.const.FXS_ACTION_PRESS:
+					bShiftPressed = true;
+					break;
+				case class'UIUtilities_Input'.const.FXS_ACTION_RELEASE:
+					bShiftPressed = false;
+					break;
+				default:
+					break;
+			}
+			//`AMLOG("Shift event:" @ arg);
+			break;
+		default:
+			return super.OnUnrealCommand(cmd, arg);
+	}	
+}
+
+private function OnSoldierListItemClicked()
 {
 	local UIMechaListItem_Soldier	SelectedPanel;
 	local XComGameState_Unit		SelectedUnit;
@@ -316,24 +342,77 @@ simulated function EditSoldier()
 	CharacterPoolMgr.SaveCharacterPool();
 }
 
-simulated function SelectSoldier(UICheckbox CheckBox)
+private function OnSoldierListCheckboxClicked(UICheckbox CheckBox)
 {
 	local UIMechaListItem_Soldier	SelectedPanel;
-	local XComGameState_Unit		SelectedUnit;
+	local UIMechaListItem_Soldier	ListItem;
+	local int						SelectedIndex;
+	local int						StartIndex;
+	local int						EndIndex;
+	local int						Index;
 
 	SelectedPanel = UIMechaListItem_Soldier(List.GetSelectedItem());
-	SelectedUnit = SelectedPanel.UnitState;
+	SelectedIndex = List.GetItemIndex(SelectedPanel);
 
-	if (CheckBox.bChecked)
-		SelectedCharacters.AddItem(SelectedUnit);
-	else
-		SelectedCharacters.RemoveItem(SelectedUnit);
+	`AMLOG(`showvar(bShiftPressed) @ `showvar(SelectedIndex) @ `showvar(iLastClickedCheckboxIndex));
+	if (iLastClickedCheckboxIndex != INDEX_NONE && bShiftPressed)
+	{
+		if (SelectedIndex < iLastClickedCheckboxIndex)
+		{
+			StartIndex = SelectedIndex;
+			EndIndex = iLastClickedCheckboxIndex;
+		}
+		else
+		{
+			StartIndex = iLastClickedCheckboxIndex;
+			EndIndex = SelectedIndex;
+		}
+			
+		`AMLOG(`showvar(StartIndex) @ `showvar(EndIndex));
+		for (Index = StartIndex; Index <= EndIndex; Index++)
+		{
+			ListItem = UIMechaListItem_Soldier(List.GetItem(Index));
+			if (ListItem == none || ListItem.UnitState == none || ListItem.Checkbox == none)
+				continue;
+
+			`AMLOG(`showvar(Index) @ "Set checked:" @ CheckBox.bChecked);
+			ListItem.Checkbox.SetChecked(CheckBox.bChecked, false);
+		}
+	}
+
+	UpdateSelectedSoldiers();
+	iLastClickedCheckboxIndex = SelectedIndex;
+	`AMLOG("Setting" @ `showvar(iLastClickedCheckboxIndex));
 	
-	if( `ISCONTROLLERACTIVE )
+	if (`ISCONTROLLERACTIVE)
 		UpdateNavHelp();
 	else
 		UpdateEnabledButtons();
 }
+
+// This is less optimal in terms of performance, but much more reliable,
+// as it lets me one-to-one map list items' checkboxes to select soldiers.
+// I don't trust myself to create error-free logic at this point.
+private function UpdateSelectedSoldiers()
+{	
+	local UIMechaListItem_Soldier	ListItem;
+	local int						Index;
+
+	SelectedCharacters.Length = 0;
+	for (Index = 0; Index < List.ItemCount; Index++)
+	{
+		ListItem = UIMechaListItem_Soldier(List.GetItem(Index));
+		if (ListItem == none || ListItem.UnitState == none || ListItem.Checkbox == none)
+			continue;
+
+		if (ListItem.Checkbox.bChecked)
+		{
+			SelectedCharacters.AddItem(ListItem.UnitState);
+			`AMLOG(Index @ ListItem.UnitState.GetFullName() @ "is now selected");
+		}
+	}
+}
+
 
 function XComGameState_Unit GetSoldierInSlot( int iSlot )
 {
@@ -398,4 +477,5 @@ defaultproperties
 {
 	bShowSoldiers = true
 	bShowUniforms = true
+	iLastClickedCheckboxIndex = INDEX_NONE
 }
