@@ -879,9 +879,13 @@ private function OnSaveAsUniformInputBoxAccepted(string strLastName)
 		NewUnit.bAllowedTypeDarkVIP = false;
 
 		NewUnit.StoreAppearance(ArmoryPawn.m_kAppearance.iGender, ArmorTemplateName);
-		PoolMgr.AddUnitToCharacterPool(NewUnit);
+		NewUnit = PoolMgr.AddUnitToCharacterPool(NewUnit);
 		PoolMgr.SetUniformStatus(NewUnit, EUS_Manual);
 		SaveCosmeticOptionsForUnit(NewUnit); // This calls SaveCharacterPool()
+
+		PoolMgr.SortCharacterPoolByUniformStatus();
+		PoolMgr.SortCharacterPoolBySoldierName();
+		PoolMgr.SortCharacterPoolBySoldierClass();
 
 		UpdateAppearanceList();
 	}

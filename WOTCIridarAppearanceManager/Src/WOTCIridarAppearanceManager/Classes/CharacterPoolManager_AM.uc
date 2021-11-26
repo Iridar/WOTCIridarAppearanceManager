@@ -487,7 +487,7 @@ final function ValidateUnitAppearance(XComGameState_Unit UnitState)
 	}
 }
 
-final function AddUnitToCharacterPool(XComGameState_Unit NewUnit, optional CharacterPoolExtraData NewExtraData)
+final function XComGameState_Unit AddUnitToCharacterPool(XComGameState_Unit NewUnit, optional CharacterPoolExtraData NewExtraData)
 {
 	local UnitValue OldValue;
 	local UnitValue NewValue;
@@ -513,6 +513,8 @@ final function AddUnitToCharacterPool(XComGameState_Unit NewUnit, optional Chara
 	NewUnit.GetUnitValue(ExtraDataValueName, OldValue);
 	CreateUnit.GetUnitValue(ExtraDataValueName, NewValue);
 	`AMLOG("Adding new unit to Character Pool." @ CreateUnit.GetFullName() @ "old value:" @ int(OldValue.fValue) @ "new value:" @ int(NewValue.fValue) @ "new ExtraData ObjectID:" @ NewExtraData.ObjectID);
+
+	return CreateUnit;
 }
 
 final function CharacterPoolExtraData GetExtraDataForUnit(const XComGameState_Unit UnitState)
