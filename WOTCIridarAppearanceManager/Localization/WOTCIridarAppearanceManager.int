@@ -73,7 +73,7 @@ strVadlidateAppearance = "Validate Appearance"
 strVadlidateAppearanceButton = "Validate"
 
 strConfigureUniform = "Configure Uniform"
-strUniformSoldierFirstName = "UNIFORM"
+strUniformSoldierFirstName = "Uniform"
 
 strAutoManageUniformForUnitTitle = "Uniform management"
 strAutoManageUniformForUnit[0] = "Global setting"

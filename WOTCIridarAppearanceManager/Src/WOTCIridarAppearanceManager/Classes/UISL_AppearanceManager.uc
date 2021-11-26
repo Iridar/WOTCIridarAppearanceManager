@@ -122,7 +122,10 @@ private function ApplyScreenChanges()
 	CustomizeScreen.SetTimer(0.25f, false, nameof(ApplyScreenChanges), self);
 
 	if (ChangesAlreadyMade(CustomizeScreen.List))
+	{
+		EnsureDropdownsAreHighestDepth(CustomizeScreen.List);
 		return; 
+	}
 
 	ListIndex = GetIndexOfLastVisibleListItem(CustomizeScreen.List) + 1;
 
@@ -668,6 +671,21 @@ private function UIMechaListItem CreateOrUpdateDropdown(out int ListIndex, UICus
 
 	ListItem.Show();
 	return ListItem;
+}
+
+private function EnsureDropdownsAreHighestDepth(UIList List)
+{
+	local UIMechaListItem ListItem;
+	local int i;
+
+	for (i = 0; i < List.ItemCount; i++)
+	{
+		ListItem = UIMechaListItem(List.GetItem(i));
+		if (ListItem == none || ListItem.Dropdown == none)
+			continue;
+
+		ListItem.MoveToHighestDepth();
+	}
 }
 
 // ----------------------------------------------------------------------
