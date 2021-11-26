@@ -11,23 +11,27 @@ https://creativecommons.org/licenses/by/4.0/
 
 [WOTC] Iridar's Appearance Manager
 
-This mod adds new functionality to Character Pool and new robust interface to manage units' appearance, as well as an automated Uniform Manager. Take a look at the introduction video for a brief overview, or go here for the full explanation of mod's functions.
+Adds new functionality to Character Pool and new interface to manage units' appearance, as well as an automated Uniform Manager.
+
+For a brief overview of the mod's functions, check the introduction video above, or click the link below for an in-depth explanation.
+
+[b][url=https://steamcommunity.com/workshop/filedetails/discussion/2664422411/3194737075878800834/]>>> DETAILED INSTRUCTIONS <<<[/url][/b]
 
 [h1]New Soldier Customization UI[/h1]
 [list]
 [*] New "Manage Appearance" screen. Allows copying units' entire or partial appearance onto other units, as well as quickly importing soldier appearance from Character Pool or Memorial, or putting uniforms on soldiers. You can also make sweeping changes to your entire Squad, Barracks or Character Pool. This can be used, for example, to quickly set the same camouflage for the entire Squad.
-[*] New "Stored Appearance" screen. Allows viewing, "equipping" and deleting stored soldier appearance for each armor they have ever equipped.[/list]
+[*] New "Stored Appearance" screen. Allows viewing, "equipping" and deleting stored appearance for each armor the soldier have ever equipped.[/list]
 
 [h1]Character Pool Changes[/h1]
 [list]
-[*] Character Pool list is now sorted and shows soldiers' class.
+[*] Character Pool soldier list is now sorted and shows soldiers' class.
 [*] A "Search" button has been added to quickly filter out soldiers based on their name or class.
 [*] You can now Shift+Click to select or deselect multiple soldiers in Character Pool.
 [*] Character Pool now saves Appearance Store - individual unit appearance for each armor.
 [*] It's now possible to pre-customize appearance of Character Pool units for each armor by equipping said armor on the new Loadout screen. Weapons can also be previewed in Character Pool.
 [*] "Dormant" character pool units that do not appear in the campaign are now allowed.
 [*] Appearance validation is now turned off in debug game mode, and can be also turned off in normal game mode. Appearance validation is the game attempting to correct the appearance of Character Pool units if their cosmetic body parts become missing, typically because cosmetic mods with those body parts have been deactivated. Disabling validation allows temporarily disabling cosmetic mods without losing the customized appearance of your Character Pool. If appearance validation is currently disabled, a new button is added to soldier customization screen to perform it manually for specific soldiers.
-[*] Individual Character Pool units can be converted to Uniforms. Uniforms are grouped separately on the Manage Appearance screen, and may be applied to soldiers manually or automatically.[list]
+[*] Individual Character Pool units can be converted to Uniforms. Uniforms are grouped separately on the Manage Appearance screen, and may be applied to soldiers manually or automatically.[/list]
 
 [h1]Automated Uniform Manager[/h1]
 [list]
@@ -37,24 +41,39 @@ This mod adds new functionality to Character Pool and new robust interface to ma
 [*] You can also work with Uniforms manually using the Manage Appearance screen.
 [*] Uniforms can be shared through Character Pool files.[/list]
 
+[h1]Be careful with[/h1]
+[list]
+[*] Disabling the mod - Appearance Manager is safe to disable temporarily, as long as you don't make [b][i]any[/i][/b] changes to character pool units.
+[*] Any stored appearance on the Uniform unit will count as a potential uniform, so when you are done setting up a uniform, make sure to go to Stored Appearance screen and delete any unwanted appearances.
+[*] Be very careful when you [b]Apply Сhanges[/b] to multiple units. Double check cosmetic options you have enabled, otherwise you might accidentally give the same face to all soldiers in your barracks, for example.[/list]
+
 [h1]REQUIREMENTS[/h1]
 [list]
-[*] [url=https://steamcommunity.com/workshop/filedetails/?id=1134256495][b]X2 WOTC Community Highlander[/b][/url] is required.[/list]
+[*] [url=https://steamcommunity.com/workshop/filedetails/?id=1134256495][b]X2 WOTC Community Highlander[/b][/url] is required.
+[*] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=667104300][b][WotC] Mod Config Menu[/b][/url] is supported, but not a hard requirement.
+[*]Safe to add or remove mid-campaign.[/list]
 
 [h1]COMPATIBILITY[/h1]
 
 Appearance Manager replaces [i][b]CharacterPoolManager[/b][/i] and will be incompatible with any mod that does the same. It also has the following ModClassOverrides:
 [code]
 UICharacterPool - can be safely disabled by removing its entry in this mod's XComEngine.ini. Doing so will disable sorting and the "Search" button.
-UICharacterPool_ListPools - required for the mod to Import and Export additional information to and from Character Pool files created with this mod.[/code]
 
-[list]
-[*] [b][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2589916279][WOTC] Item Hider[/url][/b] - compatible, hidden items do not appear as equippable in Character Pool Loadout screen.
-[*] [b][url=https://steamcommunity.com/sharedfiles/filedetails/?id=1135440846]Unrestricted Customization - Wotc[/url][/b] (and its [b][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2438621356]Redux version[/url][/b]) - limited compatibility. These mods can work together, but the Uniform Manager and Stored Appearance screen will become useless due to what Unrestricted Customization does to Appearance Store.
+UICharacterPool_ListPools - required for the mod to Import and Export additional information to and from Character Pool files created with this mod.[/code][list]
+[*] [b][url=https://steamcommunity.com/sharedfiles/filedetails/?id=1135440846]Unrestricted Customization - Wotc[/url][/b] (and its [b][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2438621356]Redux version[/url][/b]) - [b]limited compatibility[/b]. These mods can work together, but the Uniform Manager and Stored Appearance screen will become useless due to what Unrestricted Customization does to Appearance Store.
 [*] [b][url=https://steamcommunity.com/sharedfiles/filedetails/?id=1136878667]WOTC Extended Character Pool[/url][/b] - compatible if you disable Appearance Manager's ModClassOverride for [b][i]UICharacterPool[/i][/b].
+[*] [b][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2589916279][WOTC] Item Hider[/url][/b] - compatible, hidden items do not appear as equippable in Character Pool Loadout screen.
 [/list]
 
 Other than that, should be compatible with anything and everything.
+
+[h1]CONFIGURATION[/h1]
+
+Presets and MCM settings for this mod are stored in this file. You might want to back it up when deleting User Config folder.
+[code]..\Documents\my games\XCOM2 War of the Chosen\XComGame\ConfigXComAppearanceManager.ini[/code]
+
+Mod's default configuration is located here:
+[code]..\steamapps\workshop\content\268500\2664422411\Config\[/code]
 
 [h1]COMPANION MODS[/h1]
 [list]
@@ -70,14 +89,10 @@ Mod causes a ton of log warnings and redscreens while working with Character Poo
 [h1]CREDITS[/h1]
 
 Huge thanks to [b]Xymanek (Astral Descend)[/b] for crucial code support and UI improvements.
+Thanks to my beta testers: [b]RustyDios, lago508, Deadput[/b].
+Blame [b]Veehementia[/b] for making me think that making this mod was a good idea.
 
 Please [b][url=https://www.patreon.com/Iridar]support me on Patreon[/url][/b] if you require tech support, have a suggestion for a feature, or simply wish to help me create more awesome mods.
-
-
-Things to be careful with:
-Disabling the mod
-Changing gender for a uniform
-Apply changes to multiple units
 
 
 # DETAILED GUIDE
