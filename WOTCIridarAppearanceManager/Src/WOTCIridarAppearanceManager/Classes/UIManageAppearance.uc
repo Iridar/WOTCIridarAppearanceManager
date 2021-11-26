@@ -862,30 +862,30 @@ private function OnSaveAsUniformInputBoxAccepted(string strLastName)
 
 	if (strLastName != "")
 	{
-		NewUnit = PoolMgr.CreateSoldierForceGender(ArmoryUnit.GetMyTemplateName(), EGender(ArmoryPawn.m_kAppearance.iGender));
-		if (NewUnit == none)
-		{
-			ShowInfoPopup(strFailedToCreateUnitTitle, strFailedToCreateUnitText @ ArmoryUnit.GetMyTemplateName(), eDialog_Warning);
-			return;
-		}
+		//NewUnit = PoolMgr.CreateSoldierForceGender(ArmoryUnit.GetMyTemplateName(), EGender(ArmoryPawn.m_kAppearance.iGender));
+		//if (NewUnit == none)
+		//{
+		//	ShowInfoPopup(strFailedToCreateUnitTitle, strFailedToCreateUnitText @ ArmoryUnit.GetMyTemplateName(), eDialog_Warning);
+		//	return;
+		//}
 
-		NewUnit.SetTAppearance(ArmoryPawn.m_kAppearance);
+		NewUnit = PoolMgr.AddUnitToCharacterPool(ArmoryUnit);
+		//NewUnit.SetTAppearance(ArmoryPawn.m_kAppearance);
 		NewUnit.SetCharacterName(class'UISL_AppearanceManager'.default.strUniformSoldierFirstName, strLastName, "");
-		
+		//NewUnit.SetCountry(ArmoryUnit.GetCountry());
 		NewUnit.kAppearance.iAttitude = 0;
 		NewUnit.UpdatePersonalityTemplate();
 		NewUnit.bAllowedTypeSoldier = false;
 		NewUnit.bAllowedTypeVIP = false;
 		NewUnit.bAllowedTypeDarkVIP = false;
-
-		NewUnit.StoreAppearance(ArmoryPawn.m_kAppearance.iGender, ArmorTemplateName);
-		NewUnit = PoolMgr.AddUnitToCharacterPool(NewUnit);
+		
 		PoolMgr.SetUniformStatus(NewUnit, EUS_Manual);
+		NewUnit.StoreAppearance(ArmoryPawn.m_kAppearance.iGender, ArmorTemplateName);
 		SaveCosmeticOptionsForUnit(NewUnit); // This calls SaveCharacterPool()
-
-		PoolMgr.SortCharacterPoolByUniformStatus();
+		
 		PoolMgr.SortCharacterPoolBySoldierName();
 		PoolMgr.SortCharacterPoolBySoldierClass();
+		PoolMgr.SortCharacterPoolByUniformStatus();
 
 		UpdateAppearanceList();
 	}
@@ -2471,15 +2471,15 @@ private function bool ShouldShowHeadCategory()
 	return /* OriginalAppearance.iRace != SelectedAppearance.iRace ||*/ // Race toggled together with face
 			OriginalAppearance.iSkinColor != SelectedAppearance.iSkinColor ||
 			OriginalAppearance.nmHead != SelectedAppearance.nmHead ||
-			OriginalAppearance.nmHelmet != SelectedAppearance.nmHelmet ||
-			OriginalAppearance.nmFacePropLower != SelectedAppearance.nmFacePropLower ||
-			OriginalAppearance.nmFacePropUpper != SelectedAppearance.nmFacePropUpper ||
-			OriginalAppearance.nmHaircut != SelectedAppearance.nmHaircut ||
-			OriginalAppearance.nmBeard != SelectedAppearance.nmBeard ||
+			OriginalAppearance.nmHelmet != SelectedAppearance.nmHelmet && !class'Help'.static.IsCosmeticEmpty(SelectedAppearance.nmHelmet) && !class'Help'.static.IsCosmeticEmpty(SelectedAppearance.nmHelmet) ||
+			OriginalAppearance.nmFacePropLower != SelectedAppearance.nmFacePropLower && !class'Help'.static.IsCosmeticEmpty(SelectedAppearance.nmHelmet) && !class'Help'.static.IsCosmeticEmpty(SelectedAppearance.nmHelmet) ||
+			OriginalAppearance.nmFacePropUpper != SelectedAppearance.nmFacePropUpper && !class'Help'.static.IsCosmeticEmpty(SelectedAppearance.nmHelmet) && !class'Help'.static.IsCosmeticEmpty(SelectedAppearance.nmHelmet) ||
+			OriginalAppearance.nmHaircut != SelectedAppearance.nmHaircut && !class'Help'.static.IsCosmeticEmpty(SelectedAppearance.nmHelmet) && !class'Help'.static.IsCosmeticEmpty(SelectedAppearance.nmHelmet) ||
+			OriginalAppearance.nmBeard != SelectedAppearance.nmBeard && !class'Help'.static.IsCosmeticEmpty(SelectedAppearance.nmHelmet) && !class'Help'.static.IsCosmeticEmpty(SelectedAppearance.nmHelmet) ||
 			OriginalAppearance.iHairColor != SelectedAppearance.iHairColor ||
 			OriginalAppearance.iEyeColor != SelectedAppearance.iEyeColor ||
-			OriginalAppearance.nmScars != SelectedAppearance.nmScars || 
-			OriginalAppearance.nmFacePaint != SelectedAppearance.nmFacePaint;
+			OriginalAppearance.nmScars != SelectedAppearance.nmScars && !class'Help'.static.IsCosmeticEmpty(SelectedAppearance.nmHelmet) && !class'Help'.static.IsCosmeticEmpty(SelectedAppearance.nmHelmet) || 
+			OriginalAppearance.nmFacePaint != SelectedAppearance.nmFacePaint && !class'Help'.static.IsCosmeticEmpty(SelectedAppearance.nmHelmet) && !class'Help'.static.IsCosmeticEmpty(SelectedAppearance.nmHelmet);
 }
 
 private function bool ShouldShowBodyCategory()
