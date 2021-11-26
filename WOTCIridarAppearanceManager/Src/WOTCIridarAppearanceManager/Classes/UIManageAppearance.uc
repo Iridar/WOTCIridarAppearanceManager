@@ -870,10 +870,8 @@ private function OnSaveAsUniformInputBoxAccepted(string strLastName)
 		}
 
 		NewUnit.SetTAppearance(ArmoryPawn.m_kAppearance);
-
 		NewUnit.SetCharacterName(class'UISL_AppearanceManager'.default.strUniformSoldierFirstName, strLastName, "");
-		PoolMgr.SetUniformStatus(NewUnit, EUS_Manual);
-
+		
 		NewUnit.kAppearance.iAttitude = 0;
 		NewUnit.UpdatePersonalityTemplate();
 		NewUnit.bAllowedTypeSoldier = false;
@@ -881,7 +879,8 @@ private function OnSaveAsUniformInputBoxAccepted(string strLastName)
 		NewUnit.bAllowedTypeDarkVIP = false;
 
 		NewUnit.StoreAppearance(ArmoryPawn.m_kAppearance.iGender, ArmorTemplateName);
-		PoolMgr.CharacterPool.AddItem(NewUnit);
+		PoolMgr.AddUnitToCharacterPool(NewUnit);
+		PoolMgr.SetUniformStatus(NewUnit, EUS_Manual);
 		SaveCosmeticOptionsForUnit(NewUnit); // This calls SaveCharacterPool()
 
 		UpdateAppearanceList();
