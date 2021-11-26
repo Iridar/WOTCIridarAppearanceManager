@@ -3,6 +3,8 @@ class UICharacterPool_AM extends UICharacterPool;
 var private UIButton SearchButton;
 var private string SearchText;
 
+var private bool bShowSoldiers;
+var private bool bShowUniforms;
 
 
 simulated function InitScreen(XComPlayerController InitController, UIMovie InitMovie, optional name InitName)
@@ -172,10 +174,11 @@ simulated function array<string> GetCharacterNames()
 // the UnitState stored in that list element specifically.
 simulated function UpdateDisplay()
 {
-	local XComGameState_Unit		UnitState;
-	local string					strDisplayName;
-	local UIMechaListItem_Soldier	SpawnedItem;
-	local EUniformStatus			UniformStatus;
+	local XComGameState_Unit				UnitState;
+	local string							strDisplayName;
+	local UIMechaListItem_Soldier			SpawnedItem;
+	local EUniformStatus					UniformStatus;
+	local UIManageAppearance_ListHeaderItem HeaderItem;
 
 	CharacterPoolManager_AM(CharacterPoolMgr).SortCharacterPoolBySoldierName();
 	CharacterPoolManager_AM(CharacterPoolMgr).SortCharacterPoolBySoldierClass();
@@ -185,63 +188,118 @@ simulated function UpdateDisplay()
 	// Do two passes through Character Pool. First, make a list of non-uniforms.
 	foreach CharacterPoolMgr.CharacterPool(UnitState)
 	{	
-		strDisplayName = class'Help'.static.GetUnitDisplayString(UnitState);
-
-		if (SearchText != "" && InStr(strDisplayName, SearchText,, true) == INDEX_NONE) // Ignore case
-		{
-			continue;
-		}
-
 		UniformStatus = CharacterPoolManager_AM(CharacterPoolMgr).GetUniformStatus(UnitState);
-		if (UniformStatus != EUS_NotUniform)
-			continue;
+		if (UniformStatus == EUS_NotUniform)
+		{
+			HeaderItem = Spawn(class'UIManageAppearance_ListHeaderItem', List.itemContainer);
+			HeaderItem.bAnimateOnInit = false;
+			HeaderItem.InitHeader('bShowSoldiers');
+			HeaderItem.SetLabel(`CAPS(class'UIPersonnel'.default.m_strSoldierTab));
+			HeaderItem.EnableCollapseToggle(bShowSoldiers);
+			HeaderItem.OnCollapseToggled = AppearanceListCategoryCollapseChanged;
+			HeaderItem.RealizeLayoutAndNavigation();
+			break;
+		}
+	}
 
-		if (!UnitState.bAllowedTypeSoldier && !UnitState.bAllowedTypeVIP && !UnitState.bAllowedTypeDarkVIP)
-					strDisplayName = class'Help'.static.GetHTMLColoredText(strDisplayName, class'UIUtilities_Colors'.const.DISABLED_HTML_COLOR); // Grey	
+	if (bShowSoldiers)
+	{
+		foreach CharacterPoolMgr.CharacterPool(UnitState)
+		{	
+			strDisplayName = class'Help'.static.GetUnitDisplayString(UnitState);
 
-		SpawnedItem = Spawn(class'UIMechaListItem_Soldier', List.ItemContainer);
-		SpawnedItem.bAnimateOnInit = false;
-		SpawnedItem.InitListItem();
-		SpawnedItem.UnitState = UnitState;
-		SpawnedItem.UpdateDataCheckbox(strDisplayName, 
-			"",
-			SelectedCharacters.Find(UnitState) != INDEX_NONE, 
-			SelectSoldier, 
-			EditSoldier);
+			if (SearchText != "" && InStr(strDisplayName, SearchText,, true) == INDEX_NONE) // Ignore case
+			{
+				continue;
+			}
+
+			UniformStatus = CharacterPoolManager_AM(CharacterPoolMgr).GetUniformStatus(UnitState);
+			if (UniformStatus != EUS_NotUniform)
+				continue;
+
+			if (!UnitState.bAllowedTypeSoldier && !UnitState.bAllowedTypeVIP && !UnitState.bAllowedTypeDarkVIP)
+						strDisplayName = class'Help'.static.GetHTMLColoredText(strDisplayName, class'UIUtilities_Colors'.const.DISABLED_HTML_COLOR); // Grey	
+
+			SpawnedItem = Spawn(class'UIMechaListItem_Soldier', List.ItemContainer);
+			SpawnedItem.bAnimateOnInit = false;
+			SpawnedItem.InitListItem();
+			SpawnedItem.UnitState = UnitState;
+			SpawnedItem.UpdateDataCheckbox(strDisplayName, 
+				"",
+				SelectedCharacters.Find(UnitState) != INDEX_NONE, 
+				SelectSoldier, 
+				EditSoldier);
+		}
 	}
 
 	// Then handle the uniforms, so they're grouped at the bottom of the list.
-	CharacterPoolManager_AM(CharacterPoolMgr).SortCharacterPoolByUniformStatus();
-
 	foreach CharacterPoolMgr.CharacterPool(UnitState)
 	{	
-		strDisplayName = class'Help'.static.GetUnitDisplayString(UnitState);
-
-		if (SearchText != "" && InStr(strDisplayName, SearchText,, true) == INDEX_NONE) // Ignore case
-		{
-			continue;
-		}
-
 		UniformStatus = CharacterPoolManager_AM(CharacterPoolMgr).GetUniformStatus(UnitState);
-		if (UniformStatus == EUS_NotUniform)
-			continue;  // Would love to do this in the Switch(), but compiler's not letting me.
+		if (UniformStatus > EUS_NotUniform)
+		{
+			HeaderItem = Spawn(class'UIManageAppearance_ListHeaderItem', List.itemContainer);
+			HeaderItem.bAnimateOnInit = false;
+			HeaderItem.InitHeader('bShowUniforms');
+			HeaderItem.SetLabel(`CAPS(class'UIManageAppearance'.default.strUniformsTitle));
+			HeaderItem.EnableCollapseToggle(bShowUniforms);
+			HeaderItem.OnCollapseToggled = AppearanceListCategoryCollapseChanged;
+			HeaderItem.RealizeLayoutAndNavigation();
+			break;
+		}
+	}
 
-		class'Help'.static.ApplySoldierNameColorBasedOnUniformStatus(strDisplayName, UniformStatus);
+	if (bShowUniforms)
+	{
+		CharacterPoolManager_AM(CharacterPoolMgr).SortCharacterPoolByUniformStatus();
 
-		SpawnedItem = Spawn(class'UIMechaListItem_Soldier', List.ItemContainer);
-		SpawnedItem.bAnimateOnInit = false;
-		SpawnedItem.InitListItem();
-		SpawnedItem.UnitState = UnitState;
-		SpawnedItem.UpdateDataCheckbox(strDisplayName, 
-			"",
-			SelectedCharacters.Find(UnitState) != INDEX_NONE, 
-			SelectSoldier, 
-			EditSoldier);
+		foreach CharacterPoolMgr.CharacterPool(UnitState)
+		{	
+			strDisplayName = class'Help'.static.GetUnitDisplayString(UnitState);
+
+			if (SearchText != "" && InStr(strDisplayName, SearchText,, true) == INDEX_NONE) // Ignore case
+			{
+				continue;
+			}
+
+			UniformStatus = CharacterPoolManager_AM(CharacterPoolMgr).GetUniformStatus(UnitState);
+			if (UniformStatus == EUS_NotUniform)
+				continue; 
+
+			class'Help'.static.ApplySoldierNameColorBasedOnUniformStatus(strDisplayName, UniformStatus);
+
+			SpawnedItem = Spawn(class'UIMechaListItem_Soldier', List.ItemContainer);
+			SpawnedItem.bAnimateOnInit = false;
+			SpawnedItem.InitListItem();
+			SpawnedItem.UnitState = UnitState;
+			SpawnedItem.UpdateDataCheckbox(strDisplayName, 
+				"",
+				SelectedCharacters.Find(UnitState) != INDEX_NONE, 
+				SelectSoldier, 
+				EditSoldier);
+		}
 	}
 
 	UpdateNavHelp();
 	if( !`ISCONTROLLERACTIVE )
 		UpdateEnabledButtons();
+}
+
+private function AppearanceListCategoryCollapseChanged(UIManageAppearance_ListHeaderItem HeaderItem)
+{
+	SetOptionCategoryCheckboxStatus(HeaderItem.MCName, HeaderItem.bSectionVisible);
+	UpdateDisplay();
+}
+
+private function SetOptionCategoryCheckboxStatus(name CategoryName, bool bNewValue)
+{
+	switch (CategoryName)
+	{
+		case 'bShowUniforms': bShowUniforms = bNewValue; break;
+		case 'bShowSoldiers': bShowSoldiers = bNewValue; break;
+		default:
+			return;
+	}
 }
 
 simulated function EditSoldier()
@@ -251,6 +309,8 @@ simulated function EditSoldier()
 
 	SelectedPanel = UIMechaListItem_Soldier(List.GetSelectedItem());
 	SelectedUnit = SelectedPanel.UnitState;
+
+	`AMLOG("Opening customize screen for:" @ SelectedUnit.GetFullName());
 
 	PC.Pres.UICustomize_Menu(SelectedUnit, none);
 	CharacterPoolMgr.SaveCharacterPool();
@@ -332,4 +392,10 @@ private function OnSearchInputBoxAccepted(string text)
 
 	SearchButton.SetText(strShowText);
 	UpdateData();
+}
+
+defaultproperties
+{
+	bShowSoldiers = true
+	bShowUniforms = true
 }

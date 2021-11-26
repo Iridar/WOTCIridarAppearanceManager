@@ -4,7 +4,7 @@ class UIManageAppearance extends UICustomize;
 /*
 # Priority
 
-Psi Operative uniform works?
+Insert list headers into character pool UI.
 
 Make chevron animation on Apply Changes button go away when there's no changes to apply. Alternatively, hide the button.
 Validate Appearance caused double pawn. Need for Validate Appearance occured when deleting appearance stores caused the unit to glitch out.
