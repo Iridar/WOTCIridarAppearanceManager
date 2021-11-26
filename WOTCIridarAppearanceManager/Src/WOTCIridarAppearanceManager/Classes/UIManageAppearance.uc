@@ -37,6 +37,8 @@ Maybe allow Appearance Store button to work as a "reskin armor" button? - redund
 
 ## Ideas for later
 
+Make text on UIMechaListItem_Button long enough to be obscured by the button scroll from under the button rather than go under it.
+
 Make clicking a list item in cosmetic options list toggle its checkbox.
 
 Do CP units need a way to select whether they want to accept only class-specific or AnyClass uniforms?
@@ -123,6 +125,7 @@ var localized string strDeletePreset;
 var localized string strCannotDeleteThisPreset;
 var localized string strRacePrefix;
 var localized string strApplyChangesButtonDisabled;
+var localized string strInvalidPresetNameText;
 
 // ==============================================================================
 // Screen Options - preserved between game restarts.
@@ -487,8 +490,8 @@ function CreateFiltersList()
 	SpawnedItem = Spawn(class'UIMechaListItem', FiltersList.itemContainer);
 	SpawnedItem.bAnimateOnInit = false;
 	SpawnedItem.InitListItem('FilterArmorAppearance');
+	SpawnedItem.UpdateDataCheckbox(`CAPS(class'UIArmory_Loadout'.default.m_strInventoryLabels[eInvSlot_Armor]), "", ArmorTemplateName != '', OnFilterCheckboxChanged, none); 
 	SpawnedItem.SetDisabled(ArmorTemplateName == '', strNoArmorTemplateError @ ArmoryUnit.GetFullName());
-	SpawnedItem.UpdateDataCheckbox(`CAPS(class'UIArmory_Loadout'.default.m_strInventoryLabels[eInvSlot_Armor]), "", true, OnFilterCheckboxChanged, none); 
 }
 
 private function OnApplyToCheckboxChanged(UICheckbox CheckBox)
@@ -2264,6 +2267,13 @@ function OnCreatePresetInputBoxAccepted(string text)
 	local CheckboxPresetStruct	NewPresetStruct;
 	local name					NewPresetName;
 	local int i;
+
+	if (text == "")
+	{
+		// No empty preset names
+		ShowInfoPopup(strDuplicatePresetDisallowedTitle, strInvalidPresetNameText, eDialog_Warning);
+		return;
+	}
 
 	text = Repl(text, " ", "_"); // Oh, you want to break this preset by putting spaces into a 'name'? I'm afraid I can't let you do that, Dave..
 

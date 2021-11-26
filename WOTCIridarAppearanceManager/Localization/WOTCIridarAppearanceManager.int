@@ -47,6 +47,7 @@ strCreatePresetText = "_Copy"
 
 strDuplicatePresetDisallowedTitle = "Failed to add new preset!"
 strDuplicatePresetDisallowedText = "A preset with that name already exists. Aborting."
+strInvalidPresetNameText = "Invalid preset name. Aborting."
 
 strSaveAsUniform = "Save as Uniform"
 strEnterUniformName = "Enter Uniform's name:"
