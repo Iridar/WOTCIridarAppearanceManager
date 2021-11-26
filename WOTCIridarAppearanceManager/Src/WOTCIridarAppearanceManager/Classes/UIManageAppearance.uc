@@ -2,43 +2,19 @@ class UIManageAppearance extends UICustomize;
 
 // TODO:
 /*
-# Priority
+# Bugs to be aware of:
 
-Insert list headers into character pool UI.
-
-Make chevron animation on Apply Changes button go away when there's no changes to apply. Alternatively, hide the button.
 Validate Appearance caused double pawn. Need for Validate Appearance occured when deleting appearance stores caused the unit to glitch out.
+Attempting to switch the gender of a newly generated Reaper somehow switched their gender to None. It cannot be switched off of None.
+The intermittent neanderthal bug.
 
-1. Color bug in #beta_testing
-3. Attempting to switch the gender of a newly generated Reaper somehow switched its gender to None. It cannot be switched off of None
+# Bugs that were already fixed, potentially:
 
-Soldier customization bug repro steps:
-1. Equip plated armor.
-2. Delete stored appearance for kevlar armor.
-3. Go to customize it.
-4. Can select only kevlar options, soldier now has kevlar equipped.
+When entering Manage Appearance screen, gender sometimes doesn't refresh automatically, deforming the pawn.
+The Uniform preset somehow got broken. 
+Pawn sometimes remains on character pool screen. 
 
-Fixed already?
-Genders sometimes doesn't refresh automatically, deforming the pawn.
-3. Uniform preset somehow got broken. 
-Pawn sometimes hangs on character pool screen. 
-4. Apply to squad, apply to barracks doesn't work. 6:30
-
-Optimize performance on this screen? Don't create options all the time, maybe?
-
-# Character Pool
-Sorting buttons for CP units?
-
-Do CP units need a way to select whether they want to accept only class-specific or AnyClass uniforms?
-
-Fix wrong unit being opened in CP sometimes. (Has to do with deleting units?)
--- Apparently the problem is the CP opens the unit you had selected when the interface раздупляется, а не тот юнит по которому кликал. Это ваниллы проблема. Можно пофиксить, наверное
-
-# This screen
-
-Make clicking an item toggle its checkbox?
-
-## Checks:
+## Checks performed:
 1. Saves stored appearance in CP.
 2. Saves stored apearance when importing a unit from campaign into CP.
 3. Individual uniform setting.
@@ -53,11 +29,23 @@ Make clicking an item toggle its checkbox?
 
 ## Addressed
 
-Should APply Changes button select Original Apperance? --No, it shouldn't, user might want to copy stuff one by one from selected appearance.
+Make chevron animation on Apply Changes button go away when there's no changes to apply. Alternatively, hide the button.
+
+Should Apply Changes button select Original Apperance? --No, it shouldn't, user might want to copy stuff one by one from selected appearance.
 
 Maybe allow Appearance Store button to work as a "reskin armor" button? - redundant, can be done with this mod's customization screen by importing unit's own appearance from another armor.
 
 ## Ideas for later
+
+Make clicking a list item in cosmetic options list toggle its checkbox.
+
+Do CP units need a way to select whether they want to accept only class-specific or AnyClass uniforms?
+
+Make the CP UI open customization menu for the soldier you clicked on, not the soldier under the mouse cursor when the UI code decides the sun is high enough to start working.
+
+Sorting buttons for CP units?
+
+Optimize performance on this screen? Don't create options all the time, maybe?
 
 Patch Shen (and maybe Tygan) in a plugin mod so they can be uniform'd without their Mesh on their Pawn clipping.
 
@@ -76,7 +64,7 @@ Investigate customizing off-duty (Underlay?) appearance.
 
 Make GetApplyChangesNumUnits() take into account gender of the targeted soldier, as depending on selected cosmetic options they may not receive any changes.
 
-AU units with custom rookie class should be able to choose from different classes in CP
+Allies Unknown units with custom rookie class should be able to choose from different classes in CP
 I have no idea how they coded that, but it would appear that they stem from a separate species specific rookie template, then get a class independently, while the game properly treats them as rookies, allowing them to train in GTS. however in the character pool there is no option to change their class, which is an issue for anyone using the "use my class" mod
 
 When copying biography, automatically update soldier name and country (MCM toggle)

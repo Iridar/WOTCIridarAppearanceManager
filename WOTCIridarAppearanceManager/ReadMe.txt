@@ -22,6 +22,7 @@ This mod adds new functionality to Character Pool and new robust interface to ma
 [list]
 [*] Character Pool list is now sorted and shows soldiers' class.
 [*] A "Search" button has been added to quickly filter out soldiers based on their name or class.
+[*] You can now Shift+Click to select or deselect multiple soldiers in Character Pool.
 [*] Character Pool now saves Appearance Store - individual unit appearance for each armor.
 [*] It's now possible to pre-customize appearance of Character Pool units for each armor by equipping said armor on the new Loadout screen. Weapons can also be previewed in Character Pool.
 [*] "Dormant" character pool units that do not appear in the campaign are now allowed.
@@ -72,6 +73,11 @@ Huge thanks to [b]Xymanek (Astral Descend)[/b] for crucial code support and UI i
 
 Please [b][url=https://www.patreon.com/Iridar]support me on Patreon[/url][/b] if you require tech support, have a suggestion for a feature, or simply wish to help me create more awesome mods.
 
+
+Things to be careful with:
+Disabling the mod
+Changing gender for a uniform
+Apply changes to multiple units
 
 
 # DETAILED GUIDE
@@ -139,6 +145,8 @@ At the top of the list is the selected soldier's "ORIGINAL APPEARANCE" - the app
 The Appearance List has several Headers: Uniforms, Character Pool, Barracks and Memorial. Under each Header there will be a list of appearances of soldiers from that category. Barracks and Memorial headers are shown only during a campaign, not in Character Pool.
 
 Each Header has an eye icon you can click to "fold" the group, hiding all of its members.
+
+During the campaign, character pool soldiers that are already in your campaign will be highlighted in green. This is done so that you know not to import the entire unit from character pool to avoid the same soldier appearing twice.
 
 [b]FILTERS[/b]
 
