@@ -35,13 +35,13 @@ event OnInit(UIScreen Screen)
 		// When screen is initialized, list has no items yet, so need to wait for the list to init.
 		if (!CustomizeScreen.List.bIsInited)
 		{
-			`AMLOG("List is not initialized, adding a delegate");
+			`AMLOG("List is not initialized, adding a delegate. We're in armory:" @ CustomizeScreen.bInArmory);
 
 			CustomizeScreen.List.AddOnInitDelegate(OnListInited);
 		}
 		else
 		{
-			`AMLOG("List is initialized, applying changes");
+			`AMLOG("List is initialized, applying changes We're in armory:" @ CustomizeScreen.bInArmory);
 			ApplyScreenChanges();
 		}
 
@@ -144,14 +144,13 @@ private function ApplyScreenChanges()
 	CreateOrUpdateListItem(ListIndex, CustomizeScreen, 
 		strStoredAppearance, OnAppearanceStoreItemClicked);
 
+	if (CustomizeScreen.bInArmory) // Uniform units should never be able to exist inside actual campaigns. We're in Character Pool past this point.
+		return;
 
 	// If unit is uniform and we're in Character Pool
 	UniformStatus = CharPoolMgr.GetUniformStatus(UnitState);
 	if (UniformStatus > 0)
 	{
-		if (CustomizeScreen.bInArmory) // Uniform units should never be able to exist inside actual campaigns. We're in Character Pool past this point.
-			return;
-
 		RemoveCanAppearAsListItems(CustomizeScreen);
 
 		ListIndex = GetIndexOfLastVisibleListItem(CustomizeScreen.List) + 1;

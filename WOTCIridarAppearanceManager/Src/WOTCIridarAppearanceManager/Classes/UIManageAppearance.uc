@@ -1015,10 +1015,22 @@ private function CreateAppearanceStoreEntriesForUnit(const XComGameState_Unit Un
 
 		// Can't use Item State cuz Character Pool units would have none.
 		ArmorTemplate = class'Help'.static.GetItemTemplateFromCosmeticTorso(UnitState.kAppearance.nmTorso);
+		if (ArmorTemplate != none)
+		{
+			LocalArmorTemplateName = ArmorTemplate.DataName;
+		}
+		else
+		{
+			LocalArmorTemplateName = '';
+		}
+		
+		`AMLOG(UnitState.GetFullName() @ "cosmetic torso:" @ UnitState.kAppearance.nmTorso @ "found armor template:" @ LocalArmorTemplateName);
 
-		if (GetFilterListCheckboxStatus('FilterArmorAppearance') && ArmorTemplateName != ArmorTemplate == none ? '' : ArmorTemplate.DataName)
+		if (GetFilterListCheckboxStatus('FilterArmorAppearance') && ArmorTemplateName != LocalArmorTemplateName)
+		{
+			`AMLOG("This armor template is different to equipped on the unit:" @ ArmorTemplateName @ ", so skipping unit's current appearance");
 			return;
-
+		}
 		DisplayString = GetUnitDisplayStringForAppearanceList(UnitState, Gender);
 		if (bCharPool && IsUnitPresentInCampaign(UnitState)) // If unit was already drawn from the CP, color their entry green.
 			DisplayString = `GREEN(DisplayString);

@@ -843,7 +843,7 @@ private function int GetExtraDataIndexForUnit(const XComGameState_Unit UnitState
 	
 		return ExtraData.ObjectID;
 	}
-	`AMLOG("WARNING :: You are attempting to get ExtraData for a unit that's not in Chararacter Pool! Don't do that!" @ UnitState.GetFullName());
+	`AMLOG("WARNING :: You are attempting to get ExtraData for a unit that's not in Character Pool! Don't do that!" @ UnitState.GetFullName() @ GetScriptTrace());
 	return INDEX_NONE;
 }
 

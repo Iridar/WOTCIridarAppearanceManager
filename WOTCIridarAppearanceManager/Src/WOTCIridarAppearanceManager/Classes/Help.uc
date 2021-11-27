@@ -175,9 +175,12 @@ static final function X2ItemTemplate GetItemTemplateFromCosmeticTorso(const name
 	local X2ItemTemplateManager		ItemMgr;
 	local X2ItemTemplate			ItemTemplate;
 
+	`AMLOG("Running for" @ `showvar(nmTorso));
+	`AMLOG(GetScriptTrace());
+
 	BodyPartMgr = class'X2BodyPartTemplateManager'.static.GetBodyPartTemplateManager();
 	ArmorPartTemplate = BodyPartMgr.FindUberTemplate("Torso", nmTorso);
-	`AMLOG("Found ArmorPartTemplate:" @ ArmorPartTemplate.DataName @ ArmorPartTemplate.ArmorTemplate @ "for torso:" @ nmTorso);
+	`AMLOG("Found ArmorPartTemplate:" @ ArmorPartTemplate.DataName @ ArmorPartTemplate.ArmorTemplate);
 	if (ArmorPartTemplate != none)
 	{
 		ArmorTemplateName = ArmorPartTemplate.ArmorTemplate;

@@ -149,19 +149,27 @@ private function OnPawnVisualsCreated(XComUnitPawn inPawn)
 		CustomizeScreen.UpdateData(); // Play HQ Idle Anim
 	}
 
-	`AMLOG(GetFuncName() @ " running for unit:" @ UnitState.GetFullName() @ "Pawn state:" @ CustomizationManager.ActorPawn.GetStateName());
+	`AMLOG("Running for unit:" @ UnitState.GetFullName() @ "Pawn state:" @ CustomizationManager.ActorPawn.GetStateName());
 
 	//Create the visuals for the weapons, using the temp game state
 	XComUnitPawn(CustomizationManager.ActorPawn).CreateVisualInventoryAttachments(PawnMgr, UnitState, TempGameState);
+
+	`AMLOG("Created visual attachments.");
 
 	//Destroy the temporary game state change that granted the unit a load out
 	//Hack! Nuking gamestate is not guaranteed. However, this function is only ever called in CP, where History is more or less irrelevant.
 	History.ObliterateGameStatesFromHistory(1);
 
+	`AMLOG("Obliterated Game State.");
+
 	//Now clear the items from the unit so we don't accidentally save them
 	UnitState.EmptyInventoryItems();
 
-	UIMouseGuard_RotatePawn(`SCREENSTACK.GetFirstInstanceOf(class'UIMouseGuard_RotatePawn')).SetActorPawn(CustomizationManager.ActorPawn);
+	`AMLOG("Cleared out inventory.");
+
+	UIMouseGuard_RotatePawn(CustomizeScreen.MouseGuardInst).SetActorPawn(CustomizationManager.ActorPawn);
+
+	`AMLOG("Assigned pawn to mouse guard.");
 	
 	//-------------------------------------------------------------
 	// Not sure if events will work in CP.
@@ -179,6 +187,8 @@ private function OnPawnVisualsCreated(XComUnitPawn inPawn)
 	OverrideTuple.Data[2].kind = XComLWTVObject;
 	OverrideTuple.Data[2].o = UnitState;
 	`XEVENTMGR.TriggerEvent('OverrideCharCustomizationScale', OverrideTuple, UnitState, none);
+
+	`AMLOG("Triggered 'OverrideCharCustomizationScale' event.");
 	
 	//if the unit should use the large armory scale by default, then either they'll use the default scale
 	//or a custom one given by a mod according to their character template
@@ -187,6 +197,7 @@ private function OnPawnVisualsCreated(XComUnitPawn inPawn)
 		CustomScale = OverrideTuple.Data[1].f;
 		XComUnitPawn(CustomizationManager.ActorPawn).Mesh.SetScale(CustomScale);
 	}
+	`AMLOG("Set custom scale:" @ CustomScale);
 	//end issue #229
 }
 
