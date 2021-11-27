@@ -524,6 +524,10 @@ final function CharacterPoolExtraData GetExtraDataForUnit(const XComGameState_Un
 
 final function EUniformStatus GetUniformStatus(XComGameState_Unit UnitState)
 {
+	if (CharacterPool.Find(UnitState) == INDEX_NONE)
+	{
+		return EUS_NotUniform;
+	}
 	return ExtraDatas[ GetExtraDataIndexForUnit(UnitState) ].UniformStatus;
 }
 

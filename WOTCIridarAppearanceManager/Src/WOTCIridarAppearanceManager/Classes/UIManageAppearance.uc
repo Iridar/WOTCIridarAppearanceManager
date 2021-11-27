@@ -938,6 +938,8 @@ private function CreateAppearanceStoreEntriesForUnit(const XComGameState_Unit Un
 	if (GetFilterListCheckboxStatus('FilterClass') && ArmoryUnit.GetSoldierClassTemplateName() != UnitState.GetSoldierClassTemplateName())
 		return;
 
+	`AMLOG("Running for:" @ UnitState.GetFullName());
+
 	// Cycle through Appearance Store, which may or may not include unit's current appearance.
 	foreach UnitState.AppearanceStore(StoredAppearance)
 	{	
@@ -952,6 +954,8 @@ private function CreateAppearanceStoreEntriesForUnit(const XComGameState_Unit Un
 		LocalArmorTemplateName = name(Left(StoredAppearance.GenderArmorTemplate, Len(StoredAppearance.GenderArmorTemplate) - 1));
 		if (GetFilterListCheckboxStatus('FilterArmorAppearance') && ArmorTemplateName != LocalArmorTemplateName)
 			continue;
+
+		`AMLOG(`ShowVar(LocalArmorTemplateName) @ GetEnum(enum'EGender', Gender));
 
 		DisplayString = GetUnitDisplayStringForAppearanceList(UnitState, Gender);
 
@@ -994,6 +998,8 @@ private function CreateAppearanceStoreEntriesForUnit(const XComGameState_Unit Un
 			// If unit was already drawn from the CP, color their entry green.
 			DisplayString = `GREEN(DisplayString);
 		}
+
+		`AMLOG(DisplayString);
 		
 		SpawnedItem = Spawn(class'UIMechaListItem_Soldier', AppearanceList.ItemContainer);
 		SpawnedItem.bAnimateOnInit = false;
@@ -1002,8 +1008,10 @@ private function CreateAppearanceStoreEntriesForUnit(const XComGameState_Unit Un
 		SpawnedItem.SetPersonalityTemplate();
 		SpawnedItem.UnitState = UnitState;
 		SpawnedItem.UpdateDataCheckbox(DisplayString, "", SelectedAppearance == SpawnedItem.StoredAppearance.Appearance && SpawnedItem.UnitState == SelectedUnit, AppearanceOptionCheckboxChanged, none);
-		SpawnedItem.SetDisabled(StoredAppearance.Appearance == OriginalAppearance && UnitState == ArmoryUnit); // Lock current appearance of current unit
+		//SpawnedItem.SetDisabled(StoredAppearance.Appearance == OriginalAppearance && UnitState == ArmoryUnit); // Lock current appearance of current unit
 	}
+
+	`AMLOG("Done working with Appearance Store, looking at current appearance.");
 
 	// If Appearance Store didn't contain unit's current appearance, add unit's current appearance to the list as well.
 	// As long it's not the currently selected unit. There's no value in having that one in the list.
@@ -1014,7 +1022,12 @@ private function CreateAppearanceStoreEntriesForUnit(const XComGameState_Unit Un
 			return;
 
 		// Can't use Item State cuz Character Pool units would have none.
+		`AMLOG("About to call GetItemTemplateFromCosmeticTorso()");
+
 		ArmorTemplate = class'Help'.static.GetItemTemplateFromCosmeticTorso(UnitState.kAppearance.nmTorso);
+
+		`AMLOG("Called GetItemTemplateFromCosmeticTorso()");
+
 		if (ArmorTemplate != none)
 		{
 			LocalArmorTemplateName = ArmorTemplate.DataName;
