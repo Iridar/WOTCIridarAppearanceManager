@@ -293,9 +293,23 @@ static private function EventListenerReturn OnCreateCinematicPawn(Object EventDa
 		//{	
 		//	  HumanPawn.Mesh = none; // Crashes the gume
 		//}
-		`AMLOG("Aplying uniform appearance. Uniform torso:" @ NewAppearance.nmTorso);
+		`AMLOG("Aplying uniform appearance.");
+		`AMLOG(`ShowVar(NewAppearance.nmTorso));
+		`AMLOG(`ShowVar(NewAppearance.nmArms));
+		`AMLOG(`ShowVar(NewAppearance.nmLeftArm));
+		`AMLOG(`ShowVar(NewAppearance.nmRightArm));
+		`AMLOG(`ShowVar(NewAppearance.nmLegs));
+		//HumanPawn.bShouldUseUnderlay = false;
 		UnitState.SetTAppearance(NewAppearance);
-		HumanPawn.SetAppearance(NewAppearance, true);
+		if (UnitState.GetMyTemplateName() == 'Clerk')
+		{
+			HumanPawn.SetAppearance(NewAppearance, false);
+			RequestFullPawnContentForClerk(UnitState, HumanPawn, NewAppearance);
+		}
+		else
+		{
+			HumanPawn.SetAppearance(NewAppearance, true);
+		}
 	}
 	else `AMLOG("Has no uniform");
 	
@@ -331,6 +345,255 @@ static private function EventListenerReturn OnRefreshPawnEvent(Object EventData,
 	}
 	
 	return ELR_NoInterrupt;
+}
+
+// Base game is pawn content request logic is hardcoded to not request certain body parts for clerks. 
+static private function RequestFullPawnContentForClerk(XComGameState_Unit UnitState, XComHumanPawn HumanPawn, const out TAppearance m_kAppearance)
+{
+	local PawnContentRequest kRequest;
+	//local XGUnit GameUnit;
+	local name UnderlayName;
+	local bool HasCustomUnderlay; // for issue #251	
+	
+	HasCustomUnderlay = class'CHHelpers'.default.CustomUnderlayCharTemplates.Find(UnitState.GetMyTemplateName()) != INDEX_NONE; 
+	HumanPawn.bShouldUseUnderlay = HumanPawn.ShouldUseUnderlay(UnitState);
+
+	//Underlay is the outfit that characters wear when they are in the background of the ship. It is a custom uni-body mesh that saves on mesh component draws and updates.
+	UnderlayName = HumanPawn.GetUnderlayName(HumanPawn.bShouldUseUnderlay, m_kAppearance);		
+	if (HasCustomUnderlay && UnderlayName != '') //issue #251 start
+	{
+		UnderlayName = m_kAppearance.nmTorso_Underlay;
+	}
+	// issue #251 end
+	//GameUnit = XGUnit(GetGameUnit());
+	//`log(self @ GetFuncName() @ `showvar(GameUnit) @ `showvar(m_bSetAppearance) @ `showvar(m_bSetArmorKit), , 'DevStreaming');
+
+	HumanPawn.PawnContentRequests.Length = 0;
+	HumanPawn.PatternsContent.Length = 0;
+
+	//Order matters here, because certain pieces of content can affect other pieces of content. IE. a selected helmet can affect which mesh the hair uses, or disable upper or lower face props
+	if ((!HumanPawn.bShouldUseUnderlay && m_kAppearance.nmTorso != '') || (HumanPawn.bShouldUseUnderlay && UnderlayName != ''))
+	{
+		kRequest.ContentCategory = 'Torso';
+		kRequest.TemplateName = HumanPawn.bShouldUseUnderlay ? UnderlayName : m_kAppearance.nmTorso;
+		kRequest.BodyPartLoadedFn = HumanPawn.OnTorsoLoaded;
+		HumanPawn.PawnContentRequests.AddItem(kRequest);
+	}
+
+	if (!HumanPawn.bShouldUseUnderlay && m_kAppearance.nmTorsoDeco != '')
+	{
+		kRequest.ContentCategory = 'TorsoDeco';
+		kRequest.TemplateName = m_kAppearance.nmTorsoDeco;
+		kRequest.BodyPartLoadedFn = HumanPawn.OnBodyPartLoaded;
+		HumanPawn.PawnContentRequests.AddItem(kRequest);
+	}
+
+	if (m_kAppearance.nmHead != '')
+	{
+		kRequest.ContentCategory = 'Head';
+		kRequest.TemplateName = m_kAppearance.nmHead;
+		kRequest.BodyPartLoadedFn = HumanPawn.OnHeadLoaded;
+		HumanPawn.PawnContentRequests.AddItem(kRequest);
+	}
+
+	//Helmets can affect: beard, lower face prop, upper face prop, hair mesh
+	if (m_kAppearance.nmHelmet != '')
+	{
+		kRequest.ContentCategory = 'Helmets';
+		kRequest.TemplateName = m_kAppearance.nmHelmet;
+		kRequest.BodyPartLoadedFn = HumanPawn.OnBodyPartLoaded;
+		HumanPawn.PawnContentRequests.AddItem(kRequest);
+	}
+
+	//Lower face props can affect: beard
+	if (m_kAppearance.nmFacePropLower != '')
+	{
+		kRequest.ContentCategory = 'FacePropsLower';
+		kRequest.TemplateName = m_kAppearance.nmFacePropLower;
+		kRequest.BodyPartLoadedFn = HumanPawn.OnBodyPartLoaded;
+		HumanPawn.PawnContentRequests.AddItem(kRequest);
+	}
+
+	if (m_kAppearance.nmHaircut != '')
+	{
+		kRequest.ContentCategory = 'Hair';
+		kRequest.TemplateName = m_kAppearance.nmHaircut;
+		kRequest.BodyPartLoadedFn = HumanPawn.OnBodyPartLoaded;
+		HumanPawn.PawnContentRequests.AddItem(kRequest);
+	}
+
+	if (m_kAppearance.nmBeard != '')
+	{
+		kRequest.ContentCategory = 'Beards';
+		kRequest.TemplateName = m_kAppearance.nmBeard;
+		kRequest.BodyPartLoadedFn = HumanPawn.OnBodyPartLoaded;
+		HumanPawn.PawnContentRequests.AddItem(kRequest);
+	}
+
+	if (m_kAppearance.nmFacePropUpper != '')
+	{
+		kRequest.ContentCategory = 'FacePropsUpper';
+		kRequest.TemplateName = m_kAppearance.nmFacePropUpper;
+		kRequest.BodyPartLoadedFn = HumanPawn.OnBodyPartLoaded;
+		HumanPawn.PawnContentRequests.AddItem(kRequest);
+	}
+
+	// issue #251: allow arms underlay usage only when it's a custom underlay
+	if ((!HumanPawn.bShouldUseUnderlay && m_kAppearance.nmArms != '') || (HumanPawn.bShouldUseUnderlay && HasCustomUnderlay))
+	{
+		kRequest.ContentCategory = 'Arms';
+		kRequest.TemplateName = HumanPawn.bShouldUseUnderlay ? m_kAppearance.nmArms_Underlay : m_kAppearance.nmArms;
+		kRequest.BodyPartLoadedFn = HumanPawn.OnArmsLoaded;
+		HumanPawn.PawnContentRequests.AddItem(kRequest);
+	}
+
+	if (!HumanPawn.bShouldUseUnderlay && m_kAppearance.nmLeftArm != '')
+	{
+		kRequest.ContentCategory = 'LeftArm';
+		kRequest.TemplateName = m_kAppearance.nmLeftArm;
+		kRequest.BodyPartLoadedFn = HumanPawn.OnArmsLoaded;
+		HumanPawn.PawnContentRequests.AddItem(kRequest);
+	}
+
+	if (!HumanPawn.bShouldUseUnderlay && m_kAppearance.nmRightArm != '')
+	{
+		kRequest.ContentCategory = 'RightArm';
+		kRequest.TemplateName = m_kAppearance.nmRightArm;
+		kRequest.BodyPartLoadedFn = HumanPawn.OnArmsLoaded;
+		HumanPawn.PawnContentRequests.AddItem(kRequest);
+	}
+
+	if (!HumanPawn.bShouldUseUnderlay && m_kAppearance.nmLeftArmDeco != '')
+	{
+		kRequest.ContentCategory = 'LeftArmDeco';
+		kRequest.TemplateName = m_kAppearance.nmLeftArmDeco;
+		kRequest.BodyPartLoadedFn = HumanPawn.OnArmsLoaded;
+		HumanPawn.PawnContentRequests.AddItem(kRequest);
+	}
+
+	if (!HumanPawn.bShouldUseUnderlay && m_kAppearance.nmRightArmDeco != '')
+	{
+		kRequest.ContentCategory = 'RightArmDeco';
+		kRequest.TemplateName = m_kAppearance.nmRightArmDeco;
+		kRequest.BodyPartLoadedFn = HumanPawn.OnArmsLoaded;
+		HumanPawn.PawnContentRequests.AddItem(kRequest);
+	}
+
+	if (!HumanPawn.bShouldUseUnderlay && m_kAppearance.nmLeftForearm != '')
+	{
+		kRequest.ContentCategory = 'LeftForearm';
+		kRequest.TemplateName = m_kAppearance.nmLeftForearm;
+		kRequest.BodyPartLoadedFn = HumanPawn.OnArmsLoaded;
+		HumanPawn.PawnContentRequests.AddItem(kRequest);
+	}
+
+	if (!HumanPawn.bShouldUseUnderlay && m_kAppearance.nmRightForearm != '')
+	{
+		kRequest.ContentCategory = 'RightForearm';
+		kRequest.TemplateName = m_kAppearance.nmRightForearm;
+		kRequest.BodyPartLoadedFn = HumanPawn.OnArmsLoaded;
+		HumanPawn.PawnContentRequests.AddItem(kRequest);
+	}
+	// issue #251: allow legs underlay usage only when it's a custom underlay
+	if ((!HumanPawn.bShouldUseUnderlay && m_kAppearance.nmLegs != '') || (HumanPawn.bShouldUseUnderlay && HasCustomUnderlay))
+	{
+		kRequest.ContentCategory = 'Legs';
+		kRequest.TemplateName = HumanPawn.bShouldUseUnderlay ? m_kAppearance.nmLegs_Underlay : m_kAppearance.nmLegs;
+		kRequest.BodyPartLoadedFn = HumanPawn.OnLegsLoaded;
+		HumanPawn.PawnContentRequests.AddItem(kRequest);
+	}
+
+	if (!HumanPawn.bShouldUseUnderlay && m_kAppearance.nmThighs != '')
+	{
+		kRequest.ContentCategory = 'Thighs';
+		kRequest.TemplateName = m_kAppearance.nmThighs;
+		kRequest.BodyPartLoadedFn = HumanPawn.OnBodyPartLoaded;
+		HumanPawn.PawnContentRequests.AddItem(kRequest);
+	}
+
+	if (!HumanPawn.bShouldUseUnderlay && m_kAppearance.nmShins != '')
+	{
+		kRequest.ContentCategory = 'Shins';
+		kRequest.TemplateName = m_kAppearance.nmShins;
+		kRequest.BodyPartLoadedFn = HumanPawn.OnBodyPartLoaded;
+		HumanPawn.PawnContentRequests.AddItem(kRequest);
+	}
+
+	if (m_kAppearance.nmEye != '')
+	{
+		kRequest.ContentCategory = 'Eyes';
+		kRequest.TemplateName = m_kAppearance.nmEye;
+		kRequest.BodyPartLoadedFn = HumanPawn.OnBodyPartLoaded;
+		HumanPawn.PawnContentRequests.AddItem(kRequest);
+	}
+
+	if (m_kAppearance.nmTeeth != '')
+	{
+		kRequest.ContentCategory = 'Teeth';
+		kRequest.TemplateName = m_kAppearance.nmTeeth;
+		kRequest.BodyPartLoadedFn = HumanPawn.OnBodyPartLoaded;
+		HumanPawn.PawnContentRequests.AddItem(kRequest);
+	}
+
+	if (m_kAppearance.nmPatterns != '')
+	{
+		kRequest.ContentCategory = 'Patterns';
+		kRequest.TemplateName = m_kAppearance.nmPatterns;
+		kRequest.BodyPartLoadedFn = HumanPawn.OnPatternsLoaded;
+		HumanPawn.PawnContentRequests.AddItem(kRequest);
+	}
+
+	if (m_kAppearance.nmWeaponPattern != '')
+	{
+		kRequest.ContentCategory = 'Patterns';
+		kRequest.TemplateName = m_kAppearance.nmWeaponPattern;
+		kRequest.BodyPartLoadedFn = HumanPawn.OnPatternsLoaded;
+		HumanPawn.PawnContentRequests.AddItem(kRequest);
+	}
+
+	if (m_kAppearance.nmTattoo_LeftArm != '')
+	{
+		kRequest.ContentCategory = 'Tattoos';
+		kRequest.TemplateName = m_kAppearance.nmTattoo_LeftArm;
+		kRequest.BodyPartLoadedFn = HumanPawn.OnTattoosLoaded_LeftArm;
+		HumanPawn.PawnContentRequests.AddItem(kRequest);
+	}
+
+	if (m_kAppearance.nmTattoo_RightArm != '')
+	{
+		kRequest.ContentCategory = 'Tattoos';
+		kRequest.TemplateName = m_kAppearance.nmTattoo_RightArm;
+		kRequest.BodyPartLoadedFn = HumanPawn.OnTattoosLoaded_RightArm;
+		HumanPawn.PawnContentRequests.AddItem(kRequest);
+	}
+
+	if (m_kAppearance.nmScars != '')
+	{
+		kRequest.ContentCategory = 'Scars';
+		kRequest.TemplateName = m_kAppearance.nmScars;
+		kRequest.BodyPartLoadedFn = HumanPawn.OnScarsLoaded;
+		HumanPawn.PawnContentRequests.AddItem(kRequest);
+	}
+
+	if (m_kAppearance.nmFacePaint != '')
+	{
+		kRequest.ContentCategory = 'Facepaint';
+		kRequest.TemplateName = m_kAppearance.nmFacePaint;
+		kRequest.BodyPartLoadedFn = HumanPawn.OnFacePaintLoaded;
+		HumanPawn.PawnContentRequests.AddItem(kRequest);
+	}
+
+	if (m_kAppearance.nmVoice != '' && `TACTICALGRI != none) //Only load the voices for tactical. In strategy play them on demand
+	{
+		kRequest.ContentCategory = 'Voice';
+		kRequest.TemplateName = m_kAppearance.nmVoice;
+		kRequest.BodyPartLoadedFn = HumanPawn.OnVoiceLoaded;
+		HumanPawn.PawnContentRequests.AddItem(kRequest);
+	}
+
+	//  Make the requests later. If they come back synchronously, their callbacks will also happen synchronously, and it can throw things out of whack
+	HumanPawn.MakeAllContentRequests();
+	
 }
 
 defaultproperties
