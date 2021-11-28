@@ -1246,7 +1246,9 @@ private function UpdateUnitAppearance()
 	UpdateApplyChangesButtonVisibility();
 		
 	ArmoryUnit.SetTAppearance(NewAppearance);
-	ArmoryPawn.SetAppearance(NewAppearance);
+	ArmoryPawn.SetAppearance(NewAppearance, false);
+	class'Help'.static.RequestFullPawnContentForClerk(ArmoryUnit, ArmoryPawn, NewAppearance);
+
 	ApplyChangesToUnitWeapons(ArmoryUnit, NewAppearance, none);
 	UpdateHeader();
 
@@ -1686,7 +1688,8 @@ function CancelChanges()
 {
 	PreviousAppearance = ArmoryPawn.m_kAppearance;
 	ArmoryUnit.SetTAppearance(OriginalAppearance);
-	ArmoryPawn.SetAppearance(OriginalAppearance);
+	ArmoryPawn.SetAppearance(OriginalAppearance, false);
+	class'Help'.static.RequestFullPawnContentForClerk(ArmoryUnit, ArmoryPawn, OriginalAppearance);
 
 	if (ShouldRefreshPawn(OriginalAppearance))
 	{
