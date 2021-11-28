@@ -93,11 +93,11 @@ event OnReceiveFocus(UIScreen Screen)
 {
 	if (GetUnitCustomizeMenuScreen(Screen) != none)
 	{	 
-		ApplyScreenChanges(true);
+		ApplyScreenChanges();
 	}
 }
 
-private function ApplyScreenChanges(optional bool bReceivedFocus)
+private function ApplyScreenChanges()
 {
 	local UICustomize				CustomizeScreen;
 	local EUniformStatus			UniformStatus;
@@ -117,11 +117,6 @@ private function ApplyScreenChanges(optional bool bReceivedFocus)
 	UnitState = CustomizeScreen.GetUnit();
 	if (UnitState == none) 
 		return;
-
-	if (bReceivedFocus)
-	{	
-		UnitState.StoreAppearance();
-	}
 
 	// Unfortunately have to keep timer ticking in case UpdateData() is called in CustomizeScreen.
 	CustomizeScreen.SetTimer(0.25f, false, nameof(ApplyScreenChanges), self);
