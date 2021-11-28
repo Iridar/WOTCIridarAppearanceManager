@@ -1024,7 +1024,7 @@ private function CreateAppearanceStoreEntriesForUnit(const XComGameState_Unit Un
 		// Can't use Item State cuz Character Pool units would have none.
 		`AMLOG("About to call GetItemTemplateFromCosmeticTorso()");
 
-		ArmorTemplate = class'Help'.static.GetItemTemplateFromCosmeticTorso(UnitState.kAppearance.nmTorso);
+		ArmorTemplate = GetItemTemplateFromCosmeticTorso(UnitState.kAppearance.nmTorso);
 
 		`AMLOG("Called GetItemTemplateFromCosmeticTorso()");
 
@@ -1078,6 +1078,31 @@ private function CreateAppearanceStoreEntriesForUnit(const XComGameState_Unit Un
 		SpawnedItem.SetPersonalityTemplate();
 		SpawnedItem.UnitState = UnitState;
 	}
+}
+
+private function X2ItemTemplate GetItemTemplateFromCosmeticTorso(const name nmTorso)
+{
+	local name						FunctionArmorTemplateName;
+	local X2BodyPartTemplate		FunctionArmorPartTemplate;
+	local X2ItemTemplate			FunctionItemTemplate;
+
+	`AMLOG("Running for" @ `showvar(nmTorso));
+	`AMLOG(GetScriptTrace());
+
+	FunctionArmorPartTemplate = BodyPartMgr.FindUberTemplate("Torso", nmTorso);
+	`AMLOG("Found ArmorPartTemplate:" @ FunctionArmorPartTemplate.DataName @ FunctionArmorPartTemplate.ArmorTemplate);
+	if (FunctionArmorPartTemplate != none)
+	{
+		FunctionArmorTemplateName = FunctionArmorPartTemplate.ArmorTemplate;
+		`AMLOG(`showvar(FunctionArmorTemplateName));
+		if (FunctionArmorTemplateName != '')
+		{
+			FunctionItemTemplate = ItemMgr.FindItemTemplate(FunctionArmorTemplateName);
+			`AMLOG("Found armor template:" @ FunctionItemTemplate.DataName);
+			return FunctionItemTemplate;
+		}
+	}
+	return none;
 }
 
 // Generate appearance name without redundant info.
