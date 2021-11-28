@@ -169,10 +169,12 @@ private function OnPawnVisualsCreated(XComUnitPawn inPawn)
 
 	`AMLOG("Cleared out inventory.");
 
-	UIMouseGuard_RotatePawn(CustomizeScreen.MouseGuardInst).SetActorPawn(CustomizationManager.ActorPawn);
+	if (CustomizeScreen != none)
+	{
+		UIMouseGuard_RotatePawn(CustomizeScreen.MouseGuardInst).SetActorPawn(CustomizationManager.ActorPawn);
+		`AMLOG("Assigned pawn to mouse guard.");
+	}
 
-	`AMLOG("Assigned pawn to mouse guard.");
-	
 	//-------------------------------------------------------------
 	// Not sure if events will work in CP.
 

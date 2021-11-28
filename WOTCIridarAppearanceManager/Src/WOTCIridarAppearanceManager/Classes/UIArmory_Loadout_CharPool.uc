@@ -44,8 +44,11 @@ simulated function UpdateLockerList()
 	local XComGameStateContext_ChangeContainer	TempContainer;
 	local XComGameState_Unit					UnitState;
 
-	UnitState = GetUnit();
 	SelectedSlot = GetSelectedSlot();
+	if (SelectedSlot == eInvSlot_Unknown) 
+		return;
+
+	UnitState = GetUnit();
 	History = `XCOMHISTORY;
 	ItemMgr = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
 
