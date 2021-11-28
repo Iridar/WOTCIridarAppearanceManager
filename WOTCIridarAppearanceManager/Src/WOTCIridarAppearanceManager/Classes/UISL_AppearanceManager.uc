@@ -93,11 +93,11 @@ event OnReceiveFocus(UIScreen Screen)
 {
 	if (GetUnitCustomizeMenuScreen(Screen) != none)
 	{	 
-		ApplyScreenChanges();
+		ApplyScreenChanges(true);
 	}
 }
 
-private function ApplyScreenChanges()
+private function ApplyScreenChanges(optional bool bReceivedFocus)
 {
 	local UICustomize				CustomizeScreen;
 	local EUniformStatus			UniformStatus;
@@ -117,6 +117,11 @@ private function ApplyScreenChanges()
 	UnitState = CustomizeScreen.GetUnit();
 	if (UnitState == none) 
 		return;
+
+	if (bReceivedFocus)
+	{	
+		UnitState.StoreAppearance();
+	}
 
 	// Unfortunately have to keep timer ticking in case UpdateData() is called in CustomizeScreen.
 	CustomizeScreen.SetTimer(0.25f, false, nameof(ApplyScreenChanges), self);
@@ -491,7 +496,7 @@ private function OnConvertToUniformInputBoxAccepted(string strLastName)
 	UnitState.bAllowedTypeSoldier = false;
 	UnitState.bAllowedTypeVIP = false;
 	UnitState.bAllowedTypeDarkVIP = false;
-	UnitState.StoreAppearance(UnitState.kAppearance.iGender, class'Help'.static.GetEquippedArmorTemplateName(UnitState, CharPoolMgr));
+	UnitState.StoreAppearance();
 	CustomizeScreen.CustomizeManager.CommitChanges(); // This saves the CP.
 
 	class'X2PawnRefreshHelper'.static.RefreshPawn_Static(true, CustomizeScreen.CustomizeManager, CharPoolMgr, CustomizeScreen);
@@ -547,7 +552,7 @@ private function OnValidateButtonClicked(UIButton ButtonSource)
 		}
 	}
 
-	UnitState.StoreAppearance(UnitState.kAppearance.iGender, class'Help'.static.GetEquippedArmorTemplateName(UnitState, CharPool));
+	UnitState.StoreAppearance();
 
 	CustomizeScreen.CustomizeManager.CommitChanges();
 	if (CustomizeScreen.bInArmory)

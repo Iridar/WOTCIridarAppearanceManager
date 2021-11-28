@@ -1543,7 +1543,7 @@ private function ApplyChangesToUnit(XComGameState_Unit UnitState, optional XComG
 
 	UnitState.SetTAppearance(NewAppearance);
 	UnitState.UpdatePersonalityTemplate();
-	UnitState.StoreAppearance(NewAppearance.iGender, class'Help'.static.GetEquippedArmorTemplateName(UnitState));
+	UnitState.StoreAppearance();
 
 	ApplyChangesToUnitWeapons(UnitState, NewAppearance, NewGameState);
 }
@@ -1663,7 +1663,7 @@ private function ApplyChangesToArmoryUnit()
 	if (IsCheckboxChecked('Biography'))
 		ArmoryUnit.SetBackground(SelectedUnit.GetBackground());
 
-	ArmoryUnit.StoreAppearance(ArmoryPawn.m_kAppearance.iGender, class'Help'.static.GetEquippedArmorTemplateName(ArmoryUnit));
+	ArmoryUnit.StoreAppearance();
 	CustomizeManager.SubmitUnitCustomizationChanges();
 
 	if (bInArmory)

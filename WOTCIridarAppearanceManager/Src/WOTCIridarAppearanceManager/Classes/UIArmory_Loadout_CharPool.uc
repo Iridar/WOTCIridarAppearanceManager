@@ -156,7 +156,7 @@ simulated function bool EquipItem(UIArmory_LoadoutItem Item)
 	bIsArmor = X2ArmorTemplate(Item.ItemTemplate) != none && InventorySlot == eInvSlot_Armor;
 	if (bIsArmor)
 	{
-		UnitState.StoreAppearance(UnitState.kAppearance.iGender);
+		UnitState.StoreAppearance();
 	}
 	
 	CharPoolMgr.AddItemToCharacterPoolLoadout(UnitState, GetSelectedSlot(), Item.ItemTemplate.DataName);
@@ -171,7 +171,7 @@ simulated function bool EquipItem(UIArmory_LoadoutItem Item)
 			class'Help'.static.PlayStrategySoundEvent(X2EquipmentTemplate(Item.ItemTemplate).EquipSound, self);
 			if (bIsArmor)
 			{
-				UnitState.StoreAppearance(UnitState.kAppearance.iGender, Item.ItemTemplate.DataName);
+				UnitState.StoreAppearance(, Item.ItemTemplate.DataName);
 			}
 			return true;
 		}

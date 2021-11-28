@@ -177,7 +177,7 @@ static private function MaybeApplyUniformAppearance(XComGameState_Unit UnitState
 		`AMLOG(UnitState.GetFullName() @ "aplying uniform appearance for:" @ ArmorTemplateName);
 
 		UnitState.SetTAppearance(NewAppearance);
-		UnitState.StoreAppearance(UnitState.kAppearance.iGender, ArmorTemplateName);
+		UnitState.StoreAppearance(, ArmorTemplateName);
 
 		// Weapon camo needs to be updated separately.
 		ItemStates = UnitState.GetAllInventoryItems(NewGameState, true);
