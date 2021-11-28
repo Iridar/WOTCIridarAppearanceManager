@@ -337,13 +337,11 @@ private function CacheArmoryUnitData()
 	ArmoryUnit = CustomizeManager.UpdatedUnitState;
 	if (ArmoryUnit == none)
 	{
-		if (ApplyChangesButton != none) ApplyChangesButton.Remove();
 		super.CloseScreen();
 	}
 	ArmoryPawn = XComHumanPawn(CustomizeManager.ActorPawn);
 	if (ArmoryPawn == none)
 	{
-		if (ApplyChangesButton != none) ApplyChangesButton.Remove();
 		super.CloseScreen();
 	}
 	ArmorTemplate = class'Help'.static.GetItemTemplateFromCosmeticTorso(ArmoryPawn.m_kAppearance.nmTorso);
@@ -1401,7 +1399,7 @@ simulated function CloseScreen()
 		CancelChanges();
 		ArmoryPawn.SetLocation(OriginalPawnLocation);
 		SavePresetCheckboxPositions();
-		if (ApplyChangesButton != none) ApplyChangesButton.Remove();
+		
 		super.CloseScreen();
 	}
 	else
@@ -1416,6 +1414,11 @@ simulated function CloseScreen()
 	}
 }
 
+simulated function OnRemoved()
+{
+	if (ApplyChangesButton != none) ApplyChangesButton.Remove();
+}
+
 private function OnCloseScreenDialogCallback(Name eAction)
 {
 	if (eAction == 'eUIAction_Accept')
@@ -1423,7 +1426,6 @@ private function OnCloseScreenDialogCallback(Name eAction)
 		CancelChanges();
 		ArmoryPawn.SetLocation(OriginalPawnLocation);
 		SavePresetCheckboxPositions();
-		if (ApplyChangesButton != none) ApplyChangesButton.Remove();
 		super.CloseScreen();
 	}
 }
