@@ -91,6 +91,8 @@ function array<CharacterPoolLoadoutStruct> RefreshPawn(optional bool bForce)
 	// Give the unit the standard soldier class loadout. If some slots were already filled by CP loadout items, this will just fail to equip standard items there, as intended.
 	UnitState.ApplyInventoryLoadout(TempGameState);
 
+	TempGameState.CreateNewStateObject(class'XComGameState_HeadquartersXCom');
+
 	// Validate loadout to do stuff like granting a free heavy weapon to the unit when they equip exo suit.
 	// Causes three billion redscreens, but needs to be done.
 	UnitState.ValidateLoadout(TempGameState); 
