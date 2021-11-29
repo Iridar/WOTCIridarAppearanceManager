@@ -1124,7 +1124,7 @@ private function string GetUnitDisplayStringForAppearanceList(const XComGameStat
 	}
 	
 	strFirstName = UnitState.GetFirstName();
-	strFirstName = Repl(strFirstName, strClassName, ""); // Remove soldier class name from unit's name, since it will be displayed separately anyway.
+	if (strClassName != "") strFirstName = Repl(strFirstName, strClassName, ""); // Remove soldier class name from unit's name, since it will be displayed separately anyway. The "!=" check is super important, doing Repl("string", "", "") causes a freeze.
 	RemoveEdgeEmptySpaces(strFirstName);
 	if (strFirstName != class'UISL_AppearanceManager'.default.strUniformSoldierFirstName)
 	{
@@ -1133,7 +1133,7 @@ private function string GetUnitDisplayStringForAppearanceList(const XComGameStat
 	}
 
 	strNickname = UnitState.GetNickName();
-	strNickname = Repl(strNickname, strClassName, "");
+	if (strClassName != "") strNickname = Repl(strNickname, strClassName, "");
 	RemoveEdgeEmptySpaces(strNickname);
 	if (strNickname != "")
 	{
@@ -1142,7 +1142,7 @@ private function string GetUnitDisplayStringForAppearanceList(const XComGameStat
 	}
 
 	strLastName = UnitState.GetLastName();
-	strLastName = Repl(strLastName, strClassName, "");
+	if (strClassName != "") strLastName = Repl(strLastName, strClassName, "");
 	switch (Gender)
 	{
 		case eGender_Male:
