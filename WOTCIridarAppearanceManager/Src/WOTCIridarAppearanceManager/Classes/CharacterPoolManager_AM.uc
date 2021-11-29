@@ -84,6 +84,8 @@ struct CharacterPoolExtraData
 };
 var array<CharacterPoolExtraData> ExtraDatas;
 
+var int iNumExtraDataOnInit;
+
 const ExtraDataValueName = 'IRI_AppearanceManager_ExtraData_Value';
 const NonSoldierUniformSettings = 'NonSoldierUniformSettings';
 const BackupCharacterPoolPath = "CharacterPool\\DefaultCharacterPool_AppearanceManagerBackup.bin";
@@ -136,6 +138,8 @@ simulated final function InitSoldierAppearance(XComGameState_Unit Unit, const ou
 event InitSoldier(XComGameState_Unit Unit, const out CharacterPoolDataElement CharacterPoolData)
 {
 	local int Index;
+
+	if (iNumExtraDataOnInit == -1) iNumExtraDataOnInit = ExtraDatas.Length; // Helps track if we might need to restore extra data from backup.
 
 	InitSoldierAppearance(Unit, CharacterPoolData);
 
@@ -1229,4 +1233,9 @@ private final function int SortCharacterPoolByUniformStatusFn(XComGameState_Unit
 		return -1;
 	}
 	return 0;
+}
+
+defaultproperties
+{
+	iNumExtraDataOnInit = -1;
 }

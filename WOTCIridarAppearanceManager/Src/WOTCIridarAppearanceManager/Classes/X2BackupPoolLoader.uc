@@ -28,7 +28,7 @@ private function DisplayPopup()
 	strText = strLoadBackupText;
 	strText = Repl(strText, "%CURRENT_SOLDIERS%", CharPool.CharacterPool.Length);
 	strText = Repl(strText, "%BACKUP_SOLDIERS%", BackupPool.CharacterPool.Length);
-	strText = Repl(strText, "%CURRENT_DATA%", CharPool.ExtraDatas.Length);
+	strText = Repl(strText, "%CURRENT_DATA%", CharPool.iNumExtraDataOnInit);
 	strText = Repl(strText, "%BACKUP_DATA%", BackupPool.ExtraDatas.Length);
 
 	kDialogData.strTitle = strLoadBackupTitle;
