@@ -91,7 +91,9 @@ function array<CharacterPoolLoadoutStruct> RefreshPawn(optional bool bForce)
 	// Give the unit the standard soldier class loadout. If some slots were already filled by CP loadout items, this will just fail to equip standard items there, as intended.
 	UnitState.ApplyInventoryLoadout(TempGameState);
 
-	TempGameState.CreateNewStateObject(class'XComGameState_HeadquartersXCom');
+	// Wanted to create an HQ state here to prevent million of log warnings caused by ValidateLoadout(), but for some reason that prevents faction soldier helmets from being used in character pool.
+	// Doesn't make sense, considering the game state is obliterated afterwards, but it is what it is.
+	//TempGameState.CreateNewStateObject(class'XComGameState_HeadquartersXCom');
 
 	// Validate loadout to do stuff like granting a free heavy weapon to the unit when they equip exo suit.
 	// Causes three billion redscreens, but needs to be done.
@@ -309,7 +311,7 @@ function array<CharacterPoolLoadoutStruct> RefreshPawn_UseAppearance(const out T
 	// Give the unit the standard soldier class loadout. If some slots were already filled by CP loadout items, this will just fail to equip standard items there, as intended.
 	UnitState.ApplyInventoryLoadout(TempGameState);
 
-	TempGameState.CreateNewStateObject(class'XComGameState_HeadquartersXCom');
+	//TempGameState.CreateNewStateObject(class'XComGameState_HeadquartersXCom');
 
 	// Validate loadout to do stuff like granting a free heavy weapon to the unit when they equip exo suit.
 	// Causes three billion redscreens, but needs to be done.

@@ -89,6 +89,15 @@
     <Content Include="Src\WOTCIridarAppearanceManager\Classes\Help.uc">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Src\WOTCIridarAppearanceManager\Classes\UIScreen_Dummy.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\WOTCIridarAppearanceManager\Classes\UISL_BackupPoolLoader.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\WOTCIridarAppearanceManager\Classes\X2BackupPoolLoader.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\WOTCIridarAppearanceManager\Classes\X2PawnRefreshHelper.uc">
       <SubType>Content</SubType>
     </Content>

@@ -139,13 +139,9 @@ event InitSoldier(XComGameState_Unit Unit, const out CharacterPoolDataElement Ch
 
 	InitSoldierAppearance(Unit, CharacterPoolData);
 
-	if (ExtraDatas.Length == 0 && PoolFileName == default.PoolFileName) // Load ExtraData from backup if this pool is the default character pool.
-	{
-		LoadBackupCharacterPool();
-	}
-
 	// Use Character Pool Data to locate saved Extra Data for this unit.
 	Index = GetExtraDataIndexForCharPoolData(CharacterPoolData);
+	`AMLOG(Unit.GetFullName() @ "Got index:" @ `ShowVar(Index));
 
 	// The current order of this Extra Data in the array will serve as its unique Object ID.
 	ExtraDatas[Index].ObjectID = Index;
@@ -206,22 +202,27 @@ function SaveCharacterPool()
 
 	// Starting the game with Appearance Manager disabled will cause all Extra Data to be lost.
 	// To prevent fatal changes to the Character Pool, always save a backup.
-	PoolFileName = BackupCharacterPoolPath;
-	super.SaveCharacterPool();
-	PoolFileName = default.PoolFileName;
+	//PoolFileName = BackupCharacterPoolPath;
+	//super.SaveCharacterPool();
+	//PoolFileName = default.PoolFileName;
+
+	// EDIT: Doing it the way above appears to make the game use the backup pool as default one if AM is deactivated.
+	// Save backup pool only if this is the game's default character pool. Otherwise we cause inception by doing BackupPool.SaveCharacterPool();
+	if (PoolFileName == default.PoolFileName)
+	{
+		SaveBackupCharacterPool();
+	}
 }
 
-private function LoadBackupCharacterPool()
+private function SaveBackupCharacterPool()
 {
 	local CharacterPoolManager_AM BackupPool;
 
 	BackupPool = new class'CharacterPoolManager_AM';
 	BackupPool.PoolFileName = BackupCharacterPoolPath;
-	BackupPool.LoadCharacterPool();
-
-	`AMLOG("WARNING :: No Extra Data found in Default Character Pool. Loading Extra Data from backup:" @ BackupPool.ExtraDatas.Length @ "for pool:" @ PoolFileName);
-
-	ExtraDatas = BackupPool.ExtraDatas;
+	BackupPool.CharacterPool = CharacterPool;
+	BackupPool.ExtraDatas = ExtraDatas;
+	BackupPool.SaveCharacterPool();
 }
 
 // Replace pointless 'assert' with 'return none' so we can do error detecting
@@ -868,8 +869,27 @@ private function int FindFreeExtraDataObjectID()
 private function int GetExtraDataIndexForCharPoolData(const out CharacterPoolDataElement CharacterPoolData)
 {
 	local CharacterPoolExtraData ExtraData;
+	//local CharacterPoolDataElement CPD;
 	local int Index;
 
+	/*if (PoolFileName == default.PoolFileName)
+	{
+		for (Index = 0; Index < ExtraDatas.Length; Index++)
+		{	
+			CPD = ExtraDatas[Index].CharPoolData;
+			if (CPD == CharacterPoolData)
+			{
+				`AMLOG("Found index match" @ Index);
+				return Index;
+			}
+			else
+			{
+				`AMLOG("This CP Data doesn't match given one. Difference is in appearance:" @ CPD.kAppearance != CharacterPoolData.kAppearance);
+				PrintCPData(CPD);
+				PrintCPData(CharacterPoolData);
+			}
+		}
+	}*/
 	Index = ExtraDatas.Find('CharPoolData', CharacterPoolData);
 	if (Index != INDEX_NONE)
 	{
@@ -882,6 +902,21 @@ private function int GetExtraDataIndexForCharPoolData(const out CharacterPoolDat
 		return ExtraDatas.Length - 1;
 	}	
 }
+/*
+private function PrintCPData(const out CharacterPoolDataElement CharacterPoolData)
+{
+	`AMLOG(`ShowVar(CharacterPoolData.strFirstName));
+	`AMLOG(`ShowVar(CharacterPoolData.strLastName));
+	`AMLOG(`ShowVar(CharacterPoolData.strNickName));
+	`AMLOG(`ShowVar(CharacterPoolData.m_SoldierClassTemplateName));
+	`AMLOG(`ShowVar(CharacterPoolData.CharacterTemplateName));
+	`AMLOG(`ShowVar(CharacterPoolData.Country));
+	`AMLOG(`ShowVar(CharacterPoolData.AllowedTypeSoldier));
+	`AMLOG(`ShowVar(CharacterPoolData.AllowedTypeVIP));
+	`AMLOG(`ShowVar(CharacterPoolData.AllowedTypeDarkVIP));
+	`AMLOG(`ShowVar(CharacterPoolData.PoolTimestamp));
+	`AMLOG(`ShowVar(CharacterPoolData.BackgroundText));
+}*/
 
 // ---------------------------------------------------------------------------
 // UNIFORM FUNCTIONS

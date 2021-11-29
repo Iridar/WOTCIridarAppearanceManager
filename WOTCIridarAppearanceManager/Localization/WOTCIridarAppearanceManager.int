@@ -60,6 +60,10 @@ strInvalidEmptyUniformNameText = "Uniform name cannot be empty."
 
 strRacePrefix = "Race "
 
+[X2BackupPoolLoader]
+strLoadBackupTitle = "Restore Character Pool from backup?" 
+strLoadBackupText = "Appearance Manager has detected that your Character Pool or its Extra Data have been lost. Current number of soldiers: %CURRENT_SOLDIERS%, current Extra Data: %CURRENT_DATA%.\n\nA Character Pool backup is available. It contains %BACKUP_SOLDIERS% soldiers and %BACKUP_DATA% Extra Data. Would you like to restore your Character Pool from that backup?\n\nIf you accept, your current Character Pool will be completely overwritten by the backup.\nIf you proceed without restoring the Character Pool now, the backup itself may be overwritten when Character Pool is saved, which happens whenever any changes to it are made."
+
 [UISL_AppearanceManager]
 
 strManageAppearance = "Manage Appearance"

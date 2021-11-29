@@ -1,0 +1,1 @@
+class UIScreen_Dummy extends UIScreen;
