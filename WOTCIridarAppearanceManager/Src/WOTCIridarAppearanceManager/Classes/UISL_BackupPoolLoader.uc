@@ -9,13 +9,19 @@ event OnInit(UIScreen Screen)
 	if (UIShell(Screen) != none)
 	{
 		CharPool = `CHARACTERPOOLMGRAM;
+		`AMLOG("Check if restoring Character Pool from backup is required. Num characters:" @ CharPool.CharacterPool.Length @ "Extra Data on Init:" @ CharPool.iNumExtraDataOnInit);
 		if (CharPool.CharacterPool.Length == 0 || CharPool.iNumExtraDataOnInit == 0)
 		{
 			BackupPool = new class'CharacterPoolManager_AM';
 			BackupPool.PoolFileName = BackupPool.BackupCharacterPoolPath;
 			BackupPool.LoadCharacterPool();
 
-			if (BackupPool.CharacterPool.Length != 0 || BackupPool.ExtraDatas.Length != 0)
+			`AMLOG("Backup pool loaded. Num characters:" @ BackupPool.CharacterPool.Length @ "Extra Data on Init:" @ BackupPool.iNumExtraDataOnInit);
+
+			// Suggest restoring a backup if main pool doesn't have any characters, and backup pool does,
+			// or if backup pool has characters, but no extra data, and backup pool has extra data.
+			if (CharPool.CharacterPool.Length == 0 && BackupPool.CharacterPool.Length != 0 ||
+			CharPool.CharacterPool.Length != 0 && CharPool.iNumExtraDataOnInit == 0 && BackupPool.iNumExtraDataOnInit != 0)
 			{
 				`AMLOG("Init backup loader");
 				BackupPoolLoader = new class'X2BackupPoolLoader';

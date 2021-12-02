@@ -37,6 +37,8 @@ Maybe allow Appearance Store button to work as a "reskin armor" button? - redund
 
 ## Ideas for later
 
+Remember scroll position in the soldier list.
+
 Make text on UIMechaListItem_Button long enough to be obscured by the button scroll from under the button rather than go under it.
 
 Make clicking a list item in cosmetic options list toggle its checkbox.
