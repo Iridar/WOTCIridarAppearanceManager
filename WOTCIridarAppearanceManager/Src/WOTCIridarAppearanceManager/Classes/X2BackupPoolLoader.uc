@@ -44,6 +44,7 @@ private function OnClickedCallback(Name eAction)
 {
 	if (eAction == 'eUIAction_Accept')
 	{
+		`AMLOG("Restoring Character Pool from backup");
 		CharPool.CharacterPool = BackupPool.CharacterPool;
 		CharPool.ExtraDatas = BackupPool.ExtraDatas;
 		CharPool.SaveCharacterPool();

@@ -84,7 +84,7 @@ struct CharacterPoolExtraData
 };
 var array<CharacterPoolExtraData> ExtraDatas;
 
-var int iNumExtraDataOnInit;
+var int iNumExtraDataOnInit; // Helps track if we might need to restore extra data from backup.
 
 const ExtraDataValueName = 'IRI_AppearanceManager_ExtraData_Value';
 const NonSoldierUniformSettings = 'NonSoldierUniformSettings';
@@ -139,12 +139,10 @@ event InitSoldier(XComGameState_Unit Unit, const out CharacterPoolDataElement Ch
 {
 	local int Index;
 
-	if (iNumExtraDataOnInit == -1) iNumExtraDataOnInit = ExtraDatas.Length; // Helps track if we might need to restore extra data from backup.
-
 	InitSoldierAppearance(Unit, CharacterPoolData);
 
 	// Use Character Pool Data to locate saved Extra Data for this unit.
-	Index = GetExtraDataIndexForCharPoolData(CharacterPoolData);
+	Index = GetExtraDataIndexForCharPoolData(CharacterPoolData, true);
 	`AMLOG(Unit.GetFullName() @ "Got index:" @ `ShowVar(Index));
 
 	// The current order of this Extra Data in the array will serve as its unique Object ID.
@@ -870,9 +868,9 @@ private function int FindFreeExtraDataObjectID()
 	return i;
 }
 
-private function int GetExtraDataIndexForCharPoolData(const out CharacterPoolDataElement CharacterPoolData)
+private function int GetExtraDataIndexForCharPoolData(const out CharacterPoolDataElement CharacterPoolData, optional const bool bCalledFromInitSoldier)
 {
-	local CharacterPoolExtraData ExtraData;
+	local CharacterPoolExtraData EmptyExtraData;
 	//local CharacterPoolDataElement CPD;
 	local int Index;
 
@@ -897,11 +895,15 @@ private function int GetExtraDataIndexForCharPoolData(const out CharacterPoolDat
 	Index = ExtraDatas.Find('CharPoolData', CharacterPoolData);
 	if (Index != INDEX_NONE)
 	{
+		if (bCalledFromInitSoldier)
+		{
+			iNumExtraDataOnInit++;
+		}
 		return Index;
 	}
 	else
 	{
-		ExtraDatas.AddItem(ExtraData);
+		ExtraDatas.AddItem(EmptyExtraData);
 
 		return ExtraDatas.Length - 1;
 	}	
@@ -1233,9 +1235,4 @@ private final function int SortCharacterPoolByUniformStatusFn(XComGameState_Unit
 		return -1;
 	}
 	return 0;
-}
-
-defaultproperties
-{
-	iNumExtraDataOnInit = -1;
 }
