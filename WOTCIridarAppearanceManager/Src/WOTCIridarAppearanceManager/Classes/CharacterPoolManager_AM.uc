@@ -448,7 +448,6 @@ function XComGameState_Unit CreateCharacter(XComGameState StartState, optional E
 	}
 	else
 	{
-
 		CharacterGenerator = `XCOMGRI.Spawn(CharacterTemplate.CharacterGeneratorClass);
 		`assert(CharacterGenerator != none);
 
@@ -492,32 +491,37 @@ final function ValidateUnitAppearance(XComGameState_Unit UnitState)
 
 final function XComGameState_Unit AddUnitToCharacterPool(XComGameState_Unit NewUnit, optional CharacterPoolExtraData NewExtraData)
 {
-	local UnitValue OldValue;
-	local UnitValue NewValue;
-	local XComGameState_Unit CreateUnit;
+	// Besides adding a unit to character pool, the function is used to update Extra Data for unit.
+	// Previously this function created a copy of the original unit for the reason explained in this old comment:
+		// Reason: imagine scenario, we're imporing a Unit X from Character Pool A to Character Pool B.
+		// In CharPool A, UX has its own Extra Data, connected to the unit by Unit Value.
+		// If we add reference to the Unit X into CharPool B, CharPool B will need to have its own copy of Extra Data.
+		// And Unit X will need a new Unit Value to be connected to it.
+		// But if we overwrite the Unit Value on Unit X, 
+		// their connection to its own Extra Data in its own CharPool A will be broken.
+		// Essentially we'd break Extra Data for every unit we attempt to export from any Character Pool.
+		// So in order to prevent that, we duplicate the passed unit, and then apply Unit Value to that instead.
 
-	// Have to create a copy rather, cannot use the passed unit as-is.
-	// Reason: imagine scenario, we're imporing a Unit X from Character Pool A to Character Pool B.
-	// In CharPool A, UX has its own Extra Data, connected to the unit by Unit Value.
-	// If we add reference to the Unit X into CharPool B, CharPool B will need to have its own copy of Extra Data.
-	// And Unit X will need a new Unit Value to be connected to it.
-	// But if we overwrite the Unit Value on Unit X, 
-	// their connection to its own Extra Data in its own CharPool A will be broken.
-	// Essentially we'd break Extra Data for every unit we attempt to export from any Character Pool.
-	// So in order to prevent that, we duplicate the passed unit, and then apply Unit Value to that instead.
-	CreateUnit = new class'XComGameState_Unit'(NewUnit);
+	// But it turned out creating a new unit like that makes native code spaz out in specific circumstances, 
+	// so I decided to live with exporting a unit being destructive to the connection between unit and their extra data,
+	// I just changed the vanilla code to make sure these destructive changes are reversed or left unsaved.
 
 	NewExtraData.ObjectID = FindFreeExtraDataObjectID();
-	CreateUnit.SetUnitFloatValue(ExtraDataValueName, NewExtraData.ObjectID, eCleanup_Never);
+	NewUnit.SetUnitFloatValue(ExtraDataValueName, NewExtraData.ObjectID, eCleanup_Never);
 
 	ExtraDatas.AddItem(NewExtraData);
-	CharacterPool.AddItem(CreateUnit);
 
-	NewUnit.GetUnitValue(ExtraDataValueName, OldValue);
-	CreateUnit.GetUnitValue(ExtraDataValueName, NewValue);
-	`AMLOG("Adding new unit to Character Pool." @ CreateUnit.GetFullName() @ "old value:" @ int(OldValue.fValue) @ "new value:" @ int(NewValue.fValue) @ "new ExtraData ObjectID:" @ NewExtraData.ObjectID);
+	if (CharacterPool.Find(NewUnit) == INDEX_NONE)
+	{
+		`AMLOG("Adding new unit to Character Pool." @ NewUnit.GetFullName());
+		CharacterPool.AddItem(NewUnit);
+	}
+	else
+	{
+		`AMLOG("Updated Extra Data for Unit." @ NewUnit.GetFullName());
+	}
 
-	return CreateUnit;
+	return NewUnit;
 }
 
 final function CharacterPoolExtraData GetExtraDataForUnit(const XComGameState_Unit UnitState)
@@ -870,28 +874,9 @@ private function int FindFreeExtraDataObjectID()
 
 private function int GetExtraDataIndexForCharPoolData(const out CharacterPoolDataElement CharacterPoolData, optional const bool bCalledFromInitSoldier)
 {
-	local CharacterPoolExtraData EmptyExtraData;
-	//local CharacterPoolDataElement CPD;
-	local int Index;
+	local CharacterPoolExtraData	EmptyExtraData;
+	local int						Index;
 
-	/*if (PoolFileName == default.PoolFileName)
-	{
-		for (Index = 0; Index < ExtraDatas.Length; Index++)
-		{	
-			CPD = ExtraDatas[Index].CharPoolData;
-			if (CPD == CharacterPoolData)
-			{
-				`AMLOG("Found index match" @ Index);
-				return Index;
-			}
-			else
-			{
-				`AMLOG("This CP Data doesn't match given one. Difference is in appearance:" @ CPD.kAppearance != CharacterPoolData.kAppearance);
-				PrintCPData(CPD);
-				PrintCPData(CharacterPoolData);
-			}
-		}
-	}*/
 	Index = ExtraDatas.Find('CharPoolData', CharacterPoolData);
 	if (Index != INDEX_NONE)
 	{

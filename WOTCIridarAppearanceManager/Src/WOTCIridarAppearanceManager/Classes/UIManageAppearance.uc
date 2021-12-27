@@ -177,7 +177,7 @@ var protected XComGameState_Unit			ArmoryUnit;
 var protected vector						OriginalPawnLocation;
 var protected TAppearance					OriginalAppearance; // Appearance to restore if the player exits the screen without selecting anything
 var protected TAppearance					PreviousAppearance; // Briefly cached appearance, used to check if we need to refresh pawn
-var protected name							ArmorTemplateName;
+var /*protected*/ name						ArmorTemplateName; // Unprotected for the console command hack
 var protected X2SoldierPersonalityTemplate	OriginalAttitude;
 
 // ==============================================================================

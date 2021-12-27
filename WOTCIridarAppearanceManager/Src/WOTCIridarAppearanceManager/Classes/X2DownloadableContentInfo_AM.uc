@@ -15,6 +15,12 @@ static event OnPostTemplatesCreated()
 	class'UIManageAppearance'.static.SetInitialSoldierListSettings();
 }
 
+exec function SetArmorTemplateName(name NewName)
+{
+	UIManageAppearance(`SCREENSTACK.GetCurrentScreen()).ArmorTemplateName = NewName;
+	`LOG("Set ArmorTemplateName to:" @ NewName,, 'IRITEST');
+}
+
 /*
 static event OnLoadedSavedGame()
 {
