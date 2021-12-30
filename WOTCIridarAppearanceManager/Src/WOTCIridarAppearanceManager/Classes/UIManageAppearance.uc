@@ -908,7 +908,7 @@ simulated function SaveCosmeticOptionsForUnit(XComGameState_Unit UnitState)
 	for (i = 1; i < OptionsList.ItemCount; i++) // Skip 0th member that is for sure "ShowAllCosmetics"
 	{
 		ListItem = UIMechaListItem(OptionsList.GetItem(i));
-		if (ListItem == none || ListItem.Checkbox == none || !IsCosmeticOption(ListItem.MCName))
+		if (ListItem == none || ListItem.Checkbox == none || ListItem.bDisabled || !IsCosmeticOption(ListItem.MCName))
 			continue;
 
 		`AMLOG(i @ "List item:" @ ListItem.MCName @ ListItem.Desc.htmlText @ "Checked:" @ ListItem.Checkbox.bChecked);
@@ -1888,7 +1888,7 @@ final function SetOptionsListCheckbox(name OptionName, bool bChecked)
 
 	ListItem = UIMechaListItem(OptionsList.ItemContainer.GetChildByName(OptionName, false));
 
-	if (ListItem != none)
+	if (ListItem != none && !ListItem.bDisabled)
 	{
 		ListItem.Checkbox.SetChecked(bChecked, false);
 	}
