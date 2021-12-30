@@ -1005,16 +1005,33 @@ private function array<XComGameState_Unit> GetClassSpecificUniforms(const name A
 	local array<XComGameState_Unit> UniformStates;
 	local XComGameState_Unit		UniformState;
 
-	foreach CharacterPool(UniformState)
+	if (class'Help'.static.IsUnrestrictedCustomizationLoaded())
 	{
-		if (GetUniformStatus(UniformState) == EUS_ClassSpecific && 
-			UniformState.GetSoldierClassTemplateName() == SoldierClass && 
-			UniformState.HasStoredAppearance(iGender, ArmorTemplateName))
+		foreach CharacterPool(UniformState)
 		{
-			`AMLOG(UniformState.GetFullName() @ "is class uniform for:" @ SoldierClass);
-			UniformStates.AddItem(UniformState);
+			if (GetUniformStatus(UniformState) == EUS_ClassSpecific && 
+				UniformState.GetSoldierClassTemplateName() == SoldierClass && 
+				GetCharacterPoolEquippedArmor(UniformState) == ArmorTemplateName)
+			{
+				`AMLOG(UniformState.GetFullName() @ "is class uniform for (Unrestricted Customization support):" @ SoldierClass);
+				UniformStates.AddItem(UniformState);
+			}
+			else `AMLOG(UniformState.GetFullName() @ "is NOT class uniform for:" @ SoldierClass @ "Uniform status:" @ GetEnum(enum'EUniformStatus', GetUniformStatus(UniformState)) @ "Soldier class:" @ UniformState.GetSoldierClassTemplateName() @ "Armor match (Unrestricted Customization support):" @ GetCharacterPoolEquippedArmor(UniformState) == ArmorTemplateName);
 		}
-		else `AMLOG(UniformState.GetFullName() @ "is NOT class uniform for:" @ SoldierClass @ "Uniform status:" @ GetEnum(enum'EUniformStatus', GetUniformStatus(UniformState)) @ "Soldier class:" @ UniformState.GetSoldierClassTemplateName() @ "Stored appearance:" @ UniformState.HasStoredAppearance(iGender, ArmorTemplateName));
+	}
+	else
+	{
+		foreach CharacterPool(UniformState)
+		{
+			if (GetUniformStatus(UniformState) == EUS_ClassSpecific && 
+				UniformState.GetSoldierClassTemplateName() == SoldierClass && 
+				UniformState.HasStoredAppearance(iGender, ArmorTemplateName))
+			{
+				`AMLOG(UniformState.GetFullName() @ "is class uniform for:" @ SoldierClass);
+				UniformStates.AddItem(UniformState);
+			}
+			else `AMLOG(UniformState.GetFullName() @ "is NOT class uniform for:" @ SoldierClass @ "Uniform status:" @ GetEnum(enum'EUniformStatus', GetUniformStatus(UniformState)) @ "Soldier class:" @ UniformState.GetSoldierClassTemplateName() @ "Stored appearance:" @ UniformState.HasStoredAppearance(iGender, ArmorTemplateName));
+		}
 	}
 	return UniformStates;
 }
@@ -1023,13 +1040,28 @@ private function array<XComGameState_Unit> GetAnyClassUniforms(const name ArmorT
 	local array<XComGameState_Unit> UniformStates;
 	local XComGameState_Unit		UniformState;
 
-	foreach CharacterPool(UniformState)
+	if (class'Help'.static.IsUnrestrictedCustomizationLoaded())
 	{
-		if (GetUniformStatus(UniformState) == EUS_AnyClass &&
-			UniformState.HasStoredAppearance(iGender, ArmorTemplateName))
+		foreach CharacterPool(UniformState)
 		{
-			`AMLOG(UniformState.GetFullName() @ "is a non-class uniform");
-			UniformStates.AddItem(UniformState);
+			if (GetUniformStatus(UniformState) == EUS_AnyClass &&
+				GetCharacterPoolEquippedArmor(UniformState) == ArmorTemplateName)
+			{
+				`AMLOG(UniformState.GetFullName() @ "is a non-class uniform for armor (Unrestricted Customization support):" @ ArmorTemplateName);
+				UniformStates.AddItem(UniformState);
+			}
+		}
+	}
+	else
+	{
+		foreach CharacterPool(UniformState)
+		{
+			if (GetUniformStatus(UniformState) == EUS_AnyClass &&
+				UniformState.HasStoredAppearance(iGender, ArmorTemplateName))
+			{
+				`AMLOG(UniformState.GetFullName() @ "is a non-class uniform for armor:" @ArmorTemplateName);
+				UniformStates.AddItem(UniformState);
+			}
 		}
 	}
 	return UniformStates;
@@ -1095,7 +1127,7 @@ private function CopyUniformAppearance(out TAppearance NewAppearance, const XCom
 	local EUniformStatus				UniformStatus;
 
 	UniformStatus = GetUniformStatus(UniformState);
-	if (UniformStatus == EUS_NonSoldier)
+	if (UniformStatus == EUS_NonSoldier || class'Help'.static.IsUnrestrictedCustomizationLoaded())
 	{
 		UniformAppearance = UniformState.kAppearance;
 		CosmeticOptions = GetCosmeticOptionsForUnit(UniformState, string(NonSoldierUniformSettings));
