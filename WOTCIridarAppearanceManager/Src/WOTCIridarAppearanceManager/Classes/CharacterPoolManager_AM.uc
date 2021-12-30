@@ -737,7 +737,10 @@ final function array<CosmeticOptionStruct> GetCosmeticOptionsForUnit(const XComG
 	if (SettingsIndex != INDEX_NONE)
 	{
 		ReturnArray = ExtraDatas[Index].UniformSettings[SettingsIndex].CosmeticOptions;
+		`AMLOG("Got cosmetic options for unit:" @ UnitState.GetFullName() @ GenderArmorTemplate @ ReturnArray.Length);
 	}
+	else `AMLOG("Did not find cosmetic options for unit:" @ UnitState.GetFullName() @ `showvar(GenderArmorTemplate));
+	
 	
 	return ReturnArray;
 }
@@ -782,6 +785,7 @@ final function SaveCosmeticOptionsForUnit(const array<CosmeticOptionStruct> Cosm
 		NewUniformSetting.CosmeticOptions = CosmeticOptions;
 		ExtraDatas[Index].UniformSettings.AddItem(NewUniformSetting);
 	}
+	`AMLOG("Saved cosmetic options for unit:" @ UnitState.GetFullName() @ GenderArmorTemplate @ CosmeticOptions.Length);
 	SaveCharacterPool();
 }
 
@@ -1011,6 +1015,7 @@ private function array<XComGameState_Unit> GetClassSpecificUniforms(const name A
 		{
 			if (GetUniformStatus(UniformState) == EUS_ClassSpecific && 
 				UniformState.GetSoldierClassTemplateName() == SoldierClass && 
+				UniformState.kAppearance.iGender == iGender &&
 				GetCharacterPoolEquippedArmor(UniformState) == ArmorTemplateName)
 			{
 				`AMLOG(UniformState.GetFullName() @ "is class uniform for (Unrestricted Customization support):" @ SoldierClass);
@@ -1045,6 +1050,7 @@ private function array<XComGameState_Unit> GetAnyClassUniforms(const name ArmorT
 		foreach CharacterPool(UniformState)
 		{
 			if (GetUniformStatus(UniformState) == EUS_AnyClass &&
+				UniformState.kAppearance.iGender == iGender &&
 				GetCharacterPoolEquippedArmor(UniformState) == ArmorTemplateName)
 			{
 				`AMLOG(UniformState.GetFullName() @ "is a non-class uniform for armor (Unrestricted Customization support):" @ ArmorTemplateName);
@@ -1127,10 +1133,18 @@ private function CopyUniformAppearance(out TAppearance NewAppearance, const XCom
 	local EUniformStatus				UniformStatus;
 
 	UniformStatus = GetUniformStatus(UniformState);
-	if (UniformStatus == EUS_NonSoldier || class'Help'.static.IsUnrestrictedCustomizationLoaded())
+	if (UniformStatus == EUS_NonSoldier)
 	{
 		UniformAppearance = UniformState.kAppearance;
 		CosmeticOptions = GetCosmeticOptionsForUnit(UniformState, string(NonSoldierUniformSettings));
+	}
+	else if (class'Help'.static.IsUnrestrictedCustomizationLoaded())
+	{
+		UniformAppearance = UniformState.kAppearance;
+		GenderArmorTemplate = ArmorTemplateName $ NewAppearance.iGender;
+		CosmeticOptions = GetCosmeticOptionsForUnit(UniformState, GenderArmorTemplate);
+
+		`AMLOG("Selected uniform with head:" @ UniformState.kAppearance.nmHead @ "should copy head:" @ ShouldCopyUniformPiece('nmHead', CosmeticOptions) @ CosmeticOptions.Length);
 	}
 	else
 	{

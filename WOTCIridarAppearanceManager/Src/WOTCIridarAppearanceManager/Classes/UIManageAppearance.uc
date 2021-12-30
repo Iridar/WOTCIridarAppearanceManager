@@ -332,7 +332,8 @@ function UpdateApplyChangesButtonVisibility()
 
 private function CacheArmoryUnitData()
 {
-	local X2ItemTemplate ArmorTemplate;
+	local X2ItemTemplate		ArmorTemplate;
+	local XComGameState_Item	ItemState;
 
 	bOriginalAppearanceSelected = true;
 
@@ -346,10 +347,26 @@ private function CacheArmoryUnitData()
 	{
 		super.CloseScreen();
 	}
-	ArmorTemplate = class'Help'.static.GetItemTemplateFromCosmeticTorso(ArmoryPawn.m_kAppearance.nmTorso);
-	if (ArmorTemplate != none)
+
+	if (class'Help'.static.IsUnrestrictedCustomizationLoaded())
 	{
-		ArmorTemplateName = ArmorTemplate.DataName;
+		ItemState = ArmoryUnit.GetItemInSlot(eInvSlot_Armor);
+		if (ItemState != none)
+		{
+			ArmorTemplateName = ItemState.GetMyTemplateName();
+		}
+		else
+		{
+			ArmorTemplateName = PoolMgr.GetCharacterPoolEquippedArmor(ArmoryUnit);
+		}
+	}
+	else
+	{
+		ArmorTemplate = class'Help'.static.GetItemTemplateFromCosmeticTorso(ArmoryPawn.m_kAppearance.nmTorso);
+		if (ArmorTemplate != none)
+		{
+			ArmorTemplateName = ArmorTemplate.DataName;
+		}
 	}
 
 	SelectedUnit = ArmoryUnit;

@@ -172,8 +172,10 @@ static private function MaybeApplyUniformAppearance(XComGameState_Unit UnitState
 	}
 
 	NewAppearance = UnitState.kAppearance;
+	`AMLOG("old head:" @ NewAppearance.nmHead);
 	if (CharacterPool.GetUniformAppearanceForUnit(NewAppearance, UnitState, ArmorTemplateName, bClassUniformOnly))
 	{
+		`AMLOG("New head:" @ NewAppearance.nmHead);
 		`AMLOG(UnitState.GetFullName() @ "aplying uniform appearance for:" @ ArmorTemplateName);
 
 		UnitState.SetTAppearance(NewAppearance);
