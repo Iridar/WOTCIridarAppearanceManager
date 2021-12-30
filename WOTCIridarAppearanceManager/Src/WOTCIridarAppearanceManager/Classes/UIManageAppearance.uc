@@ -931,6 +931,7 @@ private function CreateAppearanceStoreEntriesForUnit(const XComGameState_Unit Un
 	local bool						bCurrentAppearanceFound;
 	local UIMechaListItem_Soldier	SpawnedItem;
 	local EUniformStatus			UniformStatus;
+	local XComGameState_Item		ItemState;
 
 	if (!IsUnitSameType(UnitState))
 		return;
@@ -939,6 +940,78 @@ private function CreateAppearanceStoreEntriesForUnit(const XComGameState_Unit Un
 		return;
 
 	`AMLOG("Running for:" @ UnitState.GetFullName());
+
+	if (class'Help'.static.IsUnrestrictedCustomizationLoaded() && UnitState != ArmoryUnit)
+	{	
+		`AMLOG("Unrestricted Customization compatibility enabled.");
+
+		Gender = EGender(UnitState.kAppearance.iGender);
+		if (GetFilterListCheckboxStatus('FilterGender') && OriginalAppearance.iGender != Gender)
+			return;
+
+		if (bCharPool)
+		{
+			// Can't use Item State cuz Character Pool units would have none.
+			LocalArmorTemplateName = PoolMgr.GetCharacterPoolEquippedArmor(UnitState);
+			`AMLOG("Armpr saved in Character Pool Loadout:" @ LocalArmorTemplateName);
+		}
+		else
+		{
+			ItemState = UnitState.GetItemInSlot(eInvSlot_Armor);
+			if (ItemState != none)
+			{
+				ArmorTemplate = ItemState.GetMyTemplate();
+				if (ArmorTemplate != none)
+				{
+					LocalArmorTemplateName = ArmorTemplate.DataName;
+					`AMLOG("Armpr equipped on the unit:" @ LocalArmorTemplateName);
+				}
+			}
+		}
+		
+		`AMLOG(UnitState.GetFullName() @ "cosmetic torso:" @ UnitState.kAppearance.nmTorso @ "found armor template:" @ LocalArmorTemplateName);
+
+		if (GetFilterListCheckboxStatus('FilterArmorAppearance') && ArmorTemplateName != LocalArmorTemplateName)
+		{
+			`AMLOG("This armor template is different to equipped on the unit:" @ ArmorTemplateName @ ", so skipping unit's current appearance");
+			return;
+		}
+
+		DisplayString = GetUnitDisplayStringForAppearanceList(UnitState, Gender);
+		if (bCharPool && IsUnitPresentInCampaign(UnitState)) // If unit was already drawn from the CP, color their entry green.
+			DisplayString = `GREEN(DisplayString);
+
+		ArmorTemplate = ItemMgr.FindItemTemplate(LocalArmorTemplateName);
+		if (ArmorTemplate != none && ArmorTemplate.FriendlyName != "")
+		{
+			DisplayString $= ArmorTemplate.FriendlyName $ " ";
+		}
+		else
+		{
+			DisplayString $= string(LocalArmorTemplateName) $ " ";
+		}
+
+		if (Gender == eGender_Male)
+		{
+			DisplayString $= "|" @ class'XComCharacterCustomization'.default.Gender_Male $ " ";
+		}
+		else if (Gender == eGender_Female)
+		{
+			DisplayString $= "|" @ class'XComCharacterCustomization'.default.Gender_Female $ " ";
+		}
+		
+		if (SearchText != "" && InStr(DisplayString, SearchText,, true) == INDEX_NONE) // ignore case
+			return;
+		
+		SpawnedItem = Spawn(class'UIMechaListItem_Soldier', AppearanceList.ItemContainer);
+		SpawnedItem.bAnimateOnInit = false;
+		SpawnedItem.InitListItem();
+		SpawnedItem.UpdateDataCheckbox(DisplayString, "", false, AppearanceOptionCheckboxChanged, none);
+		SpawnedItem.StoredAppearance.Appearance = UnitState.kAppearance;
+		SpawnedItem.SetPersonalityTemplate();
+		SpawnedItem.UnitState = UnitState;
+		return;
+	}
 
 	// Cycle through Appearance Store, which may or may not include unit's current appearance.
 	foreach UnitState.AppearanceStore(StoredAppearance)

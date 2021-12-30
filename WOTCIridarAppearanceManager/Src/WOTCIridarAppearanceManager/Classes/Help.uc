@@ -6,6 +6,9 @@ var private name AutoManageUniformForUnitValueName;
 
 var localized string strCurrentAppearance;
 
+var private config bool bIsUnrestrictedCustomizationLoaded;
+var private config bool bIsUnrestrictedCustomizationLoadedChecked;
+
 `include(WOTCIridarAppearanceManager\Src\ModConfigMenuAPI\MCM_API_CfgHelpers.uci)
 
 static final function string GetUnitDisplayString(const XComGameState_Unit UnitState)
@@ -448,7 +451,15 @@ static final function X2ItemTemplate GetItemTemplateFromCosmeticTorso(const name
 
 static final function bool IsUnrestrictedCustomizationLoaded()
 {
-	return IsModActive('UnrestrictedCustomization');
+	if (default.bIsUnrestrictedCustomizationLoadedChecked)
+	{
+		return default.bIsUnrestrictedCustomizationLoaded;
+	}
+
+	default.bIsUnrestrictedCustomizationLoadedChecked = true;
+	default.bIsUnrestrictedCustomizationLoaded = IsModActive('UnrestrictedCustomization');
+
+	return default.bIsUnrestrictedCustomizationLoaded;
 }
 
 static final function bool IsModActive(name ModName)

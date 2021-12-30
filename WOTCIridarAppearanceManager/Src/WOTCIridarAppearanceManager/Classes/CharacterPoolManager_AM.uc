@@ -554,6 +554,62 @@ final function SetAutoManageUniformForUnit(const XComGameState_Unit UnitState, c
 	SaveCharacterPool();
 }
 
+// Used with Unrestricted Customization to figure out what armor is equipped on the unit bypassing the regular cosmtic torso -> armor name system.
+final function name GetCharacterPoolEquippedArmor(const XComGameState_Unit UnitState)
+{
+	local array<CharacterPoolLoadoutStruct> SavedLoadout;
+	local CharacterPoolLoadoutStruct		SavedItem;
+
+	local name								UseLoadoutName;
+	local X2SoldierClassTemplate			SoldierClassTemplate;
+	local X2CharacterTemplate				CharTemplate;
+	local X2ItemTemplateManager				ItemTemplateManager;
+	local InventoryLoadoutItem				LoadoutItem;
+	local X2ArmorTemplate					ArmorTemplate;
+	local InventoryLoadout					Loadout;
+
+	SavedLoadout = GetCharacterPoolLoadout(UnitState);
+	foreach SavedLoadout(SavedItem)
+	{
+		if (SavedItem.InventorySlot == eInvSlot_Armor)
+		{
+			return SavedItem.TemplateName;
+		}
+	}
+
+	CharTemplate = UnitState.GetMyTemplate();
+	if (CharTemplate != none)
+	{
+		UseLoadoutName = CharTemplate.DefaultLoadout;
+	}
+	SoldierClassTemplate = UnitState.GetSoldierClassTemplate();
+	if (SoldierClassTemplate != none  && SoldierClassTemplate.SquaddieLoadout != '')
+	{
+		UseLoadoutName = SoldierClassTemplate.SquaddieLoadout;
+	}
+	if (UseLoadoutName == '')
+		return 'KevlarArmor';
+
+	ItemTemplateManager = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
+	foreach ItemTemplateManager.Loadouts(Loadout)
+	{
+		if (Loadout.LoadoutName == UseLoadoutName)
+		{
+			foreach Loadout.Items(LoadoutItem)
+			{
+				ArmorTemplate = X2ArmorTemplate(ItemTemplateManager.FindItemTemplate(LoadoutItem.Item));
+				if (ArmorTemplate != none && ArmorTemplate.InventorySlot == eInvSlot_Armor)
+				{
+					return ArmorTemplate.DataName;
+				}
+			}
+			return 'KevlarArmor';
+		}
+	}		
+
+	return 'KevlarArmor';
+}
+
 final function array<CharacterPoolLoadoutStruct> GetCharacterPoolLoadout(const XComGameState_Unit UnitState)
 {
 	return ExtraDatas[ GetExtraDataIndexForUnit(UnitState) ].CharacterPoolLoadout;
