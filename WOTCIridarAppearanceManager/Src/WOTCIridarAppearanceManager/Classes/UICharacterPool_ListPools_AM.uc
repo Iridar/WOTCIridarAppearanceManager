@@ -2,11 +2,11 @@ class UICharacterPool_ListPools_AM extends UICharacterPool_ListPools;
 
 // Make importing and exporting CP units also import and export their extra data.
 
-simulated function OnClickLocal(UIList _list, int iItemIndex)
-{
-	super.OnClickLocal(_list, iItemIndex);
-	`AMLOG(`showvar(SelectedFilename));
-}
+//simulated function OnClickLocal(UIList _list, int iItemIndex)
+//{
+//	super.OnClickLocal(_list, iItemIndex);
+//	`AMLOG(`showvar(SelectedFilename));
+//}
 
 simulated function DoImportCharacter(string FilenameForImport, int IndexOfCharacter)
 {
