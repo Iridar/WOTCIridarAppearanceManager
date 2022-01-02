@@ -86,6 +86,22 @@ simulated function DoImportAllCharacters(string FilenameForImport)
 	}
 }
 
+simulated function OnExportCharacters()
+{
+	local XComGameState_Unit UnitState;
+	local array<XComGameState_Unit> OldUnitsToExport;
+
+	// Validate the list of units to export before doing anything, as the array might contain 'none' entries.
+	OldUnitsToExport = UnitsToExport;
+	UnitsToExport.Length = 0;
+	foreach OldUnitsToExport(UnitState)
+	{
+		UnitsToExport.AddItem(UnitState);
+	}	
+
+	super.OnExportCharacters();
+}
+
 simulated function DoExportCharacters(string FilenameForExport)
 {
 	local int i;

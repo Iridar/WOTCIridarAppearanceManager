@@ -413,6 +413,61 @@ private function UpdateSelectedSoldiers()
 	}
 }
 
+simulated function OnButtonCallback(UIButton kButton)
+{
+	local XComGameState_Unit UnitState;
+	local int i;
+	
+	if(bAnimateOut) return;
+
+	if (kButton == CreateButton)
+	{
+		OnButtonCallbackCreateNew();
+	}
+	else if (kButton == ImportButton)
+	{
+		PC.Pres.UICharacterPool_ImportPools();
+		SelectedCharacters.Length = 0;
+	}
+	else if (kButton == ExportButton)
+	{
+		if (SelectedCharacters.Length > 0)
+		{
+			PC.Pres.UICharacterPool_ExportPools(SelectedCharacters);
+			SelectedCharacters.Length = 0;
+		}
+	}
+	else if (kButton == DeleteButton)
+	{
+		if (SelectedCharacters.Length > 0)
+			DeleteSoldiersDialogue();
+	}
+	else if (kButton == SelectAllButton)
+	{
+		SelectedCharacters.Length = 0;
+		for (i = 0; i < List.ItemCount; i++)
+		{
+			// CHANGED
+			// 'none' check the unit in slot before adding it to the array
+			// The i-th member of the list might be the list header, so GetSoldierInSlot(i) might return 'none',
+			// and we don't need 'none' in the list of selected soldiers, as the length of the array is used in UI to count the soldiers.
+			UnitState = GetSoldierInSlot(i);
+			if (UnitState != none)
+			{
+				SelectedCharacters.AddItem(UnitState);
+			}
+			// END OF CHANGED
+		}
+		UpdateDisplay();
+	}
+	else if (kButton == DeselectAllButton)
+	{
+		SelectedCharacters.Length = 0;
+		UpdateDisplay();
+	}
+	
+	Movie.Pres.PlayUISound(eSUISound_MenuSelect);
+}
 
 function XComGameState_Unit GetSoldierInSlot( int iSlot )
 {
