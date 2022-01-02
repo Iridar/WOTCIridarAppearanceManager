@@ -2,11 +2,18 @@ class UICharacterPool_ListPools_AM extends UICharacterPool_ListPools;
 
 // Make importing and exporting CP units also import and export their extra data.
 
+simulated function OnClickLocal(UIList _list, int iItemIndex)
+{
+	super.OnClickLocal(_list, iItemIndex);
+	`AMLOG(`showvar(SelectedFilename));
+}
+
 simulated function DoImportCharacter(string FilenameForImport, int IndexOfCharacter)
 {
 	local CharacterPoolManager		ImportPool;
 	local XComGameState_Unit		ImportUnit;
 	local CharacterPoolExtraData	ImportExtraData;
+	local int i;
 
 	//Find the character pool we want to import from
 	foreach ImportablePoolsLoaded(ImportPool)
@@ -14,11 +21,20 @@ simulated function DoImportCharacter(string FilenameForImport, int IndexOfCharac
 		if (ImportPool.PoolFileName == FilenameForImport)
 			break;
 	}
+	// Okay, so original code appears to be broken AF, and this failsafe is the only thing that keeps this pile of shit & sticks working with renamed pools.
+	// EDIT: Updating the SelectedFilename previously should make this failsafe unnecessary, but keeping it just in case.
+	if (ImportPool == none)
+	{
+		ImportPool = ImportablePoolsLoaded[0];
+	}
 	//`assert(ImportPool.PoolFileName != FilenameForImport);
 	if (ImportPool.PoolFileName != FilenameForImport)
 	{
 		`redscreen(GetFuncName() @ "WARNING :: Incorrect ImportPool filename:" @ ImportPool.PoolFileName @ "expected:" @ FilenameForImport);
+		`AMLOG("WARNING :: Incorrect ImportPool filename:" @ ImportPool.PoolFileName @ "expected:" @ FilenameForImport);
 	}
+
+	`AMLOG("ImportPool class:" @ ImportPool.Class.Name @ "CharacterPoolMgr class:" @ CharacterPoolMgr.Class.Name @ "Has units inside:" @ ImportPool.CharacterPool.Length);
 
 	//Grab the unit (we already know the index)
 	ImportUnit = ImportPool.CharacterPool[IndexOfCharacter];
@@ -64,6 +80,7 @@ simulated function DoImportAllCharacters(string FilenameForImport)
 		if (ImportPool.PoolFileName != FilenameForImport)
 		{
 			`redscreen(GetFuncName() @ "WARNING :: Incorrect ImportPool filename:" @ ImportPool.PoolFileName @ "expected:" @ FilenameForImport);
+			`AMLOG("WARNING :: Incorrect ImportPool filename:" @ ImportPool.PoolFileName @ "expected:" @ FilenameForImport);
 		}
 
 		//Grab each unit and put it in the default pool
@@ -181,6 +198,12 @@ simulated function array<string> GetImportList()
 		SelectedPool.PoolFileName = SelectedFilename;
 		SelectedPool.LoadCharacterPool();
 		ImportablePoolsLoaded.AddItem(SelectedPool);
+
+		// Apparently LoadCharacterPool() may change the PoolFileName, doing stuff like replating empty space with an underscore.
+		// So we have to update the SelectedFilename for other logic to run correctly.
+		SelectedFilename = SelectedPool.PoolFileName;
+
+		//`AMLOG("Adding Pool as importable:" @ SelectedPool.PoolFileName @ SelectedFilename);
 	}
 
 	foreach SelectedPool.CharacterPool(PoolUnit)
