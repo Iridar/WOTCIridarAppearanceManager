@@ -889,15 +889,16 @@ private function OnSaveAsUniformInputBoxAccepted(string strLastName)
 		//	return;
 		//}
 
-		NewUnit = PoolMgr.AddUnitToCharacterPool(ArmoryUnit);
-		//NewUnit.SetTAppearance(ArmoryPawn.m_kAppearance);
+		NewUnit = PoolMgr.CreateSoldier(ArmoryUnit.GetMyTemplateName());
+		NewUnit.SetTAppearance(ArmoryPawn.m_kAppearance);
 		NewUnit.SetCharacterName(class'UISL_AppearanceManager'.default.strUniformSoldierFirstName, strLastName, "");
-		//NewUnit.SetCountry(ArmoryUnit.GetCountry());
+		NewUnit.SetCountry(ArmoryUnit.GetCountry());
 		NewUnit.kAppearance.iAttitude = 0;
 		NewUnit.UpdatePersonalityTemplate();
 		NewUnit.bAllowedTypeSoldier = false;
 		NewUnit.bAllowedTypeVIP = false;
 		NewUnit.bAllowedTypeDarkVIP = false;
+		NewUnit = PoolMgr.AddUnitToCharacterPool(NewUnit);
 		
 		PoolMgr.SetUniformStatus(NewUnit, EUS_Manual);
 		NewUnit.StoreAppearance(ArmoryPawn.m_kAppearance.iGender, ArmorTemplateName);

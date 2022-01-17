@@ -13,7 +13,7 @@ simulated function DoImportCharacter(string FilenameForImport, int IndexOfCharac
 	local CharacterPoolManager		ImportPool;
 	local XComGameState_Unit		ImportUnit;
 	local CharacterPoolExtraData	ImportExtraData;
-	local int i;
+	//local int i;
 
 	//Find the character pool we want to import from
 	foreach ImportablePoolsLoaded(ImportPool)
