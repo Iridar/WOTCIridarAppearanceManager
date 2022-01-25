@@ -2284,7 +2284,13 @@ private function SavePresetCheckboxPositions()
 		}
 	}
 	
+	SavePresetConfig();
+}
+
+function SavePresetConfig()
+{	
 	default.CheckboxPresets = CheckboxPresets; // This is actually necessary
+	default.Presets = Presets;
 	SaveConfig();
 }
 
@@ -2390,9 +2396,7 @@ private function OnCopyPresetButtonClicked(UIButton ButtonSource)
 		}
 	}
 
-	default.CheckboxPresets = CheckboxPresets;
-	SaveConfig();
-
+	SavePresetConfig();
 	UpdateOptionsList();
 	ApplyCheckboxPresetPositions();
 	UpdateUnitAppearance();
@@ -2449,9 +2453,7 @@ function OnCreatePresetInputBoxAccepted(string text)
 		}
 	}
 
-	default.CheckboxPresets = CheckboxPresets;
-	default.Presets = Presets;
-	self.SaveConfig();
+	SavePresetConfig();
 
 	CurrentPreset = NewPresetName;
 	//ApplyCheckboxPresetPositions(); // No need, settings would be identical.
@@ -2569,10 +2571,7 @@ private function OnDeletePresetButtonClicked(UIButton ButtonSource)
 		}
 	}
 
-	default.Presets = Presets;
-	default.CheckboxPresets = CheckboxPresets;
-	SaveConfig();
-
+	SavePresetConfig();
 	CurrentPreset = 'PresetDefault';
 	UpdateOptionsList();
 	ApplyCheckboxPresetPositions();

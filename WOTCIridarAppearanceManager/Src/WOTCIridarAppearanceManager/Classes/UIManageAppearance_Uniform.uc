@@ -150,3 +150,14 @@ simulated function SaveCosmeticOptions()
 		PoolMgr.SaveCosmeticOptionsForUnit(CosmeticOptions, ArmoryUnit, GetGenderArmorTemplate());
 	}
 }
+
+function SavePresetConfig()
+{	
+	default.CheckboxPresets = CheckboxPresets;
+	default.Presets = Presets;
+
+	// We don't need config for this screen. All info about presets is saved in config for Manage Appearance screen.
+	class'UIManageAppearance'.default.CheckboxPresets = CheckboxPresets;
+	class'UIManageAppearance'.default.Presets = Presets;
+	class'UIManageAppearance'.static.StaticSaveConfig();
+}
