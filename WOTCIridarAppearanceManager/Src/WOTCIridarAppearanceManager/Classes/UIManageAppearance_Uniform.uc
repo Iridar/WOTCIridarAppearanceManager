@@ -150,3 +150,94 @@ simulated function SaveCosmeticOptions()
 		PoolMgr.SaveCosmeticOptionsForUnit(CosmeticOptions, ArmoryUnit, GetGenderArmorTemplate());
 	}
 }
+
+
+function OnCreatePresetInputBoxAccepted(string text)
+{
+	local CheckboxPresetStruct	NewPresetStruct;
+	local name					NewPresetName;
+	local int i;
+
+	if (text == "")
+	{
+		// No empty preset names
+		ShowInfoPopup(strDuplicatePresetDisallowedTitle, strInvalidPresetNameText, eDialog_Warning);
+		return;
+	}
+
+	text = Repl(text, " ", "_"); // Oh, you want to break this preset by putting spaces into a 'name'? I'm afraid I can't let you do that, Dave..
+
+	NewPresetName = name(text);
+
+	if (Presets.Find(NewPresetName) != INDEX_NONE)
+	{
+		// Not letting you create duplicates either.
+		ShowInfoPopup(strDuplicatePresetDisallowedTitle, strDuplicatePresetDisallowedText, eDialog_Warning);
+		return;
+	}
+
+	Presets.AddItem(NewPresetName);
+
+	// Copy settings from current preset to the new preset
+	for (i = CheckboxPresets.Length - 1; i >= 0; i--)
+	{
+		if (CheckboxPresets[i].Preset == CurrentPreset)
+		{
+			NewPresetStruct = CheckboxPresets[i];
+			NewPresetStruct.Preset = NewPresetName;
+			CheckboxPresets.AddItem(NewPresetStruct);
+
+			`AMLOG("Copied:" @ i @ CurrentPreset @ NewPresetStruct.Preset @ NewPresetStruct.OptionName @ NewPresetStruct.bChecked);
+		}
+	}
+
+	default.CheckboxPresets = CheckboxPresets;
+	default.Presets = Presets;
+
+	// --------------------
+	// Update main screen's config to make sure presets created on the Configure Uniform screen are properly saved.
+	class'UIManageAppearance'.default.Presets = Presets;
+	class'UIManageAppearance'.default.CheckboxPresets = CheckboxPresets;
+	class'UIManageAppearance'.static.StaticSaveConfig();
+	// --------------------
+
+	CurrentPreset = NewPresetName;
+	//ApplyCheckboxPresetPositions(); // No need, settings would be identical.
+	UpdateOptionsList();
+}
+
+function OnDeletePresetButtonClicked(UIButton ButtonSource)
+{
+	//local name DeletePreset;
+	local int i;
+
+	//DeletePreset = ButtonSource.GetParent(class'UIMechaListItem_Button').MCName;
+
+	`AMLOG("Deleting preset:" @ CurrentPreset @ "This preset exists:" @ Presets.Find(CurrentPreset) != INDEX_NONE);
+
+	Presets.RemoveItem(CurrentPreset);
+
+	// Wipe preset settings for the preset we're deleting.
+	for (i = CheckboxPresets.Length - 1; i >= 0; i--)
+	{
+		if (CheckboxPresets[i].Preset == CurrentPreset)
+		{
+			CheckboxPresets.Remove(i, 1);
+		}
+	}
+
+	default.Presets = Presets;
+	default.CheckboxPresets = CheckboxPresets;
+	
+	// --------------------
+	// Update main screen's config to make sure presets deleted on the Configure Uniform screen are properly saved.
+	class'UIManageAppearance'.default.Presets = Presets;
+	class'UIManageAppearance'.default.CheckboxPresets = CheckboxPresets;
+	class'UIManageAppearance'.static.StaticSaveConfig();
+	// --------------------
+
+	CurrentPreset = 'PresetDefault';
+	UpdateOptionsList();
+	ApplyCheckboxPresetPositions();
+	UpdateUnitAppearance();
+}
