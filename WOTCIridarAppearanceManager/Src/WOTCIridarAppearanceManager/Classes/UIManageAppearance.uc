@@ -362,7 +362,7 @@ private function CacheArmoryUnitData()
 	}
 	else
 	{
-		ArmorTemplate = class'Help'.static.GetItemTemplateFromCosmeticTorso(ArmoryPawn.m_kAppearance.nmTorso);
+		ArmorTemplate = class'Help'.static.GetItemTemplateFromCosmeticTorso(ArmoryUnit.kAppearance.nmTorso);
 		if (ArmorTemplate != none)
 		{
 			ArmorTemplateName = ArmorTemplate.DataName;
@@ -370,7 +370,7 @@ private function CacheArmoryUnitData()
 	}
 
 	SelectedUnit = ArmoryUnit;
-	OriginalAppearance = ArmoryPawn.m_kAppearance;
+	OriginalAppearance = ArmoryUnit.kAppearance;
 	PreviousAppearance = OriginalAppearance;
 	SelectedAppearance = OriginalAppearance;
 	OriginalAttitude = ArmoryUnit.GetPersonalityTemplate();

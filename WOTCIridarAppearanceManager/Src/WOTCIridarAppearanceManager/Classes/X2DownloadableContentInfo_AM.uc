@@ -21,6 +21,12 @@ exec function SetArmorTemplateName(name NewName)
 	`LOG("Set ArmorTemplateName to:" @ NewName,, 'IRITEST');
 }
 
+exec function CheckPawn()
+{
+	`LOG("Current Pawn's weapon tint:" @ XComHumanPawn(UICustomize(`SCREENSTACK.GetCurrentScreen()).CustomizeManager.ActorPawn).m_kAppearance.iWeaponTint @ XComHumanPawn(UICustomize(`SCREENSTACK.GetCurrentScreen()).CustomizeManager.ActorPawn).m_kAppearance.nmWeaponPattern);
+	`LOG("Current Pawn's weapon tint:" @ UICustomize(`SCREENSTACK.GetCurrentScreen()).CustomizeManager.UpdatedUnitState.GetFullName() @ UICustomize(`SCREENSTACK.GetCurrentScreen()).CustomizeManager.UpdatedUnitState.kAppearance.iWeaponTint @ UICustomize(`SCREENSTACK.GetCurrentScreen()).CustomizeManager.UpdatedUnitState.kAppearance.nmWeaponPattern);
+}
+
 /*
 static event OnLoadedSavedGame()
 {
