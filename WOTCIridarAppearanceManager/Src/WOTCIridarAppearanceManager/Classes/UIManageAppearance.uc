@@ -1325,7 +1325,7 @@ private static function bool AreUnitsSameType(const XComGameState_Unit FirstUnit
 // ================================================================================================================================================
 // FUNCTIONS FOR APPLYING APPEARANCE CHANGES
 
-function UpdateUnitAppearance()
+private function UpdateUnitAppearance()
 {
 	local TAppearance NewAppearance;
 
@@ -2288,7 +2288,7 @@ private function SavePresetCheckboxPositions()
 	SaveConfig();
 }
 
-function ApplyCheckboxPresetPositions()
+private function ApplyCheckboxPresetPositions()
 {
 	local CheckboxPresetStruct CheckboxPreset;
 
@@ -2549,7 +2549,7 @@ private function UpdatePresetListItemsButtons()
 	}
 }
 
-function OnDeletePresetButtonClicked(UIButton ButtonSource)
+private function OnDeletePresetButtonClicked(UIButton ButtonSource)
 {
 	//local name DeletePreset;
 	local int i;
@@ -3214,7 +3214,7 @@ final function bool IsUnitPresentInCampaign(const XComGameState_Unit CheckUnit)
 	return false;
 }
 
-final function ShowInfoPopup(string strTitle, string strText, optional EUIDialogBoxDisplay eType)
+private function ShowInfoPopup(string strTitle, string strText, optional EUIDialogBoxDisplay eType)
 {
 	local TDialogueBoxData kDialogData;
 
