@@ -241,6 +241,7 @@ static private function EventListenerReturn OnPostAliensSpawned(Object EventData
 	local XComGameState_Unit		UnitState;
 	local CharacterPoolManager_AM	CharacterPool;
 	local TAppearance				NewAppearance;
+	local XComGameState_Item		ItemState;
 
 	CharacterPool = `CHARACTERPOOLMGRAM;
 	if (CharacterPool == none)
@@ -248,20 +249,31 @@ static private function EventListenerReturn OnPostAliensSpawned(Object EventData
 
 	foreach StartState.IterateByClassType(class'XComGameState_Unit', UnitState)
 	{
-		//if (UnitState.IsSoldier())
-		//	continue;
-
-		`AMLOG(UnitState.GetFullName() @ UnitState.GetMyTemplateGroupName());
-			
-		NewAppearance = UnitState.kAppearance;
-		if (CharacterPool.GetUniformAppearanceForNonSoldier(NewAppearance, UnitState))
+		if (UnitState.IsSoldier())
 		{
-			`AMLOG("Aplying uniform appearance");
+			ItemState = UnitState.GetItemInSlot(eInvSlot_Armor, StartState);
+			if (ItemState == none)
+				return ELR_NoInterrupt;
 
-			UnitState.SetTAppearance(NewAppearance);
-			UnitState.StoreAppearance();
+			`AMLOG(UnitState.GetFullName() @ UnitState.GetMyTemplateGroupName() @ "is a soldier");
+			MaybeApplyUniformAppearance(UnitState, ItemState.GetMyTemplateName(), StartState);
 		}
-		else `AMLOG("Has no uniform");
+		else
+		{
+
+			`AMLOG(UnitState.GetFullName() @ UnitState.GetMyTemplateGroupName() @ "is not a soldier");
+			
+			NewAppearance = UnitState.kAppearance;
+			if (CharacterPool.GetUniformAppearanceForNonSoldier(NewAppearance, UnitState))
+			{
+				`AMLOG("Aplying uniform appearance for non-soldier");
+
+				UnitState.SetTAppearance(NewAppearance);
+				UnitState.StoreAppearance();
+			}
+			else `AMLOG("Has no non-soldier uniform.");
+		}
+
 	}
 	return ELR_NoInterrupt;
 }
