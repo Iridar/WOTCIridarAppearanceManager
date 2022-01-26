@@ -1225,10 +1225,13 @@ private function string GetUnitDisplayStringForAppearanceList(const XComGameStat
 		bAddDelim = true;
 	}
 
+	
 	strNickname = UnitState.GetNickName();
-	if (strClassName != "") strNickname = Repl(strNickname, strClassName, "");
+	// If the soldier is uniform, removing their nickname if it's the same as their soldier class name
+	if (strClassName != "" && PoolMgr.GetUniformStatus(UnitState) > EUS_NotUniform) strNickname = Repl(strNickname, strClassName, "");
+
 	RemoveEdgeEmptySpaces(strNickname);
-	if (strNickname != "")
+	if (strNickname != "" && strNickname != "''")
 	{
 		SoldierString $= strNickname $ " ";
 		bAddDelim = true;
