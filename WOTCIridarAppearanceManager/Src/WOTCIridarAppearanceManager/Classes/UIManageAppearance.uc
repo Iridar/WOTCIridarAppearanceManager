@@ -30,14 +30,10 @@ Pawn sometimes remains on character pool screen.
 ## Addressed
 
 Make chevron animation on Apply Changes button go away when there's no changes to apply. Alternatively, hide the button.
-
 Should Apply Changes button select Original Apperance? --No, it shouldn't, user might want to copy stuff one by one from selected appearance.
-
 Maybe allow Appearance Store button to work as a "reskin armor" button? - redundant, can be done with this mod's customization screen by importing unit's own appearance from another armor.
 
 ## Ideas for later
-
-Remember scroll position in the soldier list.
 
 Make text on UIMechaListItem_Button long enough to be obscured by the button scroll from under the button rather than go under it.
 
@@ -58,6 +54,9 @@ Set up uniforms from the armory
 Lock specific customization slots on the soldier, and lock them between all stored appearances whenever armor is equipped.
 
 Compatibility with Allies Unknown classes? Can't select them in the CP or something like that.
+Allies Unknown units with custom rookie class should be able to choose from different classes in CP
+I have no idea how they coded that, but it would appear that they stem from a separate species specific rookie template, then get a class independently, while the game properly treats them as rookies, allowing them to train in GTS. however in the character pool there is no option to change their class, which is an issue for anyone using the "use my class" mod
+
 Compatibility with Trainable Faction Soldiers? When switching to their class in character pool, the pawn gets "outdated", still wearing the last equipped armor on the soldier. Exiting and entering soldier customization fixes it.
 
 Save modlist in CP files, and warn if mods are missing.
@@ -67,9 +66,6 @@ Make character pool loadout actually show up in game, with a toggle.
 Investigate customizing off-duty (Underlay?) appearance.
 
 Make GetApplyChangesNumUnits() take into account gender of the targeted soldier, as depending on selected cosmetic options they may not receive any changes.
-
-Allies Unknown units with custom rookie class should be able to choose from different classes in CP
-I have no idea how they coded that, but it would appear that they stem from a separate species specific rookie template, then get a class independently, while the game properly treats them as rookies, allowing them to train in GTS. however in the character pool there is no option to change their class, which is an issue for anyone using the "use my class" mod
 
 When copying biography, automatically update soldier name and country (MCM toggle)
 Equipping weapons in CP will reskin them automatically with XSkin (RustyDios). Probably use a Tuple.
