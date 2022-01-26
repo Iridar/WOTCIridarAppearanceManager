@@ -113,6 +113,9 @@ DISABLE_APPEARANCE_VALIDATION_DEBUG_Tip = "If you start the game with cosmetic m
 DEBUG_LOGGING_Label = "Enable debug logging"
 DEBUG_LOGGING_Tip = "If enabled, the mod will print debug messages into the log file, located at:\n..\\Documents\\my games\\XCOM2 War of the Chosen\\XComGame\\Logs\\Launch.log"
 
+REMEMBER_SCROLLBAR_POSITION_IN_CHARACTER_POOL_Label = "Remember scrollbar position in Character Pool"
+REMEMBER_SCROLLBAR_POSITION_IN_CHARACTER_POOL_Tip = "If enabled, the mod will remember the position of the scrollbar while in Character Pool. Convenient for large Character Pools."
+
 AUTOMATIC_UNIFORM_MANAGEMENT_Label = "Enable automatic uniform management by default"
 AUTOMATIC_UNIFORM_MANAGEMENT_Tip = "If enabled, the mod will automatically apply uniforms to soldiers when they equip armor for the first time or when they are promoted to the squaddie rank. These uniforms have to be created and configured in Character Pool. This setting can also be configured for each soldier individually on the appearance customization screen."
 

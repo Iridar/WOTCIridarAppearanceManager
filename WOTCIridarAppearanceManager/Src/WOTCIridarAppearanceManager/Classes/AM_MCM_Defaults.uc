@@ -14,6 +14,7 @@ var config bool MANAGE_APPEARANCE_2D;
 var config bool MULTIPLE_UNIT_CHANGE_REQUIRES_CONFIRMATION;
 var config bool DISABLE_APPEARANCE_VALIDATION_REVIEW;
 var config bool DISABLE_APPEARANCE_VALIDATION_DEBUG;
+var config bool REMEMBER_SCROLLBAR_POSITION_IN_CHARACTER_POOL;
 var config bool DEBUG_LOGGING;
 
 // These are not exposed for MCM, they are for UIManageAppearance.

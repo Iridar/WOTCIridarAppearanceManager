@@ -8,6 +8,10 @@ var private bool bShowUniforms;
 var private bool bShiftPressed;
 var private int  PrevSelectedIndex;
 
+var private float ScrollPercent;
+
+`include(WOTCIridarAppearanceManager\Src\ModConfigMenuAPI\MCM_API_CfgHelpers.uci)
+
 simulated function InitScreen(XComPlayerController InitController, UIMovie InitMovie, optional name InitName)
 {
 	local float RunningY;
@@ -526,6 +530,26 @@ private function OnSearchInputBoxAccepted(string text)
 
 	SearchButton.SetText(strShowText);
 	UpdateData();
+}
+
+simulated function OnLoseFocus()
+{
+	super.OnLoseFocus();
+
+	if (List.Scrollbar != none && `GETMCMVAR(REMEMBER_SCROLLBAR_POSITION_IN_CHARACTER_POOL))
+	{
+		ScrollPercent = List.Scrollbar.percent;
+	}
+}
+
+simulated function OnReceiveFocus()
+{
+	super.OnReceiveFocus();
+
+	if (List.Scrollbar != none && `GETMCMVAR(REMEMBER_SCROLLBAR_POSITION_IN_CHARACTER_POOL))
+	{
+		List.Scrollbar.SetThumbAtPercent(ScrollPercent);
+	}
 }
 
 defaultproperties
