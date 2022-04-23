@@ -242,13 +242,19 @@ static private function EventListenerReturn OnPostAliensSpawned(Object EventData
 	local CharacterPoolManager_AM	CharacterPool;
 	local TAppearance				NewAppearance;
 	local XComGameState_Item		ItemState;
+	local XComGameState_HeadquartersXCom XComHQ;
 
 	CharacterPool = `CHARACTERPOOLMGRAM;
 	if (CharacterPool == none)
 		return ELR_NoInterrupt;
 
+	XComHQ = `XCOMHQ;
+
 	foreach StartState.IterateByClassType(class'XComGameState_Unit', UnitState)
 	{
+		if (XComHQ.IsUnitInCrew(UnitState.GetReference()))
+			continue;
+
 		if (UnitState.IsSoldier())
 		{
 			ItemState = UnitState.GetItemInSlot(eInvSlot_Armor, StartState);

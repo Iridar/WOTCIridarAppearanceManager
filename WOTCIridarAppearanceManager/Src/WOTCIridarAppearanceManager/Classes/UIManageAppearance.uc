@@ -7,6 +7,7 @@ class UIManageAppearance extends UICustomize;
 Validate Appearance caused double pawn. Need for Validate Appearance occured when deleting appearance stores caused the unit to glitch out.
 Attempting to switch the gender of a newly generated Reaper somehow switched their gender to None. It cannot be switched off of None.
 The intermittent neanderthal bug.
+Soldier sometimes squatting
 
 # Bugs that were already fixed, potentially:
 
@@ -34,6 +35,10 @@ Should Apply Changes button select Original Apperance? --No, it shouldn't, user 
 Maybe allow Appearance Store button to work as a "reskin armor" button? - redundant, can be done with this mod's customization screen by importing unit's own appearance from another armor.
 
 ## Ideas for later
+
+Cycle "can appear as" filters while on Character Pool screen.
+
+Make the mod put on uniforms on friendly units that enter combat mid-mission, like from Additional Mission Types mod. (Void Light / resistance beacon item)
 
 Make text on UIMechaListItem_Button long enough to be obscured by the button scroll from under the button rather than go under it.
 

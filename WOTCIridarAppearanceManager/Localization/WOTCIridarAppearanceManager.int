@@ -41,7 +41,7 @@ strCannotDeleteThisPreset = "The mod cannot function without this preset, it can
 strConfirmApplyChangesTitle = "APPLY CHANGES?"
 strConfirmApplyChangesText = "Attention! You are about to apply appearance changes to %NUM_UNITS% units. Proceed?"
 
-strCreatePreset = "Create Preset""
+strCreatePreset = "Create Preset"
 strCreatePresetTitle = "Enter new preset name:"
 strCreatePresetText = "_Copy"
 
