@@ -45,6 +45,7 @@ static private function CHEventListenerTemplate Create_ListenerTemplate_Tactical
 	Template.AddCHEvent('UnitRankUp', OnUnitRankUp, ELD_Immediate, 50);
 	Template.AddCHEvent('PostAliensSpawned', OnPostAliensSpawned, ELD_Immediate, 50);
 	Template.AddCHEvent('OnCreateCinematicPawn', OnCreateCinematicPawn, ELD_Immediate, 10);
+	Template.AddCHEvent('OnUnitBeginPlay', OnUnitBeginPlay, ELD_OnVisualizationBlockStarted, 10);
 	Template.AddCHEvent(default.RefreshPawnEventName, OnRefreshPawnEvent, ELD_OnStateSubmitted, 50);
 
 	return Template;
@@ -284,6 +285,63 @@ static private function EventListenerReturn OnPostAliensSpawned(Object EventData
 	return ELR_NoInterrupt;
 }
 
+
+static private function EventListenerReturn OnUnitBeginPlay(Object EventData, Object EventSource, XComGameState StartState, Name Event, Object CallbackData)
+{
+	local XComGameState_Unit		UnitState;
+	local XComHumanPawn				HumanPawn;
+	local CharacterPoolManager_AM	CharacterPool;
+	local TAppearance				NewAppearance;
+	local XGUnit					Visualizer;
+	local XComGameState				NewGameState;
+
+	UnitState = XComGameState_Unit(EventData);
+	`AMLOG("Running for:" @ UnitState.GetFullName() @ UnitState != none @ UnitState.IsSoldier());
+	if (UnitState == none || UnitState.IsSoldier()) // Used only for non-soldiers.
+		return ELR_NoInterrupt;
+
+	Visualizer = XGUnit(`XCOMHISTORY.GetVisualizer(UnitState.ObjectID));
+	`AMLOG("Have XGUnit:" @ Visualizer != none);
+	if (Visualizer == none)
+		return ELR_NoInterrupt;
+
+	HumanPawn = XComHumanPawn(Visualizer.GetPawn());
+	`AMLOG("Have HumanPawn:" @ HumanPawn != none);
+	if (HumanPawn == none)
+		return ELR_NoInterrupt;
+
+	CharacterPool = `CHARACTERPOOLMGRAM;
+	if (CharacterPool == none)
+		return ELR_NoInterrupt;
+			
+	NewAppearance = UnitState.kAppearance;
+	`AMLOG(UnitState.GetFullName() @ UnitState.GetMyTemplateGroupName() @ "Old torso:" @ NewAppearance.nmTorso);
+
+	if (CharacterPool.GetUniformAppearanceForNonSoldier(NewAppearance, UnitState))
+	{
+		//if (NewAppearance.nmTorso != '')
+		//{	
+		//	  HumanPawn.Mesh = none; // Crashes the gume
+		//}
+		`AMLOG("Aplying uniform appearance.");
+		`AMLOG(`ShowVar(NewAppearance.nmTorso));
+		`AMLOG(`ShowVar(NewAppearance.nmArms));
+		`AMLOG(`ShowVar(NewAppearance.nmLeftArm));
+		`AMLOG(`ShowVar(NewAppearance.nmRightArm));
+		`AMLOG(`ShowVar(NewAppearance.nmLegs));
+		//HumanPawn.bShouldUseUnderlay = false;
+
+		NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState("Applying non-soldier uniform");
+		UnitState = XComGameState_Unit(NewGameState.ModifyStateObject(UnitState.Class, UnitState.ObjectID));
+		UnitState.SetTAppearance(NewAppearance);
+		`GAMERULES.SubmitGameState(NewGameState);
+		HumanPawn.SetAppearance(NewAppearance, false);
+		class'Help'.static.RequestFullPawnContentForClerk(UnitState, HumanPawn, NewAppearance);
+	}
+	else `AMLOG("Has no uniform");
+	
+	return ELR_NoInterrupt;
+}
 
 static private function EventListenerReturn OnCreateCinematicPawn(Object EventData, Object EventSource, XComGameState StartState, Name Event, Object CallbackData)
 {
