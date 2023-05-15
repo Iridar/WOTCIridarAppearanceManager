@@ -1,7 +1,8 @@
-class UISL_AppearanceManager extends UIScreenListener;
+class UISL_AppearanceManager extends UIScreenListener config(UI);
 
 var localized string strManageAppearance;
 var localized string strStoredAppearance;
+var localized string strStoredAppearanceDisabled;
 var localized string strConvertButtonTitle;
 var localized string strConverToUniform;
 var localized string strConvertToSoldier;
@@ -14,6 +15,8 @@ var localized array<string> strUniformStatus;
 var localized string strAutoManageUniformForUnitTitle;
 var localized array<string> strAutoManageUniformForUnit;
 var localized string strUniformUnitTypes;
+
+var config bool bUnrestrictedCustomization;
 
 `include(WOTCIridarAppearanceManager\Src\ModConfigMenuAPI\MCM_API_CfgHelpers.uci)
 
@@ -141,8 +144,17 @@ private function ApplyScreenChanges()
 		strManageAppearance, OnManageAppearanceItemClicked);
 
 	// ## Appearance Store Button
-	CreateOrUpdateListItem(ListIndex, CustomizeScreen, 
+	if (bUnrestrictedCustomization)
+	{
+		// Disabled when used alongside UC.
+		CreateOrUpdateListItem(ListIndex, CustomizeScreen, 
+			strStoredAppearance, OnAppearanceStoreItemClicked, strStoredAppearanceDisabled);
+	}
+	else
+	{
+		CreateOrUpdateListItem(ListIndex, CustomizeScreen, 
 		strStoredAppearance, OnAppearanceStoreItemClicked);
+	}
 
 	if (CustomizeScreen.bInArmory) // Uniform units should never be able to exist inside actual campaigns. We're in Character Pool past this point.
 		return;
@@ -629,7 +641,7 @@ private function OnAutoManageUniformDropdownSelectionChanged(UIDropdown Dropdown
 // ===================================================================
 // INTERNAL HELPERS
 
-private function CreateOrUpdateListItem(out int ListIndex, UICustomize CustomizeScreen, string strDesc, delegate<OnClickDelegate> OnListItemClicked)
+private function CreateOrUpdateListItem(out int ListIndex, UICustomize CustomizeScreen, string strDesc, delegate<OnClickDelegate> OnListItemClicked, optional string DisabledReason)
 {
 	local UIMechaListItem ListItem;
 
@@ -639,6 +651,11 @@ private function CreateOrUpdateListItem(out int ListIndex, UICustomize Customize
 	if (ListItem.Desc.htmlText != strDesc || string(ListItem.OnClickDelegate) != string(OnListItemClicked))
 	{
 		ListItem.UpdateDataDescription(strDesc, OnListItemClicked);
+		if (DisabledReason != "")
+		{
+			ListItem.SetDisabled(true, DisabledReason);
+			//SetTooltip(ListItem, DisabledReason);
+		}
 	}
 
 	ListItem.Show();

@@ -549,6 +549,47 @@ static function string ColourText(string strValue, string strColour)
 	return "<font color='#" $ strColour $ "'>" $ strValue $ "</font>";
 }
 
+
+// Shamelessly stolen from Unrestricted Customization.
+static function SetTooltip( UIPanel _panel, string _text, float _maxWidth=500, float _maxHeight=500 )
+{
+	if( _panel.bHasTooltip )
+	{
+		_panel.RemoveTooltip();
+	}
+
+	if( _text != "" )
+	{
+		//_panel.bProcessesMouseEvents = true;
+		_panel.ProcessMouseEvents();
+
+		//CachedTooltipId = Movie.Pres.m_kTooltipMgr.AddNewTooltipTextBox(Text, OffsetX, OffsetY, string(.MCPath), 
+		//	Title, bRelativeLocation, TooltipAnchor, bFollowMouse, MaxW, MaxH, Hover, Colour, DisplayTime, Delay, AnimateIn, AnimateOut);
+
+		_panel.CachedTooltipId = _panel.Movie.Pres.m_kTooltipMgr.AddNewTooltipTextBox(
+			_text,
+			100,
+			100,
+			string(_panel.MCPath),
+			"",
+			class'UITextTooltip'.default.bRelativeLocation,
+			class'UITextTooltip'.default.Anchor,
+			class'UITextTooltip'.default.bFollowMouse,
+			_maxWidth, // class'UITextTooltip'.default.maxW,
+			_maxHeight, // class'UITextTooltip'.default.maxH,
+			class'UITextTooltip'.default.eTTBehavior,
+			class'UITextTooltip'.default.eTTColor,
+			class'UITextTooltip'.default.tDisplayTime,
+			0.0f, //class'UITextTooltip'.default.tDelay
+			class'UITextTooltip'.default.tAnimateIn,
+			class'UITextTooltip'.default.tAnimateOut
+		);
+
+		_panel.bHasTooltip = true;
+	}
+}
+
+
 defaultproperties
 {
 	AutoManageUniformForUnitValueName = "IRI_AutoManageUniform_Value"

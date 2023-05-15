@@ -68,6 +68,7 @@ strLoadBackupText = "Appearance Manager has detected that your Character Pool or
 
 strManageAppearance = "Manage Appearance"
 strStoredAppearance = "Stored Appearance"
+strStoredAppearanceDisabled = "Appearance Store is disabled by Unrestricted Customization."
 
 strConvertButtonTitle = "Convert"
 
