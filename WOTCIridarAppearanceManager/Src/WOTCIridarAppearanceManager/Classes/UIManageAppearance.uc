@@ -4,6 +4,10 @@ class UIManageAppearance extends UICustomize;
 /*
 # Bugs to be aware of:
 
+not entirely 'fixed' by the UCR mod.. it's an issue with the camera whilst changing parts for head cosmetics.. need to keep telling the camera to do ;
+CustomizeManager.UpdateCamera(eUICustomizeCat_Face);
+which in turn also sets the unit temporarily to "by the book" attitude (c) RustyDios
+
 Validate Appearance caused double pawn. Need for Validate Appearance occured when deleting appearance stores caused the unit to glitch out.
 Attempting to switch the gender of a newly generated Reaper somehow switched their gender to None. It cannot be switched off of None.
 The intermittent neanderthal bug.

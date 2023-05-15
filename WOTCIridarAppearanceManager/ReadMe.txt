@@ -7,6 +7,9 @@ Music promoted by https://www.chosic.com/free-music/all/
 Attribution 4.0 International (CC BY 4.0)
 https://creativecommons.org/licenses/by/4.0/
 
+BUUUUUGS:
+- (Vee) "Apply to same soldier class" - doesn't work, I've had to manually manage the appearance of rookies that leveled up to squaddie
+
 
 
 [WOTC] Iridar's Appearance Manager
