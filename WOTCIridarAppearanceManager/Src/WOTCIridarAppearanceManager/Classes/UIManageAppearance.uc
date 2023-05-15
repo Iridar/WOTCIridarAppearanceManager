@@ -1365,7 +1365,6 @@ private function UpdateUnitAppearance()
 	}	
 	else
 	{
-		CustomizeManager.UpdateCamera(eUICustomizeCat_Face);
 		UpdatePawnAttitudeAnimation(); // OnRefreshPawn() will call this automatically
 	}
 }
