@@ -1781,6 +1781,8 @@ private function ApplyChangesToArmoryUnit()
 
 	UpdateOptionsList();
 	UpdateUnitAppearance();
+
+	CustomizeManager.Init(ArmoryUnit, ArmoryPawn, NewGameState);
 }
 
 function CancelChanges()

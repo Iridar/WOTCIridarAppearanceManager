@@ -8,12 +8,14 @@ Attribution 4.0 International (CC BY 4.0)
 https://creativecommons.org/licenses/by/4.0/
 
 BUUUUUGS:
+- check uniform management setting for non-soldiers (engineers)
+- disable equipping different torso armor with UC on?
+- if UC enabled, soldiers didn't get their character pool appearance, even with "never accept uniforms" enabled @pinguin#4842 on x2modding
+- pawn sometimes doesn't generate for female faction heroes
+- backing out from character customization to Character Pool screen sometimes fails to show a screen, softlocking the game.
+- [b][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2692116416][WOTC] MOCX Customizer+[/url][/b]
+- Soldiers sometimes squat during customization. 
 
-
-Changelog:
-- Stored Appearance button is now disabled when Appearance Manager is used alongside Unrestricted Customization - it was useless anyway and just confused people.
-- Tentative fix for soldier sometimes squatting during appearance customization.
-- Cancelling "save as uniform" will no longer create the uniform.
 
 [WOTC] Iridar's Appearance Manager
 
