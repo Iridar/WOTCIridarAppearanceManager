@@ -8,9 +8,12 @@ Attribution 4.0 International (CC BY 4.0)
 https://creativecommons.org/licenses/by/4.0/
 
 BUUUUUGS:
-- (Vee) "Apply to same soldier class" - doesn't work, I've had to manually manage the appearance of rookies that leveled up to squaddie
 
 
+Changelog:
+- Stored Appearance button is now disabled when Appearance Manager is used alongside Unrestricted Customization - it was useless anyway and just confused people.
+- Tentative fix for soldier sometimes squatting during appearance customization.
+- Cancelling "save as uniform" will no longer create the uniform.
 
 [WOTC] Iridar's Appearance Manager
 
