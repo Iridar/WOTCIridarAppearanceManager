@@ -151,6 +151,7 @@ private function OnPawnVisualsCreated(XComUnitPawn inPawn)
 	else if (CustomizeScreen != none)
 	{
 		CustomizeScreen.UpdateData(); // Play HQ Idle Anim
+		CustomizeScreen.CustomizeManager.UpdateCamera(eUICustomizeCat_Face);
 	}
 
 	`AMLOG("Running for unit:" @ UnitState.GetFullName() @ "Pawn state:" @ CustomizationManager.ActorPawn.GetStateName());
