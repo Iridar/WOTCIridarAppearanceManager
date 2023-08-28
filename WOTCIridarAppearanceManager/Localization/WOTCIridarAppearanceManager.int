@@ -126,6 +126,12 @@ MANAGE_APPEARANCE_2D_Tip = "Makes the screen render on top of the soldier model,
 MULTIPLE_UNIT_CHANGE_REQUIRES_CONFIRMATION_Label = "Require confirmation to apply changes to multiple units"
 MULTIPLE_UNIT_CHANGE_REQUIRES_CONFIRMATION_Tip = "If enabled, Appearance Manager will show a popup message when you click \"Apply Changes\" if that will result in changing appearance of multiple units."
 
+FEMALE_CHANCE_Label = "Female Generation Chance"
+FEMALE_CHANCE_Tip = "Chance of generating a female soldier when generating random soldiers."
+
+CHAR_POOL_MIXED_CHANCE_Label = "Mixed Character Pool Chance"
+CHAR_POOL_MIXED_CHANCE_Tip = "Chance of using a soldier from Character Pool when Character Pool Usage is set to \"Random and Character Pool\"."
+
 [Help]
 strCurrentAppearance = "(Current)"
 

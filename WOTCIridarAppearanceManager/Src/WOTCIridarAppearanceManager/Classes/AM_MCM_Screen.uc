@@ -16,6 +16,9 @@ var localized string GroupHeader;
 `MCM_API_AutoCheckBoxVars(REMEMBER_SCROLLBAR_POSITION_IN_CHARACTER_POOL);
 `MCM_API_AutoCheckBoxVars(DEBUG_LOGGING);
 
+//`MCM_API_AutoSliderVars(FEMALE_CHANCE, int)
+`MCM_API_AutoSliderVars(CHAR_POOL_MIXED_CHANCE);
+
 `include(WOTCIridarAppearanceManager\Src\ModConfigMenuAPI\MCM_API_CfgHelpers.uci)
 
 `MCM_API_AutoCheckBoxFns(AUTOMATIC_UNIFORM_MANAGEMENT, 1);
@@ -25,6 +28,9 @@ var localized string GroupHeader;
 `MCM_API_AutoCheckBoxFns(DISABLE_APPEARANCE_VALIDATION_DEBUG, 1);
 `MCM_API_AutoCheckBoxFns(REMEMBER_SCROLLBAR_POSITION_IN_CHARACTER_POOL, 3);
 `MCM_API_AutoCheckBoxFns(DEBUG_LOGGING, 1);
+
+//`MCM_API_AutoSliderFns(FEMALE_CHANCE, int, 4)
+`MCM_API_AutoSliderFns(CHAR_POOL_MIXED_CHANCE,, 4);
 
 event OnInit(UIScreen Screen)
 {
@@ -51,7 +57,11 @@ simulated function ClientModCallback(MCM_API_Instance ConfigAPI, int GameMode)
 	`MCM_API_AutoAddCheckBox(Group, REMEMBER_SCROLLBAR_POSITION_IN_CHARACTER_POOL, 3);	
 	`MCM_API_AutoAddCheckBox(Group, DISABLE_APPEARANCE_VALIDATION_REVIEW);	
 	`MCM_API_AutoAddCheckBox(Group, DISABLE_APPEARANCE_VALIDATION_DEBUG);	
+	`MCM_API_AutoAddSLider(Group, CHAR_POOL_MIXED_CHANCE, 0, 100, 1);
 	`MCM_API_AutoAddCheckBox(Group, DEBUG_LOGGING);
+
+	//`MCM_API_AutoAddSLider(Group, FEMALE_CHANCE, 0, 100, 1);
+	
 
 	Group.AddLabel('Label_End', "Created by Iridar | www.patreon.com/Iridar", "Thank you for using my mods, I hope you enjoy! Please consider supporting me at Patreon so I can afford the time to make more awesome mods <3");
 	
@@ -67,6 +77,9 @@ simulated function LoadSavedSettings()
 	DISABLE_APPEARANCE_VALIDATION_REVIEW = `GETMCMVAR(DISABLE_APPEARANCE_VALIDATION_REVIEW);
 	DISABLE_APPEARANCE_VALIDATION_DEBUG = `GETMCMVAR(DISABLE_APPEARANCE_VALIDATION_DEBUG);
 	DEBUG_LOGGING = `GETMCMVAR(DEBUG_LOGGING);
+
+	//FEMALE_CHANCE = `GETMCMVAR(FEMALE_CHANCE);
+	CHAR_POOL_MIXED_CHANCE = `GETMCMVAR(CHAR_POOL_MIXED_CHANCE);
 }
 
 simulated function ResetButtonClicked(MCM_API_SettingsPage Page)
@@ -78,6 +91,9 @@ simulated function ResetButtonClicked(MCM_API_SettingsPage Page)
 	`MCM_API_AutoReset(DISABLE_APPEARANCE_VALIDATION_REVIEW);
 	`MCM_API_AutoReset(DISABLE_APPEARANCE_VALIDATION_DEBUG);
 	`MCM_API_AutoReset(DEBUG_LOGGING);
+
+	//`MCM_API_AutoReset(FEMALE_CHANCE);
+	`MCM_API_AutoReset(CHAR_POOL_MIXED_CHANCE);
 }
 
 simulated function SaveButtonClicked(MCM_API_SettingsPage Page)

@@ -240,6 +240,8 @@ event XComGameState_Unit CreateSoldier(name DataTemplateName)
 	local XComGameStateHistory					History;
 	local XComGameStateContext_ChangeContainer	ChangeContainer;
 
+	local EGender								ForceGender;
+
 	CharTemplateMgr = class'X2CharacterTemplateManager'.static.GetCharacterTemplateManager();
 	if (CharTemplateMgr == none)
 	{
@@ -284,6 +286,28 @@ event XComGameState_Unit CreateSoldier(name DataTemplateName)
 	History.CleanupPendingGameState(SoldierContainerState);
 
 	return NewSoldierState;
+}
+
+// Original Firaxis noodle, adjusted for configurable chance
+function ECharacterPoolSelectionMode GetSelectionMode(ECharacterPoolSelectionMode OverrideMode)
+{
+
+	if (OverrideMode != eCPSM_None && OverrideMode != eCPSM_Mixed)
+		return OverrideMode;
+
+	// check for mixed, 50-50 chance of random/pool
+	if (OverrideMode == eCPSM_Mixed || SelectionMode == eCPSM_Mixed)
+	{
+		if( `SYNC_RAND(100) < `GETMCMVAR(CHAR_POOL_MIXED_CHANCE))
+		{
+			return eCPSM_PoolOnly;
+		}
+		else
+		{
+			return eCPSM_RandomOnly;
+		}
+	}
+	return SelectionMode;
 }
 
 function RemoveUnit(XComGameState_Unit Character)

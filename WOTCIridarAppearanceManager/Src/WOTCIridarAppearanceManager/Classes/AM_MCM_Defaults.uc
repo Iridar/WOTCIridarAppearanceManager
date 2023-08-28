@@ -27,3 +27,6 @@ var config bool bShowUniformSoldiers;
 var config bool bShowBarracksSoldiers;
 var config bool bShowDeadSoldiers;
 var config bool bShowAllCosmeticOptions;
+
+//var config int FEMALE_CHANCE;
+var config int CHAR_POOL_MIXED_CHANCE;
