@@ -142,6 +142,8 @@ var protected config(AppearanceManager) bool bShowDeadSoldiers;
 var protected config(AppearanceManager) bool bShowAllCosmeticOptions;
 var protected config(AppearanceManager) bool bInitComplete;
 
+var protected config(AppearanceManager) bool bEnableCrossCharacterTemplateHack;
+
 // ==============================================================================
 // Screen Options - not preserver between game restarts.
 var protected bool		bShowCategoryHead;
@@ -881,6 +883,21 @@ private function OnSaveAsUniformInputBoxAccepted(string strLastName)
 {
 	local XComGameState_Unit NewUnit;
 
+	// Hack vars
+	local TAppearance Appearance;
+
+	// --- Super shitty hack I threw together in five minutes to be able to set arbitrary body parts for soldiers
+	// Usage: enter IAMToggleManualInput console command, then select ONE appearance option checkbox, then click "save as uniform" and enter the name of the cosmetic body part.
+	if (strLastName != "" && class'X2DownloadableContentInfo_AM'.default.bEnableManualInput)
+	{
+		Appearance = ArmoryPawn.m_kAppearance;
+		Hack_SetAppearanceOption(Hack_GetFirstEnabledOptionName(), strLastName, Appearance);
+		ArmoryPawn.SetAppearance(Appearance, false);
+		ApplyChangesToArmoryUnit();
+		return;
+	}
+	// --- End of hack
+
 	if (strLastName != "")
 	{
 		//NewUnit = PoolMgr.CreateSoldierForceGender(ArmoryUnit.GetMyTemplateName(), EGender(ArmoryPawn.m_kAppearance.iGender));
@@ -1301,6 +1318,9 @@ private function bool IsUnitSameType(const XComGameState_Unit UnitState)
 	// Always filter out SPARKs and other non-soldier units.
 	if (ArmoryUnit.UnitSize != UnitState.UnitSize || ArmoryUnit.UnitHeight != UnitState.UnitHeight)
 			return false;
+
+	if (default.bEnableCrossCharacterTemplateHack)
+		return true;
 
 	// Compare character templates.
 	if (UnitState.GetMyTemplateName() != ArmoryUnit.GetMyTemplateName())
@@ -3297,6 +3317,87 @@ final function bool IsCosmeticOption(const name OptionName)
 final function string GetGenderArmorTemplate()
 {
 	return ArmorTemplateName $ ArmoryUnit.kAppearance.iGender;
+}
+
+private function name Hack_GetFirstEnabledOptionName()
+{
+	local UIMechaListItem ListItem;
+	local int i;
+
+	for (i = 4; i < OptionsList.ItemCount; i++) // Skip 0th member that is for sure "ShowAllCosmetics"
+	{
+		ListItem = UIMechaListItem(OptionsList.GetItem(i));
+		if (ListItem == none)
+			continue;
+			
+		if (ListItem.Checkbox.bChecked)
+		{
+			return ListItem.MCName;
+		}			
+	}
+	return '';
+}
+
+private function Hack_SetAppearanceOption(const name OptionName, const string strOptionValue, out TAppearance Appearance)
+{
+	switch (OptionName)
+	{
+	case 'iGender': Appearance.iGender = int(strOptionValue); return;
+	case 'iHairColor': Appearance.iHairColor = int(strOptionValue); return;
+	case 'iSkinColor': Appearance.iSkinColor = int(strOptionValue); return;
+	case 'iEyeColor': Appearance.iEyeColor = int(strOptionValue); return;
+	case 'nmFlag': Appearance.nmFlag = name(strOptionValue); return;
+	case 'iAttitude': Appearance.iAttitude = int(strOptionValue); return;
+	case 'iArmorTint': Appearance.iArmorTint = int(strOptionValue); return;
+	case 'iArmorTintSecondary': Appearance.iArmorTintSecondary = int(strOptionValue); return;
+	case 'iWeaponTint': Appearance.iWeaponTint = int(strOptionValue); return;
+	case 'iTattooTint': Appearance.iTattooTint = int(strOptionValue); return;
+	case 'nmTattoo_LeftArm': Appearance.nmTattoo_LeftArm = name(strOptionValue); return;
+	case 'nmTattoo_RightArm': Appearance.nmTattoo_RightArm = name(strOptionValue); return;
+	case 'nmWeaponPattern': Appearance.nmWeaponPattern = name(strOptionValue); return;
+	case 'nmPatterns': Appearance.nmPatterns = name(strOptionValue); return;
+	//case 'FirstName': Appearance.FirstName = int(strOptionValue); return;
+	//case 'LastName':  Appearance.LastName = int(strOptionValue); return;
+	//case 'Nickname':  Appearance.Nickname = int(strOptionValue); return;
+	//case 'Biography':  Appearance.Biography = int(strOptionValue); return;
+	//case 'iVoice': return true;
+	//case 'nmLanguage': return true;
+
+	case 'iRace':  Appearance.iRace = int(strOptionValue); return;
+	case 'nmHead':  Appearance.nmHead = name(strOptionValue); return;
+	case 'nmHaircut':  Appearance.nmHaircut = name(strOptionValue); return;
+	case 'nmBeard':  Appearance.nmBeard = name(strOptionValue); return;;
+	case 'nmPawn':  Appearance.nmPawn = name(strOptionValue); return;
+	case 'nmTorso': Appearance.nmTorso = name(strOptionValue); return;
+	case 'nmArms':  Appearance.nmArms = name(strOptionValue); return;
+	case 'nmLegs':  Appearance.nmLegs = name(strOptionValue); return;
+	case 'nmHelmet':  Appearance.nmHelmet = name(strOptionValue); return;
+	case 'nmEye':  Appearance.nmEye = name(strOptionValue); return;
+	case 'nmTeeth':  Appearance.nmTeeth = name(strOptionValue); return;
+	case 'nmFacePropLower':  Appearance.nmFacePropLower = name(strOptionValue); return;
+	case 'nmFacePropUpper':  Appearance.nmFacePropUpper = name(strOptionValue); return;
+	case 'nmVoice':  Appearance.nmVoice = name(strOptionValue); return;
+	case 'nmScars':  Appearance.nmScars = name(strOptionValue); return;
+	case 'nmTorso_Underlay':  Appearance.nmTorso_Underlay = name(strOptionValue); return;
+	case 'nmArms_Underlay': Appearance.nmArms_Underlay = name(strOptionValue); return;
+	case 'nmLegs_Underlay':  Appearance.nmLegs_Underlay = name(strOptionValue); return;
+	case 'nmFacePaint':  Appearance.nmFacePaint = name(strOptionValue); return;
+	case 'nmLeftArm':  Appearance.nmLeftArm = name(strOptionValue); return;
+	case 'nmRightArm':  Appearance.nmRightArm = name(strOptionValue); return;
+	case 'nmLeftArmDeco':  Appearance.nmLeftArmDeco = name(strOptionValue); return;
+	case 'nmRightArmDeco': Appearance.nmRightArmDeco = name(strOptionValue); return;
+	case 'nmLeftForearm':  Appearance.nmLeftForearm = name(strOptionValue); return;
+	case 'nmRightForearm': Appearance.nmRightForearm = name(strOptionValue); return;
+	case 'nmThighs': Appearance.nmThighs = name(strOptionValue); return;
+	case 'nmShins':  Appearance.nmShins = name(strOptionValue); return;
+	case 'nmTorsoDeco': Appearance.nmTorsoDeco = name(strOptionValue); return;
+
+	//case 'iFacialHair': return false;
+	//case 'iArmorDeco': return false;
+	//case 'bGhostPawn': return false;
+	default:
+		return;
+	}
 }
 
 // --------------------------------------------------------------------------------------

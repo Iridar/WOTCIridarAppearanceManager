@@ -240,7 +240,7 @@ event XComGameState_Unit CreateSoldier(name DataTemplateName)
 	local XComGameStateHistory					History;
 	local XComGameStateContext_ChangeContainer	ChangeContainer;
 
-	local EGender								ForceGender;
+	// local EGender								ForceGender;
 
 	CharTemplateMgr = class'X2CharacterTemplateManager'.static.GetCharacterTemplateManager();
 	if (CharTemplateMgr == none)

@@ -1,5 +1,7 @@
 class X2DownloadableContentInfo_AM extends X2DownloadableContentInfo;
 
+var config bool bEnableManualInput;
+
 static function OnPreCreateTemplates()
 {	
 	local XComEngine LocalEngine;
@@ -38,6 +40,11 @@ exec function SetArmorTemplateName(name NewName)
 {
 	UIManageAppearance(`SCREENSTACK.GetCurrentScreen()).ArmorTemplateName = NewName;
 	`LOG("Set ArmorTemplateName to:" @ NewName,, 'IRITEST');
+}
+
+exec function IAMToggleManualInput()
+{
+	default.bEnableManualInput = !default.bEnableManualInput;
 }
 
 exec function CheckPawn()
