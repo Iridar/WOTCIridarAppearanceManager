@@ -890,22 +890,21 @@ event XComGameState_Unit CreateSoldierForceGender(name DataTemplateName, optiona
 
 // ============================================================================================
 // INTERNAL FUNCTIONS
-/*
+
 final function bool IsCharacterPoolCharacter(const XComGameState_Unit UnitState)
 {
-	local int Index;	
+	local XComGameState_Unit PoolUnit;
 
-	// This check is primitive, but this is what the original Character Pool does to see if this CP unit is already in the campaign.
-	for (Index = 0; Index < CharacterPool.Length; Index++)
+	foreach CharacterPool(PoolUnit)
 	{
-		if (UnitState.GetFullName() == CharacterPool[Index].GetFullName())
+		if (UnitState.GetFirstName() == PoolUnit.GetFirstName() && UnitState.GetLastName() == PoolUnit.GetLastName())
 		{
 			return true;
 		}
 	}
 
 	return false;
-}*/
+}
 
 private function int GetExtraDataIndexForUnit(const XComGameState_Unit UnitState)
 {

@@ -124,12 +124,19 @@ static private function EventListenerReturn OnItemAddedToSlot_CampaignStart(Obje
 	//	return ELR_NoInterrupt;
 	//}
 
+	// Assume if the character is from character pool, then they have a kevlar appearance from character pool and should not receive a uniform.
+	if (`CHARACTERPOOLMGRAM.IsCharacterPoolCharacter(UnitState))
+	{	
+		`AMLOG("It's a Character Pool unit, exiting.");
+		return ELR_NoInterrupt;
+	}
+
 	MaybeApplyUniformAppearance(UnitState, ItemState.GetMyTemplateName(), NewGameState);
 
 	return ELR_NoInterrupt;
 }
 
-static private function MaybeApplyUniformAppearance(XComGameState_Unit UnitState, name ArmorTemplateName, XComGameState NewGameState, optional bool bClassUniformOnly = false)
+static private function MaybeApplyUniformAppearance(XComGameState_Unit UnitState, name ArmorTemplateName, XComGameState NewGameState, optional bool bClassUniformOnly = false, optional bool bCampaignStart)
 {
 	local CharacterPoolManager_AM		CharacterPool;
 	local TAppearance					NewAppearance;
