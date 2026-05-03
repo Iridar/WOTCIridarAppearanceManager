@@ -32,6 +32,12 @@ struct UniformSettingsStruct
 	var array<CosmeticOptionStruct> CosmeticOptions;
 };
 
+struct ExtraDataUnitValueStruct
+{
+	var name	UnitValueName;
+	var float	fValue;
+};
+
 enum EAutoManageUniformForUnit
 {
 	EAMUFU_Default,		// Use global MCM setting.
@@ -81,10 +87,17 @@ struct CharacterPoolExtraData
 	var array<name> NonSoldierUniformTemplates; // List of character templates this non-soldier uniform should be used for.
 
 	var array<CharacterPoolLoadoutStruct> CharacterPoolLoadout; // List of items that should be equipped on this unit in Character Pool.
+
+	var array<ExtraDataUnitValueStruct> UnitValues;
 };
 var array<CharacterPoolExtraData> ExtraDatas;
 
 var int iNumExtraDataOnInit; // Helps track if we might need to restore extra data from backup.
+
+// Other mods that need to store their own extra data for CP units can supply names of Unit Values.
+// When saving CP, IAM will find these unit values on the unit and save them to IAM's Extra Data.
+// When loading a character from CP, IAM will read these values from Extra Data and apply them to the unit.
+var config array<name> ExtraDataUnitValueNames;
 
 const ExtraDataValueName = 'IRI_AppearanceManager_ExtraData_Value';
 const NonSoldierUniformSettings = 'NonSoldierUniformSettings';
@@ -137,6 +150,8 @@ simulated final function InitSoldierAppearance(XComGameState_Unit Unit, const ou
 
 event InitSoldier(XComGameState_Unit Unit, const out CharacterPoolDataElement CharacterPoolData)
 {
+	local CharacterPoolExtraData	CPExtraData;
+	local ExtraDataUnitValueStruct	EDUV;
 	local int Index;
 
 	InitSoldierAppearance(Unit, CharacterPoolData);
@@ -151,6 +166,12 @@ event InitSoldier(XComGameState_Unit Unit, const out CharacterPoolDataElement Ch
 	// We record this ObjectID on the unit as a UnitValue so we can connect this ExtraData to this Unit.
 	Unit.SetUnitFloatValue(ExtraDataValueName, ExtraDatas[Index].ObjectID, eCleanup_Never);
 
+	CPExtraData = ExtraDatas[Index];
+	foreach CPExtraData.UnitValues(EDUV)
+	{
+		Unit.SetUnitFloatValue(EDUV.UnitValueName, EDUV.fValue, eCleanup_Never);
+	}
+
 	// Read actual Extra Data.
 	Unit.AppearanceStore = ExtraDatas[Index].AppearanceStore;
 }
@@ -160,6 +181,9 @@ function SaveCharacterPool()
 	local XComGameState_Unit UnitState;
 	local int Index;
 	local array<CharacterPoolExtraData> NewExtraDatas;
+	local name ExtraDataUnitValueName;
+	local UnitValue UV;
+	local ExtraDataUnitValueStruct NewExtraDataUnitValue;
 
 	foreach CharacterPool(UnitState)
 	{
@@ -191,6 +215,16 @@ function SaveCharacterPool()
 		Index = GetExtraDataIndexForUnit(UnitState); // Locate Extra Data for this unit using ExtraData's ObjectID and UnitValue on the unit.
 		ExtraDatas[Index].CharPoolData = CharacterPoolSerializeHelper;
 		ExtraDatas[Index].AppearanceStore = UnitState.AppearanceStore;
+
+		foreach default.ExtraDataUnitValueNames(ExtraDataUnitValueName)
+		{
+			if (UnitState.GetUnitValue(ExtraDataUnitValueName, UV))
+			{
+				NewExtraDataUnitValue.UnitValueName = ExtraDataUnitValueName;
+				NewExtraDataUnitValue.fValue = UV.fValue;
+				ExtraDatas[Index].UnitValues.AddItem(NewExtraDataUnitValue);
+			}
+		}
 
 		`AMLOG("Saving Extra Data for" @ UnitState.GetFullName() @ "ExtraData Index:" @ Index @ "Unit Index:" @ CharacterPool.Find(UnitState) @ "out of:" @ CharacterPool.Length);
 
