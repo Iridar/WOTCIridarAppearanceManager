@@ -9,6 +9,10 @@ var localized string strCurrentAppearance;
 var private config bool bIsUnrestrictedCustomizationLoaded;
 var private config bool bIsUnrestrictedCustomizationLoadedChecked;
 
+// Opt-in: keep per-armor Appearance Store + full Manage Appearance under
+// Unrestricted Customization (armor-aware keying). Default false = legacy behavior.
+var config bool bUCR_EnablePerArmorStore;
+
 `include(WOTCIridarAppearanceManager\Src\ModConfigMenuAPI\MCM_API_CfgHelpers.uci)
 
 static final function string GetUnitDisplayString(const XComGameState_Unit UnitState)
@@ -447,6 +451,34 @@ static final function X2ItemTemplate GetItemTemplateFromCosmeticTorso(const name
 		}
 	}
 	return none;
+}
+
+// Armor-aware replacement for no-arg StoreAppearance(): keys via existing
+// GetEquippedArmorTemplateName() so entries survive Unrestricted Customization's
+// torso/armor decoupling. Falls back to no-arg if armor can't be resolved.
+static final function StoreAppearanceArmorAware(XComGameState_Unit UnitState)
+{
+	local name ArmorName;
+
+	if (UnitState == none)
+		return;
+
+	ArmorName = GetEquippedArmorTemplateName(UnitState);
+	if (ArmorName != '')
+	{
+		`AMLOG("Storing appearance armor-aware for" @ UnitState.GetFullName() @ "armor:" @ ArmorName);
+		UnitState.StoreAppearance(UnitState.kAppearance.iGender, ArmorName);
+	}
+	else
+	{
+		`AMLOG("Armor-aware store fell back to no-arg for" @ UnitState.GetFullName());
+		UnitState.StoreAppearance();
+	}
+}
+
+static final function bool UCR_PerArmorStoreEnabled()
+{
+	return default.bUCR_EnablePerArmorStore;
 }
 
 static final function bool IsUnrestrictedCustomizationLoaded()

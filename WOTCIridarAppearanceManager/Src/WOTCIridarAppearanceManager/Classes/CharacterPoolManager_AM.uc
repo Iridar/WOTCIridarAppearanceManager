@@ -522,7 +522,7 @@ function XComGameState_Unit CreateCharacter(XComGameState StartState, optional E
 		class'XComGameState_Unit'.static.NameCheck(CharacterGenerator, SoldierState, eNameType_Full);
 	}
 
-	SoldierState.StoreAppearance(); // Save the soldiers appearance so char pool customizations are correct if you swap armors
+	class'Help'.static.StoreAppearanceArmorAware(SoldierState); // Save the soldiers appearance so char pool customizations are correct if you swap armors
 	return SoldierState;
 
 }

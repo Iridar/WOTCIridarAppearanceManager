@@ -156,7 +156,7 @@ simulated function bool EquipItem(UIArmory_LoadoutItem Item)
 	bIsArmor = X2ArmorTemplate(Item.ItemTemplate) != none && InventorySlot == eInvSlot_Armor;
 	if (bIsArmor)
 	{
-		UnitState.StoreAppearance();
+		class'Help'.static.StoreAppearanceArmorAware(UnitState);
 	}
 	
 	CharPoolMgr.AddItemToCharacterPoolLoadout(UnitState, GetSelectedSlot(), Item.ItemTemplate.DataName);

@@ -503,7 +503,7 @@ private function OnConvertToUniformInputBoxAccepted(string strLastName)
 	UnitState.bAllowedTypeSoldier = false;
 	UnitState.bAllowedTypeVIP = false;
 	UnitState.bAllowedTypeDarkVIP = false;
-	UnitState.StoreAppearance();
+	class'Help'.static.StoreAppearanceArmorAware(UnitState);
 	CustomizeScreen.CustomizeManager.CommitChanges(); // This saves the CP.
 
 	class'X2PawnRefreshHelper'.static.RefreshPawn_Static(true, CustomizeScreen.CustomizeManager, CharPoolMgr, CustomizeScreen);
@@ -547,6 +547,16 @@ private function OnValidateButtonClicked(UIButton ButtonSource)
 	for (i = UnitState.AppearanceStore.Length - 1; i >= 0; i--)
 	{
 		FixAppearance = UnitState.AppearanceStore[i].Appearance;
+
+		// Drop entries collapsed by UCR's LockAppearance (blanked Torso.ArmorTemplate
+		// -> empty armor-key half). Cannot match a legit armor (always non-empty).
+		if (name(Left(UnitState.AppearanceStore[i].GenderArmorTemplate, Len(UnitState.AppearanceStore[i].GenderArmorTemplate) - 1)) == '')
+		{
+			`AMLOG("Removing UCR-collapsed Appearance Store entry with empty armor key:" @ UnitState.AppearanceStore[i].GenderArmorTemplate);
+			UnitState.AppearanceStore.Remove(i, 1);
+			continue;
+		}
+
 		if (CharPool.FixAppearanceOfInvalidAttributes(FixAppearance))
 		{
 			`AMLOG("Successfully validated Appearance Store entry for Gender Armor:" @ UnitState.AppearanceStore[i].GenderArmorTemplate @ ", it required no changes:" @ FixAppearance == UnitState.AppearanceStore[i].Appearance);
@@ -559,7 +569,7 @@ private function OnValidateButtonClicked(UIButton ButtonSource)
 		}
 	}
 
-	UnitState.StoreAppearance();
+	class'Help'.static.StoreAppearanceArmorAware(UnitState);
 
 	CustomizeScreen.CustomizeManager.CommitChanges();
 	if (CustomizeScreen.bInArmory)

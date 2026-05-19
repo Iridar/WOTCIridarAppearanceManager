@@ -6,17 +6,22 @@ static function OnPreCreateTemplates()
 {	
 	local XComEngine LocalEngine;
 
+	//`log("[AMFORK-DIAG] X2DownloadableContentInfo_AM.OnPreCreateTemplates RAN",, 'AMFORK');
+
 	LocalEngine = `XENGINE;
 	LocalEngine.m_CharacterPoolManager = new class'CharacterPoolManager_AM';
 
+	//`log("[AMFORK-DIAG] m_CharacterPoolManager replaced; is CharacterPoolManager_AM:" @ (CharacterPoolManager_AM(LocalEngine.m_CharacterPoolManager) != none),, 'AMFORK');
 	`AMLOG("Replaced Character Pool manager.");
 }
 
 static event OnPostTemplatesCreated()
 {
+	//`log("[AMFORK-DIAG] X2DownloadableContentInfo_AM.OnPostTemplatesCreated RAN",, 'AMFORK');
+
 	class'UIManageAppearance'.static.SetInitialSoldierListSettings();
 
-	if (IsModActive('UnrestrictedCustomization')) class'UISL_AppearanceManager'.default.bUnrestrictedCustomization = true;
+	if (IsModActive('UnrestrictedCustomization') && !class'Help'.static.UCR_PerArmorStoreEnabled()) class'UISL_AppearanceManager'.default.bUnrestrictedCustomization = true;
 }
 
 static final function bool IsModActive(name ModName)

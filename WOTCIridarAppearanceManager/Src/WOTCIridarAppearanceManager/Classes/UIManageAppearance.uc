@@ -977,8 +977,8 @@ private function CreateAppearanceStoreEntriesForUnit(const XComGameState_Unit Un
 
 	`AMLOG("Running for:" @ UnitState.GetFullName());
 
-	if (class'Help'.static.IsUnrestrictedCustomizationLoaded() && UnitState != ArmoryUnit)
-	{	
+	if (class'Help'.static.IsUnrestrictedCustomizationLoaded() && !class'Help'.static.UCR_PerArmorStoreEnabled() && UnitState != ArmoryUnit)
+	{
 		`AMLOG("Unrestricted Customization compatibility enabled.");
 
 		Gender = EGender(UnitState.kAppearance.iGender);
@@ -1662,7 +1662,7 @@ private function ApplyChangesToUnit(XComGameState_Unit UnitState, optional XComG
 
 	UnitState.SetTAppearance(NewAppearance);
 	UnitState.UpdatePersonalityTemplate();
-	UnitState.StoreAppearance();
+	class'Help'.static.StoreAppearanceArmorAware(UnitState);
 
 	ApplyChangesToUnitWeapons(UnitState, NewAppearance, NewGameState);
 }
@@ -1782,7 +1782,7 @@ private function ApplyChangesToArmoryUnit()
 	if (IsCheckboxChecked('Biography'))
 		ArmoryUnit.SetBackground(SelectedUnit.GetBackground());
 
-	ArmoryUnit.StoreAppearance();
+	class'Help'.static.StoreAppearanceArmorAware(ArmoryUnit);
 	CustomizeManager.SubmitUnitCustomizationChanges();
 
 	if (bInArmory)
